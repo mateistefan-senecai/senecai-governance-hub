@@ -1,0 +1,94 @@
+{
+  "id": "role-classification",
+  "version": 1,
+  "title": "AI Act Role Classification Checklist",
+  "resultField": "legalRole",
+  "sourceDoc": "docs/context/decision-trees/role-classification.md",
+  "entry": "signals",
+  "nodes": {
+    "signals": {
+      "kind": "signalChecklist",
+      "id": "signals",
+      "text": "Tick every statement that applies to this AI system.",
+      "help": "The source checklist has you tick every applicable box across all six tests, then combines them — it is not a single yes/no path.",
+      "options": [
+        {
+          "id": "deployer-use",
+          "label": "You use an AI system in a professional capacity to perform a task.",
+          "help": "Examples: using a third-party tool for HR screening, summarizing documents with an LLM, AI-driven fraud detection in your bank.",
+          "signal": "deployer"
+        },
+        {
+          "id": "provider-original",
+          "label": "You develop an AI system and either sell it or use it for the first time under your own brand.",
+          "help": "Developing includes designing the logic, training the model, or building the software architecture. Note: if the model is \"General Purpose\" (a foundation model), additional GPAI Provider obligations may apply.",
+          "citation": "Art. 3(2)",
+          "signal": "provider"
+        },
+        {
+          "id": "provider-whitelabel",
+          "label": "You put your own name, logo, or trademark on an existing AI system developed by someone else.",
+          "help": "Even if you didn't build the code, if the customer sees your brand, you are deemed the Provider by law.",
+          "citation": "Art. 25(1)(a)",
+          "signal": "provider"
+        },
+        {
+          "id": "provider-repurpose",
+          "label": "You change the \"Intended Purpose\" of a high-risk AI system.",
+          "help": "Example: taking an AI meant for general text summarization and specifically marketing/using it for calculating credit scores.",
+          "citation": "Art. 25(1)(c)",
+          "signal": "provider"
+        },
+        {
+          "id": "provider-modification",
+          "label": "You make a \"Substantial Modification\" to an existing AI system.",
+          "help": "A change that affects the system's compliance or changes its risk profile (e.g. retraining a model with a massive new dataset that changes its core outputs). The original provider is usually no longer responsible for that modified version.",
+          "citation": "Art. 25(1)(b)",
+          "signal": "provider"
+        },
+        {
+          "id": "provider-integration",
+          "label": "You integrate an AI model into a larger software product you sell.",
+          "help": "Example: you build a CRM and embed a third-party API to provide predictive sales analytics to your users. You are the provider of the system (the CRM features), even if you aren't the provider of the model (the API).",
+          "signal": "provider"
+        }
+      ],
+      "onlySignal": {
+        "deployer": {
+          "kind": "outcome",
+          "outcome": { "value": "DEPLOYER", "tentative": true }
+        },
+        "provider": {
+          "kind": "outcome",
+          "outcome": { "value": "PROVIDER", "tentative": true }
+        }
+      },
+      "onMultipleSignals": {
+        "kind": "outcome",
+        "outcome": {
+          "value": "BOTH",
+          "tentative": true,
+          "note": "Both Provider and Deployer signals were ticked — dual obligations apply."
+        }
+      },
+      "onNoSignals": { "kind": "goto", "nodeId": "as-is-fallback" }
+    },
+    "as-is-fallback": {
+      "kind": "boolean",
+      "id": "as-is-fallback",
+      "text": "Do you use the AI system as-is, strictly according to the provider's instructions — no change to intended purpose, no substantial modification, no rebranding/resale, internal/operational use only?",
+      "onYes": {
+        "kind": "outcome",
+        "outcome": { "value": "DEPLOYER", "tentative": true }
+      },
+      "onNo": {
+        "kind": "outcome",
+        "outcome": {
+          "value": "REVIEW_REQUIRED",
+          "tentative": true,
+          "note": "None of the checklist statements applied and usage isn't as-is either — this needs manual legal review rather than an automated answer."
+        }
+      }
+    }
+  }
+}

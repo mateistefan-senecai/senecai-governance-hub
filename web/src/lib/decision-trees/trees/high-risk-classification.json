@@ -1,0 +1,167 @@
+{
+  "id": "high-risk-classification",
+  "version": 1,
+  "title": "Checklist: Is My AI System \"High-Risk\"?",
+  "resultField": "riskClassification",
+  "sourceDoc": "docs/context/decision-trees/high-risk-classification.md",
+  "entry": "exclusions",
+  "nodes": {
+    "exclusions": {
+      "kind": "checklist",
+      "id": "exclusions",
+      "text": "Step 0 — Is your system explicitly excluded from the AI Act's scope?",
+      "help": "Before checking risk, determine if the Act applies to this activity at all.",
+      "options": [
+        {
+          "id": "military-defense",
+          "label": "Used exclusively for military, defense, or national security purposes."
+        },
+        {
+          "id": "pure-research",
+          "label": "Developed and put into service solely for scientific research and development (not for market use)."
+        },
+        {
+          "id": "personal-use",
+          "label": "Used by a natural person for purely personal, non-professional activity."
+        },
+        {
+          "id": "open-source-rd",
+          "label": "Research/development of AI models prior to placing them on the market (unless tested in \"real-world conditions\")."
+        },
+        {
+          "id": "international-cooperation",
+          "label": "Used by a non-EU public authority under international law-enforcement cooperation agreements."
+        }
+      ],
+      "onAnyChecked": {
+        "default": {
+          "kind": "outcome",
+          "outcome": {
+            "value": "OUT_OF_SCOPE",
+            "tentative": true,
+            "note": "One or more scope exclusions apply — no AI Act obligations apply to this system."
+          }
+        }
+      },
+      "onNoneChecked": { "kind": "goto", "nodeId": "annex-i" }
+    },
+    "annex-i": {
+      "kind": "checklist",
+      "id": "annex-i",
+      "text": "Step 1 — Annex I \"Product Safety\" filter: does the system serve as a safety component (or is it the product itself) for any of these?",
+      "help": "The AI Act automatically classifies AI as High-Risk if integrated into products already subject to EU health and safety laws.",
+      "options": [
+        { "id": "medical-devices", "label": "Medical Devices (e.g. diagnostic software, robotic surgery)." },
+        { "id": "toys-transport", "label": "Toys or Personal Transport (e.g. smart toys, e-scooters)." },
+        { "id": "machinery", "label": "Machinery & Industrial Tools (e.g. collaborative robots)." },
+        { "id": "lifts-pressure-gas", "label": "Lifts, Pressure Equipment, or Gaseous Fuel Appliances." },
+        { "id": "marine-aviation-rail", "label": "Marine, Aviation, or Rail Equipment." },
+        { "id": "motor-vehicles", "label": "Motor Vehicles (e.g. ADAS or autonomous driving features)." }
+      ],
+      "onAnyChecked": {
+        "default": {
+          "kind": "outcome",
+          "outcome": { "value": "HIGH_RISK", "tentative": true, "citation": "Annex I" }
+        }
+      },
+      "onNoneChecked": { "kind": "goto", "nodeId": "annex-iii" }
+    },
+    "annex-iii": {
+      "kind": "checklist",
+      "id": "annex-iii",
+      "text": "Step 2 — Annex III \"Sensitive Use Case\" filter: does the system fall into any of these high-impact domains?",
+      "help": "Even if your product isn't a \"machine\", it is High-Risk if used in these domains.",
+      "options": [
+        { "id": "remote-biometric-id", "label": "Remote Biometric Identification — identifying people at a distance in public/private spaces." },
+        { "id": "biometric-categorization", "label": "Biometric Categorization — sorting people based on sensitive traits (gender, race, etc.).", "setFlag": "profiling" },
+        { "id": "emotion-recognition", "label": "Emotion Recognition — detecting emotional states in workplaces or schools." },
+        { "id": "critical-infra-safety", "label": "Critical Infrastructure — safety components managing/operating road traffic, or water/gas/heating/electricity supply." },
+        { "id": "critical-infra-cyber", "label": "Critical Infrastructure — cybersecurity protecting the digital integrity of essential utility networks." },
+        { "id": "education-admissions", "label": "Education — systems determining access or admission to schools/universities." },
+        { "id": "education-assessment", "label": "Education — grading exams or evaluating learning outcomes that steer a person's career path." },
+        { "id": "education-behavior", "label": "Education — detecting \"cheating\" or prohibited behavior during assessments." },
+        { "id": "hr-recruitment", "label": "Employment & HR — sorting CVs, ranking candidates, or placing targeted job ads." },
+        { "id": "hr-worker-management", "label": "Employment & HR — decisions on promotions, terminations, or task allocation based on behavior." },
+        { "id": "social-benefits", "label": "Essential Services — determining eligibility for social security, housing, or healthcare." },
+        { "id": "finance", "label": "Essential Services — assessing creditworthiness, loan approval, or insurance pricing (life/health)." },
+        { "id": "emergency-triage", "label": "Essential Services — systems used for 112/999 calls or dispatching first responders." },
+        { "id": "law-enforcement-risk", "label": "Law Enforcement — predicting the risk of a person becoming a victim or re-offending." },
+        { "id": "law-enforcement-evidence", "label": "Law Enforcement — evaluating the reliability of evidence or polygraphs." },
+        { "id": "law-enforcement-profiling", "label": "Law Enforcement — automated processing of personal data to evaluate criminal risk.", "setFlag": "profiling" },
+        { "id": "migration-verification", "label": "Migration/Border — checking travel documents or detecting fraudulent identities." },
+        { "id": "migration-assessment", "label": "Migration/Border — evaluating visa or asylum applications and security risks." },
+        { "id": "migration-monitoring", "label": "Migration/Border — monitoring, detecting, and identifying people at borders." },
+        { "id": "justice-judicial", "label": "Justice/Democracy — used by a judicial authority to research facts or interpret the law." },
+        { "id": "justice-elections", "label": "Justice/Democracy — systems used to influence the outcome of an election or voters' behavior." }
+      ],
+      "onAnyChecked": {
+        "default": { "kind": "goto", "nodeId": "escape-hatch" }
+      },
+      "onNoneChecked": { "kind": "goto", "nodeId": "practical-rights" }
+    },
+    "practical-rights": {
+      "kind": "checklist",
+      "id": "practical-rights",
+      "text": "Step 3 — The Practical Rights Test: even if not listed in Annex III, does the system do any of the following?",
+      "help": "Practical rule: if the AI affects someone's rights, opportunities, or economic wellbeing, treat as High-Risk.",
+      "options": [
+        { "id": "rights-employment", "label": "Influences access to employment — significantly impacts who gets seen or hired." },
+        { "id": "rights-finance", "label": "Influences access to finance — determines who gets loans, credit, or insurance." },
+        { "id": "rights-healthcare", "label": "Influences access to healthcare — prioritizes or denies medical treatment/insurance." },
+        { "id": "rights-education", "label": "Influences access to education — affects admission or career-defining grades." },
+        { "id": "rights-public-services", "label": "Influences access to essential public services — determines social security or housing." },
+        { "id": "rights-legal-admin", "label": "Contributes to legal or administrative decisions — directly informs a judge or official's ruling on a citizen." }
+      ],
+      "onAnyChecked": {
+        "default": { "kind": "goto", "nodeId": "escape-hatch" }
+      },
+      "onNoneChecked": {
+        "kind": "outcome",
+        "outcome": {
+          "value": "NOT_HIGH_RISK",
+          "tentative": true,
+          "note": "Source checklist only distinguishes high-risk vs. not-high-risk — it does not determine prohibited status or the limited/minimal split. See docs/context/decision-trees/high-risk-classification.md."
+        }
+      }
+    },
+    "escape-hatch": {
+      "kind": "checklist",
+      "id": "escape-hatch",
+      "text": "Step 4 — Article 6(3) \"Escape Hatch\": does the system meet any of these ancillary-task criteria?",
+      "help": "You cannot use this exemption if the system performs Profiling (automated assessment of personal traits/behavior) — profiling ticked earlier makes it High-Risk regardless of this step.",
+      "options": [
+        { "id": "narrow-procedural", "label": "Narrow Procedural Task — a tiny, administrative sub-step (e.g. formatting text)." },
+        { "id": "improving-human-activity", "label": "Improving Human Activity — only improves the result of a previous human decision." },
+        { "id": "preparatory-task", "label": "Preparatory Task — only organizes data or flags patterns for a later human assessment." },
+        { "id": "pattern-detection", "label": "Pattern Detection — identifies deviations but does not influence the final decision." }
+      ],
+      "onAnyChecked": {
+        "conditions": [
+          {
+            "ifFlag": "profiling",
+            "then": {
+              "kind": "outcome",
+              "outcome": {
+                "value": "HIGH_RISK",
+                "tentative": true,
+                "note": "The Art. 6(3) exemption cannot apply because a profiling-type trigger (Step 2) was ticked — profiling is High-Risk regardless of this step."
+              }
+            }
+          }
+        ],
+        "default": {
+          "kind": "outcome",
+          "outcome": {
+            "value": "NOT_HIGH_RISK",
+            "tentative": true,
+            "note": "Exempt under the Art. 6(3) ancillary-task escape hatch."
+          }
+        }
+      },
+      "onNoneChecked": {
+        "kind": "outcome",
+        "outcome": { "value": "HIGH_RISK", "tentative": true }
+      }
+    }
+  }
+}

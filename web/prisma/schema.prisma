@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Tenancy ──────────────────────────────────────────────────────────────
+// No physical/logical per-client isolation at this stage (concept note
+// decision) — all organizations share one database, scoped by
+// organizationId on every tenant-owned row.
+
+enum OrganizationType {
+  SENECAI
+  CLIENT
+}
+
+model Organization {
+  id        String           @id @default(cuid())
+  name      String
+  type      OrganizationType
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  users                 User[]
+  aiSystems             AiSystem[]
+  consultantAssignments ConsultantAssignment[] @relation("ClientOrgAssignments")
+}
+
+enum UserRole {
+  SENECAI_ADMIN // full access across all client orgs
+  CONSULTANT // access limited to assigned client orgs; reviews AI-generated outputs
+  CLIENT_ADMIN // manages users within their own org
+  CLIENT_MEMBER // regular user within their own org
+}
+
+model User {
+  id             String       @id @default(cuid())
+  email          String       @unique
+  passwordHash   String
+  name           String?
+  role           UserRole
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  consultantAssignments ConsultantAssignment[] @relation("ConsultantAssignments")
+  createdAiSystems      AiSystem[]             @relation("CreatedBy")
+  decisionRuns          DecisionRun[]
+}
+
+// A SenecAI consultant is granted access to specific client organizations.
+model ConsultantAssignment {
+  id                   String       @id @default(cuid())
+  consultantId         String
+  consultant           User         @relation("ConsultantAssignments", fields: [consultantId], references: [id], onDelete: Cascade)
+  clientOrganizationId String
+  clientOrganization   Organization @relation("ClientOrgAssignments", fields: [clientOrganizationId], references: [id], onDelete: Cascade)
+  createdAt            DateTime     @default(now())
+
+  @@unique([consultantId, clientOrganizationId])
+}
+
+// ── Module 1: AI Inventory & Risk Classification ───────────────────────
+// Fields below mirror the client-facing Excel questionnaire exactly
+// (docs/context/ai-inventory-questionnaire.md, "Inventar Sisteme AI" tab).
+
+enum UseCaseType {
+  PRODUCT // used by external/end customers
+  INTERNAL_OPS
+  HYBRID
+}
+
+enum AutonomyLevel {
+  FULLY_AUTOMATED
+  PARTIALLY_AUTOMATED // human-on-the-loop
+  CONSULTATIVE // human-in-the-loop
+}
+
+enum ImplementationStage {
+  PRODUCTION
+  PILOT
+  PLANNED
+}
+
+// Output of the Role Classification decision tree (Module 1.2).
+// Always preliminary until a consultant reviews it.
+enum LegalRole {
+  PROVIDER
+  DEPLOYER
+  BOTH
+  IMPORTER
+  DISTRIBUTOR
+  DOWNSTREAM_PROVIDER
+  REVIEW_REQUIRED // tree could not reach a conclusive answer
+}
+
+// Output of the High-Risk Classification decision tree (Module 1.3).
+// NOTE: the source checklist only distinguishes high-risk vs. not-high-risk;
+// it does not cover Art. 5 prohibited practices or the limited/minimal split.
+// Those values exist here for the concept note's full taxonomy but have no
+// automated rule behind them yet — see docs/context/decision-trees/high-risk-classification.md.
+enum RiskClassification {
+  PROHIBITED
+  HIGH_RISK
+  LIMITED
+  MINIMAL
+  NOT_HIGH_RISK // tree only distinguishes high-risk vs. not — see note above
+  OUT_OF_SCOPE
+  REVIEW_REQUIRED
+}
+
+model AiSystem {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Feature 1.1 — Inventory (questionnaire columns 1-13)
+  name                    String
+  description             String?
+  useCaseType             UseCaseType?
+  businessProcess         String?
+  inputData               String?
+  outputData              String?
+  dataSource              String?
+  humanOversightMechanism String?
+  autonomyLevel           AutonomyLevel?
+  complianceOwnerName     String?
+  complianceOwnerRole     String?
+  decisionsAndImpact      String?
+  userCount               Int?
+  affectsEndCustomers     Boolean?
+  endCustomerEstimate     String?
+  implementationStage     ImplementationStage?
+
+  // Feature 1.2 — Role mapping (questionnaire column 14 is risk-only;
+  // role has no dedicated column in the source sheet, but the concept
+  // note requires it as its own feature)
+  legalRole                     LegalRole?
+  legalRoleReviewedByConsultant Boolean    @default(false)
+
+  // Feature 1.3 — Risk classification (questionnaire column 14)
+  riskClassification                     RiskClassification?
+  riskClassificationReviewedByConsultant Boolean             @default(false)
+
+  createdById String
+  createdBy   User     @relation("CreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  decisionRuns DecisionRun[]
+}
+
+// Audit trail of every decision-tree run against a system: which tree
+// version, which answers were given, and what tentative outcome resulted.
+// Keeps the "configurable rules as data" principle auditable and lets a
+// consultant see exactly how a preliminary classification was reached.
+model DecisionRun {
+  id              String   @id @default(cuid())
+  aiSystemId      String
+  aiSystem        AiSystem @relation(fields: [aiSystemId], references: [id], onDelete: Cascade)
+  treeId          String // e.g. "role-classification", "high-risk-classification"
+  treeVersion     Int
+  answers         Json // ordered list of {nodeId, selection}
+  resultField     String // "legalRole" | "riskClassification"
+  resultValue     String
+  resultTentative Boolean  @default(true)
+  runByUserId     String
+  runBy           User     @relation(fields: [runByUserId], references: [id])
+  runAt           DateTime @default(now())
+}
