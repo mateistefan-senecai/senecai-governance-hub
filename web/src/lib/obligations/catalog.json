@@ -1,0 +1,177 @@
+[
+  {
+    "id": "general.art4-ai-literacy",
+    "title": "Ensure AI literacy",
+    "citation": "Art. 4",
+    "category": "GENERAL",
+    "description": "Take measures to ensure staff and other persons dealing with the operation and use of the AI system on the organization's behalf have sufficient AI literacy, considering their technical knowledge, experience, education, and the context the system is used in."
+  },
+  {
+    "id": "general.governance-policy",
+    "title": "Internal AI governance policy",
+    "citation": "Concept note — internal governance policy",
+    "category": "GENERAL",
+    "description": "Adopt and maintain an internal AI governance policy covering roles, responsibilities, risk management approach, and oversight for AI systems used or provided by the organization."
+  },
+  {
+    "id": "general.art50-transparency",
+    "title": "Transparency obligations, if applicable",
+    "citation": "Art. 50",
+    "category": "GENERAL",
+    "description": "If the system interacts directly with natural persons, generates synthetic audio/image/video/text content, or performs emotion recognition or biometric categorization, confirm whether the relevant transparency disclosures apply (e.g. informing users they are interacting with an AI system, labeling AI-generated or manipulated content, disclosing emotion recognition or biometric categorization) and implement them."
+  },
+  {
+    "id": "provider-hr.art9-risk-management",
+    "title": "Risk management system",
+    "citation": "Art. 9",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Establish, implement, document and maintain a risk management system as a continuous iterative process throughout the system's lifecycle."
+  },
+  {
+    "id": "provider-hr.art10-data-governance",
+    "title": "Data and data governance",
+    "citation": "Art. 10",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Apply data governance and management practices to training, validation and testing data sets: relevant design choices, data collection, bias examination, and gaps/shortcomings identification."
+  },
+  {
+    "id": "provider-hr.art11-technical-documentation",
+    "title": "Technical documentation (Annex IV)",
+    "citation": "Art. 11, Annex IV",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Draw up technical documentation before the system is placed on the market or put into service, and keep it up to date, demonstrating compliance with Chapter III Section 2."
+  },
+  {
+    "id": "provider-hr.art12-record-keeping",
+    "title": "Automatic logging / record-keeping",
+    "citation": "Art. 12",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Design the system to enable automatic recording of events (logs) over its lifetime, to a level enabling traceability of its functioning appropriate to its intended purpose."
+  },
+  {
+    "id": "provider-hr.art13-transparency-to-deployers",
+    "title": "Transparency & instructions for use",
+    "citation": "Art. 13",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Design the system to be sufficiently transparent for deployers to interpret its output, and accompany it with instructions for use containing the information deployers need."
+  },
+  {
+    "id": "provider-hr.art14-human-oversight",
+    "title": "Human oversight design",
+    "citation": "Art. 14",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Design the system, including appropriate human-machine interface tools, so it can be effectively overseen by natural persons during the period it is in use."
+  },
+  {
+    "id": "provider-hr.art15-accuracy-robustness-cybersecurity",
+    "title": "Accuracy, robustness & cybersecurity",
+    "citation": "Art. 15",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Design and develop the system to achieve an appropriate level of accuracy, robustness and cybersecurity, and to perform consistently across its lifecycle."
+  },
+  {
+    "id": "provider-hr.art17-quality-management-system",
+    "title": "Quality management system",
+    "citation": "Art. 17",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Put in place a quality management system covering regulatory compliance strategy, design control, data management, risk management, and post-market monitoring."
+  },
+  {
+    "id": "provider-hr.art43-conformity-assessment",
+    "title": "Conformity assessment procedure",
+    "citation": "Art. 43",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Carry out the applicable conformity assessment procedure before placing the system on the market or putting it into service, and whenever a substantial modification is made."
+  },
+  {
+    "id": "provider-hr.art47-declaration-of-conformity",
+    "title": "EU declaration of conformity",
+    "citation": "Art. 47",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Draw up a written EU declaration of conformity for each system and keep it available to national authorities for 10 years after the system is placed on the market."
+  },
+  {
+    "id": "provider-hr.art48-ce-marking",
+    "title": "CE marking",
+    "citation": "Art. 48",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Affix the CE marking to the system (or its documentation/packaging, if physical marking isn't possible) to indicate conformity."
+  },
+  {
+    "id": "provider-hr.art49-eu-database-registration",
+    "title": "Registration in EU database",
+    "citation": "Art. 49",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Register the system in the EU database for high-risk AI systems before placing it on the market or putting it into service."
+  },
+  {
+    "id": "provider-hr.art72-post-market-monitoring",
+    "title": "Post-market monitoring system",
+    "citation": "Art. 72",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Establish and document a post-market monitoring system proportionate to the nature of the AI technology and risks, to actively collect and review performance data over the system's lifetime."
+  },
+  {
+    "id": "provider-hr.art73-serious-incident-reporting",
+    "title": "Serious incident reporting",
+    "citation": "Art. 73",
+    "category": "PROVIDER_HIGH_RISK",
+    "description": "Report serious incidents to the market surveillance authorities of the Member States concerned, within the timelines set out in Art. 73."
+  },
+  {
+    "id": "deployer-hr.art26-1-use-per-instructions",
+    "title": "Use the system per the provider's instructions",
+    "citation": "Art. 26(1)",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "Take appropriate technical and organisational measures to ensure the system is used in accordance with the instructions for use accompanying it."
+  },
+  {
+    "id": "deployer-hr.art26-2-human-oversight-assignment",
+    "title": "Assign competent, trained human oversight",
+    "citation": "Art. 26(2)",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "Assign human oversight to natural persons who have the necessary competence, training, authority, and support to exercise it effectively."
+  },
+  {
+    "id": "deployer-hr.art26-3-monitoring",
+    "title": "Monitor operation & report risks",
+    "citation": "Art. 26(3)-(5)",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "Monitor the system's operation based on the instructions for use and, where relevant, inform the provider and/or distributor and market surveillance authority when a risk under Art. 79(1) is identified, and suspend use where appropriate."
+  },
+  {
+    "id": "deployer-hr.art26-6-logs",
+    "title": "Keep automatically generated logs",
+    "citation": "Art. 26(6)",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "Keep the logs automatically generated by the system, to the extent under the deployer's control, for a period appropriate to the system's intended purpose (at least 6 months, unless other law provides otherwise)."
+  },
+  {
+    "id": "deployer-hr.art26-7-worker-notice",
+    "title": "Inform workers' representatives & affected workers",
+    "citation": "Art. 26(7)",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "Where the deployer is an employer, inform workers' representatives and affected workers that they will be subject to the use of the high-risk AI system, before putting it into use in the workplace."
+  },
+  {
+    "id": "deployer-hr.art26-11-inform-natural-persons",
+    "title": "Inform natural persons subject to the system",
+    "citation": "Art. 26(11)",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "Where the system is used to make or assist decisions about natural persons, inform those persons that they are subject to its use, and provide the required information about the decision(s) taken."
+  },
+  {
+    "id": "deployer-hr.art27-fria",
+    "title": "Fundamental rights impact assessment",
+    "citation": "Art. 27",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "For deployers that are bodies governed by public law, private operators providing public services, or deployers of the credit/insurance-risk systems named in Annex III, carry out a fundamental rights impact assessment before first use. Mark as not applicable if the deployer doesn't fall into one of these categories."
+  },
+  {
+    "id": "deployer-hr.art49-3-eu-database",
+    "title": "Register use in EU database (public bodies)",
+    "citation": "Art. 49(3)-(4)",
+    "category": "DEPLOYER_HIGH_RISK",
+    "description": "Deployers that are public authorities, or bodies acting on their behalf, must register the use of the system in the relevant section of the EU database before putting it into use. Mark as not applicable for private-sector deployers."
+  }
+]
