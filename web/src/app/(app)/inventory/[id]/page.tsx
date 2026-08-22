@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { getAiSystem } from "@/lib/actions/ai-systems";
 import { isConsultantOrAbove } from "@/lib/authz";
 import { ClassificationPanel } from "@/components/classification-panel";
+import Link from "next/link";
 
 function Row({ label, value }: { label: string; value: string | number | null | undefined }) {
   return (
@@ -24,9 +25,17 @@ export default async function AiSystemDetailPage({
 
   return (
     <div className="max-w-3xl">
-      <div>
-        <p className="text-xs uppercase tracking-wide text-slate-400">{system.organization.name}</p>
-        <h1 className="text-xl font-semibold text-slate-900">{system.name}</h1>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-slate-400">{system.organization.name}</p>
+          <h1 className="text-xl font-semibold text-slate-900">{system.name}</h1>
+        </div>
+        <Link
+          href={`/compliance-plan/${system.id}`}
+          className="shrink-0 rounded-md border border-slate-300 px-3 py-1.5 text-sm hover:bg-slate-50"
+        >
+          Compliance plan →
+        </Link>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">

@@ -7,7 +7,7 @@ import type { ReactNode } from "react";
 
 const modules = [
   { href: "/inventory", label: "1. Inventory & Risk Classification", status: "active" as const },
-  { href: "/compliance-plan", label: "2. Compliance Plan", status: "placeholder" as const },
+  { href: "/compliance-plan", label: "2. Compliance Plan", status: "active" as const },
   { href: "/tracking", label: "3. Tracking", status: "placeholder" as const },
   { href: "/regulatory-watch", label: "4. Regulatory Watch", status: "placeholder" as const },
 ];

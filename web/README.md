@@ -1,9 +1,9 @@
 # SenecAI Governance Hub — web app
 
 Next.js (App Router) + TypeScript + Tailwind + Prisma/PostgreSQL. Currently implements
-**Module 1 — AI Inventory & Risk Classification** of the AI Act module; see
-`../docs/context/ai-act-platform-concept.md` for the full module roadmap and
-`../CLAUDE.md` for product context that always applies to this repo.
+**Module 1 — AI Inventory & Risk Classification** and **Module 2 — Compliance Plan** of the
+AI Act module; see `../docs/context/ai-act-platform-concept.md` for the full module roadmap
+and `../CLAUDE.md` for product context that always applies to this repo.
 
 ## Local setup
 
@@ -34,8 +34,17 @@ Seeded accounts (password `changeme123` for all):
 - **Decision trees as configurable data.** `src/lib/decision-trees/` is a generic
   engine (`engine.ts`) driven entirely by JSON (`trees/*.json`) — no AI-Act-specific logic
   lives in code. This is what the concept note requires so GDPR/DORA/NIS2/CRA can reuse the
-  same engine later. `scripts/validate-decision-trees.ts` structurally validates the trees and
-  smoke-tests example paths (`npx tsx scripts/validate-decision-trees.ts`).
+  same engine later.
+- **Obligation mapping as configurable data.** `src/lib/obligations/catalog.json` lists every
+  obligation with its category (`GENERAL` / `PROVIDER_HIGH_RISK` / `DEPLOYER_HIGH_RISK`) and
+  AI Act citation; `getApplicableObligations()` in `src/lib/obligations/index.ts` is a pure
+  filter over a system's `legalRole`/`riskClassification` — same principle as the decision
+  trees, so the same shape can be reused for GDPR/DORA/NIS2/CRA obligation sets later.
+  `ObligationAssessment` rows (one per system × obligation) double as the gap-assessment
+  status (Feature 2.2) and the roadmap action item (Feature 2.3: owner, due date, status).
+  `scripts/validate-config.ts` structurally validates both the decision trees and the
+  obligation catalog, and smoke-tests example decision-tree paths
+  (`npx tsx scripts/validate-config.ts`).
 - **Everything AI-generated is marked preliminary.** Role and risk classification results
   (`AiSystem.legalRole` / `riskClassification`) are written with
   `*ReviewedByConsultant: false`; only a `CONSULTANT`/`SENECAI_ADMIN` can flip it to `true`
@@ -52,5 +61,12 @@ Seeded accounts (password `changeme123` for all):
 - The high-risk decision tree only distinguishes `HIGH_RISK` vs. `NOT_HIGH_RISK` — it does not
   determine `PROHIBITED` (Art. 5) or the `LIMITED`/`MINIMAL` split. Those enum values exist in
   the schema for the concept note's full taxonomy but have no automated rule behind them yet.
-- Modules 2–4 (Compliance Plan, Tracking, Regulatory Watch) are unbuilt placeholders.
+  Module 2's obligation mapping only has rules for the `HIGH_RISK` branch as a result.
+- The obligation catalog maps provider high-risk and deployer high-risk obligations only —
+  importer/distributor/downstream-provider obligations (Art. 23–25) aren't mapped yet, matching
+  the concept note's Feature 2.1 scope (provider + deployer + general only).
+- Feature 2.1a (auto-generating/templating Annex IV technical documentation) isn't built —
+  Module 2 currently tracks the *obligation* to produce it (with owner/due date/status) but not
+  document generation itself.
+- Modules 3–4 (Tracking, Regulatory Watch) are unbuilt placeholders.
 - No self-serve signup — users are provisioned via `prisma/seed.ts` or direct DB access for now.

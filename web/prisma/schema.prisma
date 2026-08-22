@@ -53,6 +53,7 @@ model User {
   consultantAssignments ConsultantAssignment[] @relation("ConsultantAssignments")
   createdAiSystems      AiSystem[]             @relation("CreatedBy")
   decisionRuns          DecisionRun[]
+  obligationAssessments ObligationAssessment[]
 }
 
 // A SenecAI consultant is granted access to specific client organizations.
@@ -154,7 +155,8 @@ model AiSystem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  decisionRuns DecisionRun[]
+  decisionRuns          DecisionRun[]
+  obligationAssessments ObligationAssessment[]
 }
 
 // Audit trail of every decision-tree run against a system: which tree
@@ -174,4 +176,44 @@ model DecisionRun {
   runByUserId     String
   runBy           User     @relation(fields: [runByUserId], references: [id])
   runAt           DateTime @default(now())
+}
+
+// ── Module 2: Compliance Plan ───────────────────────────────────────────
+// Obligation mapping itself lives as configurable data in
+// web/src/lib/obligations/catalog.json (same principle as decision trees:
+// no regulation-specific logic hardcoded here). This model is the one
+// per-system, per-obligation row a consultant/client edits — it doubles as
+// the gap-assessment status (2.2) and the roadmap action item (2.3), since
+// the concept note has the gap assessment feed directly into the plan.
+
+enum ObligationStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  IMPLEMENTED
+  NOT_APPLICABLE // e.g. FRIA for a system with no applicable deployer category
+}
+
+model ObligationAssessment {
+  id         String   @id @default(cuid())
+  aiSystemId String
+  aiSystem   AiSystem @relation(fields: [aiSystemId], references: [id], onDelete: Cascade)
+
+  // Key into the obligations catalog, e.g. "provider-hr.art9-risk-management".
+  obligationId String
+
+  status ObligationStatus @default(NOT_STARTED)
+
+  // Feature 2.3 — action item fields (deadline, status, owner, review).
+  ownerName String?
+  dueDate   DateTime?
+  note      String?
+
+  reviewedByConsultant Boolean @default(false)
+
+  updatedById String
+  updatedBy   User     @relation(fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([aiSystemId, obligationId])
 }

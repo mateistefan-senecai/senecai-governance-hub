@@ -7,8 +7,18 @@ import {
   currentNode,
   type RunState,
 } from "../src/lib/decision-trees/engine";
+import { obligationCatalog, validateCatalog } from "../src/lib/obligations";
 
 let hadError = false;
+
+const catalogErrors = validateCatalog();
+if (catalogErrors.length) {
+  hadError = true;
+  console.error(`✗ obligations catalog has structural errors:`);
+  for (const e of catalogErrors) console.error(`  - ${e}`);
+} else {
+  console.log(`✓ obligations catalog structurally valid (${obligationCatalog.length} obligations)`);
+}
 
 for (const tree of Object.values(trees)) {
   const errors = validateTree(tree);
