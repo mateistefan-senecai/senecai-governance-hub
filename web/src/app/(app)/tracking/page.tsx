@@ -1,11 +1,14 @@
+import { PageHeader } from "@/components/ui/page-header";
+import { StubScreen } from "@/components/ui/stub-screen";
+
 export default function TrackingPage() {
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-slate-900">Module 3 — Tracking</h1>
-      <p className="mt-2 max-w-2xl text-sm text-slate-600">
-        Not built yet. Progress updates on compliance-plan actions (3.1) and the evidence
-        repository (3.2) come after Module 2 exists to update progress against.
-      </p>
-    </div>
+    <>
+      <PageHeader crumb="Module 3" title="Tracking" />
+      <StubScreen
+        title="Module 3 — Tracking"
+        description="Not built yet. Progress updates on compliance-plan actions (3.1) and the evidence repository (3.2) come after Module 2 exists to update progress against. A consultant will mark status per action point and attach evidence, recalculating the readiness score."
+      />
+    </>
   );
 }
