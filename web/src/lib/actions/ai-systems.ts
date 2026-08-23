@@ -20,7 +20,10 @@ export async function listAiSystems() {
   const orgIds = await getAccessibleOrgIds(session);
   return prisma.aiSystem.findMany({
     where: { organizationId: { in: orgIds } },
-    include: { organization: { select: { name: true } } },
+    include: {
+      organization: { select: { name: true } },
+      obligationAssessments: { select: { obligationId: true, status: true } },
+    },
     orderBy: { createdAt: "desc" },
   });
 }
@@ -175,6 +178,26 @@ export async function markReviewed(
       field === "legalRole"
         ? { legalRoleReviewedByConsultant: true }
         : { riskClassificationReviewedByConsultant: true },
+  });
+
+  revalidatePath(`/inventory/${aiSystemId}`);
+}
+
+/** The design's single "Consultant: approve classification" button flips both fields at once. */
+export async function markBothReviewed(aiSystemId: string) {
+  const session = await requireSession();
+  if (!isConsultantOrAbove(session)) {
+    throw new Error("Only SenecAI consultants can mark a classification as reviewed");
+  }
+  const orgIds = await getAccessibleOrgIds(session);
+  const system = await prisma.aiSystem.findFirst({
+    where: { id: aiSystemId, organizationId: { in: orgIds } },
+  });
+  if (!system) throw new Error("Not authorized for this AI system");
+
+  await prisma.aiSystem.update({
+    where: { id: aiSystemId },
+    data: { legalRoleReviewedByConsultant: true, riskClassificationReviewedByConsultant: true },
   });
 
   revalidatePath(`/inventory/${aiSystemId}`);

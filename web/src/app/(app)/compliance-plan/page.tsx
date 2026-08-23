@@ -1,74 +1,66 @@
-import Link from "next/link";
 import { listAiSystems } from "@/lib/actions/ai-systems";
-
-function Badge({ children, tone }: { children: React.ReactNode; tone: "neutral" | "warn" | "ok" }) {
-  const toneClass =
-    tone === "warn"
-      ? "bg-amber-100 text-amber-800"
-      : tone === "ok"
-        ? "bg-emerald-100 text-emerald-800"
-        : "bg-slate-100 text-slate-600";
-  return <span className={`rounded px-2 py-0.5 text-xs ${toneClass}`}>{children}</span>;
-}
+import { computeSystemReadiness } from "@/lib/obligations/readiness";
+import { PageHeader } from "@/components/ui/page-header";
+import { ClassificationTag } from "@/components/ui/classification-tag";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Button } from "@/components/ui/button";
 
 export default async function CompliancePlanPage() {
   const systems = await listAiSystems();
 
   return (
-    <div>
-      <h1 className="text-xl font-semibold text-slate-900">Module 2 — Compliance Plan</h1>
-      <p className="mt-2 max-w-2xl text-sm text-slate-600">
-        Obligation mapping (2.1), gap assessment (2.2) and the AI Act Readiness roadmap (2.3)
-        for each AI system, based on its Module 1 role and risk classification.
-      </p>
+    <>
+      <PageHeader
+        title="Module 2 — Compliance Plan"
+        subtitle="Obligation mapping (2.1), gap assessment (2.2) and the AI Act readiness roadmap (2.3) for each AI system, based on its Module 1 role and risk classification."
+      />
 
-      <div className="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white">
-        <table className="min-w-full divide-y divide-slate-200 text-sm">
-          <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
-            <tr>
-              <th className="px-4 py-3">System</th>
-              <th className="px-4 py-3">Organization</th>
-              <th className="px-4 py-3">Role</th>
-              <th className="px-4 py-3">Risk</th>
-              <th className="px-4 py-3" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {systems.length === 0 && (
-              <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-slate-400">
-                  No AI systems yet — add one in Module 1.
-                </td>
-              </tr>
-            )}
-            {systems.map((s) => (
-              <tr key={s.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-900">{s.name}</td>
-                <td className="px-4 py-3 text-slate-600">{s.organization.name}</td>
-                <td className="px-4 py-3">
-                  {s.legalRole ? (
-                    <Badge tone="neutral">{s.legalRole.replace(/_/g, " ")}</Badge>
-                  ) : (
-                    <Badge tone="neutral">not classified</Badge>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  {s.riskClassification ? (
-                    <Badge tone="neutral">{s.riskClassification.replace(/_/g, " ")}</Badge>
-                  ) : (
-                    <Badge tone="neutral">not classified</Badge>
-                  )}
-                </td>
-                <td className="px-4 py-3 text-right">
-                  <Link href={`/compliance-plan/${s.id}`} className="text-sm text-slate-900 underline hover:no-underline">
-                    View plan
-                  </Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <div className="p-8">
+        {systems.length === 0 ? (
+          <p className="border-2 border-ink bg-surface p-8 text-center text-[13px] text-muted">
+            No AI systems yet — add one in Module 1.
+          </p>
+        ) : (
+          <div className="overflow-x-auto border-2 border-ink bg-surface">
+            <table className="w-full min-w-[900px] border-collapse text-left">
+              <thead className="bg-ink">
+                <tr>
+                  {["AI system", "Organization", "Legal role", "Risk class", "Readiness", ""].map((h) => (
+                    <th
+                      key={h}
+                      className="px-3.5 py-2.5 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-panel"
+                    >
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-hairline">
+                {systems.map((s) => (
+                  <tr key={s.id} className="hover:bg-row-hover">
+                    <td className="px-3.5 py-3 text-[13px] font-medium text-ink">{s.name}</td>
+                    <td className="px-3.5 py-3 text-[13px] text-body">{s.organization.name}</td>
+                    <td className="px-3.5 py-3">
+                      <ClassificationTag value={s.legalRole} reviewed={s.legalRoleReviewedByConsultant} />
+                    </td>
+                    <td className="px-3.5 py-3">
+                      <ClassificationTag value={s.riskClassification} reviewed={s.riskClassificationReviewedByConsultant} />
+                    </td>
+                    <td className="px-3.5 py-3">
+                      <ProgressBar percent={computeSystemReadiness(s).percent} showLabel />
+                    </td>
+                    <td className="px-3.5 py-3 text-right">
+                      <Button variant="ghost" size="sm" href={`/compliance-plan/${s.id}/obligations`}>
+                        View plan
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }

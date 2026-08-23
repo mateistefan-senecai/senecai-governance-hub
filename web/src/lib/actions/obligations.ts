@@ -3,9 +3,18 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getAccessibleOrgIds, isConsultantOrAbove } from "@/lib/authz";
-import { getApplicableObligations, type Obligation } from "@/lib/obligations";
+import { getApplicableObligations } from "@/lib/obligations";
+import type { ObligationPlanItem } from "@/lib/obligations/types";
 import type { ObligationStatus } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+
+function revalidateSystem(aiSystemId: string) {
+  revalidatePath(`/compliance-plan/${aiSystemId}/obligations`);
+  revalidatePath(`/compliance-plan/${aiSystemId}/gap`);
+  revalidatePath(`/compliance-plan/${aiSystemId}/plan`);
+  revalidatePath("/inventory");
+}
 
 async function requireSession() {
   const session = await auth();
@@ -24,18 +33,6 @@ function dateOrNull(v: FormDataEntryValue | null): Date | null {
   const d = new Date(s);
   return Number.isNaN(d.getTime()) ? null : d;
 }
-
-export type ObligationPlanItem = {
-  obligation: Obligation;
-  assessment: {
-    id: string;
-    status: ObligationStatus;
-    ownerName: string | null;
-    dueDate: Date | null;
-    note: string | null;
-    reviewedByConsultant: boolean;
-  };
-};
 
 /**
  * Feature 2.1/2.2 — the obligation mapping for one system. Lazily creates
@@ -136,7 +133,7 @@ export async function updateObligationAssessment(formData: FormData) {
     },
   });
 
-  revalidatePath(`/compliance-plan/${aiSystemId}`);
+  revalidateSystem(aiSystemId);
 }
 
 export async function markObligationReviewed(formData: FormData) {
@@ -152,5 +149,30 @@ export async function markObligationReviewed(formData: FormData) {
     data: { reviewedByConsultant: true, updatedById: session.user.id },
   });
 
-  revalidatePath(`/compliance-plan/${aiSystemId}`);
+  revalidateSystem(aiSystemId);
+}
+
+/**
+ * The Gap assessment's Yes/Partially/No/N/A control and the Plan screen's
+ * Not started/In progress/Done control both write just the status —
+ * unlike updateObligationAssessment, this never touches ownerName/dueDate/note.
+ */
+export async function setObligationStatus(formData: FormData) {
+  const id = String(formData.get("id"));
+  const aiSystemId = String(formData.get("aiSystemId"));
+  const redirectTo = String(formData.get("redirectTo") ?? `/compliance-plan/${aiSystemId}/obligations`);
+  const { session } = await requireAssessmentAccess(id);
+
+  const statusInput = String(formData.get("status"));
+  if (!VALID_STATUSES.includes(statusInput as ObligationStatus)) {
+    throw new Error(`Invalid status "${statusInput}"`);
+  }
+
+  await prisma.obligationAssessment.update({
+    where: { id },
+    data: { status: statusInput as ObligationStatus, reviewedByConsultant: false, updatedById: session.user.id },
+  });
+
+  revalidateSystem(aiSystemId);
+  redirect(`${redirectTo}?notice=${encodeURIComponent("Status updated.")}`);
 }
