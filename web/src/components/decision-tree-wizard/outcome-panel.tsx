@@ -12,7 +12,7 @@ function noteFor(outcomes: Outcome[]): string {
     return "This escalates immediately to a consultant and blocks the system from being placed on the market.";
   }
   if (outcomes.some((o) => o.value === "HIGH_RISK")) {
-    return "The full high-risk obligation set attaches to this system — see Module 2 for the mapped obligations.";
+    return "The full high-risk obligation set attaches to this system — see Obligations for the mapped obligations.";
   }
   return "Preliminary only, pending consultant review.";
 }

@@ -11,14 +11,15 @@ export default async function CompliancePlanPage() {
   return (
     <>
       <PageHeader
-        title="Module 2 — Compliance Plan"
-        subtitle="Obligation mapping (2.1), gap assessment (2.2) and the AI Act readiness roadmap (2.3) for each AI system, based on its Module 1 role and risk classification."
+        crumb="AI Act / Steps 2–4"
+        title="Obligations, Gap Assessment & Compliance Roadmap"
+        subtitle="Obligation mapping, gap assessment and the AI Act readiness roadmap for each AI system, based on its role and risk classification from Inventory & Classification."
       />
 
       <div className="p-8">
         {systems.length === 0 ? (
           <p className="border-2 border-ink bg-surface p-8 text-center text-[13px] text-muted">
-            No AI systems yet — add one in Module 1.
+            No AI systems yet — add one in Inventory & Classification.
           </p>
         ) : (
           <div className="overflow-x-auto border-2 border-ink bg-surface">

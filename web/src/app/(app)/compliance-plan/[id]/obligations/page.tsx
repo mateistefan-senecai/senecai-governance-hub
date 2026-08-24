@@ -39,7 +39,7 @@ export default async function ObligationsPage({
     <>
       {notice && <NoticeBar message={notice} />}
       <PageHeader
-        crumb="Module 2 / Feature 2.1"
+        crumb="AI Act / Step 2"
         title="Obligations"
         subtitle={`${system.name} — every duty this classification maps, grouped by category.`}
         actions={
@@ -52,10 +52,10 @@ export default async function ObligationsPage({
       <div className="p-8">
         {notClassified && (
           <div className="border-2 border-ink bg-gold-tint p-4 text-[13px] text-gold-deep">
-            This system hasn&rsquo;t completed Module 1 classification yet — obligations can&rsquo;t be mapped
+            This system hasn&rsquo;t completed Inventory & Classification yet — obligations can&rsquo;t be mapped
             without a legal role and risk classification.{" "}
             <Link href={`/inventory/${system.id}`} className="underline">
-              Go to Module 1
+              Go to Inventory & Classification
             </Link>
             .
           </div>
@@ -91,6 +91,14 @@ export default async function ObligationsPage({
               </p>
             </div>
 
+            {items.length === 0 && (
+              <div className="mt-6 border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+                No obligations for this system — its role/risk classification doesn&rsquo;t map any
+                system-specific duty. General obligations (AI literacy, internal governance policy,
+                transparency) still apply at the organization level — see the Overview tab.
+              </div>
+            )}
+
             {CATEGORY_ORDER.map((category: ObligationCategory) => {
               const groupItems = grouped[category];
               if (!groupItems || groupItems.length === 0) return null;
@@ -103,7 +111,12 @@ export default async function ObligationsPage({
                       <div key={obligation.id} className="grid grid-cols-[minmax(0,1fr)_150px] gap-4 px-5 py-4">
                         <div className="min-w-0">
                           <p className="text-[13.5px] font-semibold text-ink">
-                            {obligation.title}{" "}
+                            <Link
+                              href={`/compliance-plan/${system.id}/obligations/${obligation.id}`}
+                              className="hover:underline"
+                            >
+                              {obligation.title}
+                            </Link>{" "}
                             <span className="font-narrow text-[10.5px] font-normal tracking-citation text-gold-hover">
                               {obligation.citation}
                             </span>

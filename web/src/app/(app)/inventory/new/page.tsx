@@ -22,7 +22,7 @@ export default async function NewAiSystemPage() {
   return (
     <>
       <PageHeader
-        crumb="Module 1 / Feature 1.1"
+        crumb="AI Act / Step 1"
         title="New AI system"
         subtitle="Fields mirror the client-facing intake questionnaire. Only the system name is required — everything else can be filled in later."
       />

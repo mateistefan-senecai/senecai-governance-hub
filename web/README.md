@@ -45,6 +45,23 @@ Seeded accounts (password `changeme123` for all):
   `scripts/validate-config.ts` structurally validates both the decision trees and the
   obligation catalog, and smoke-tests example decision-tree paths
   (`npx tsx scripts/validate-config.ts`).
+- **GENERAL obligations are org-level, not per-system.** `getApplicableObligations()` only
+  returns role/risk-gated (`PROVIDER_HIGH_RISK`/`DEPLOYER_HIGH_RISK`) items now;
+  `getGeneralObligations()` returns the `GENERAL` catalog items once, tracked per organization
+  via `OrganizationObligationAssessment` and surfaced on `/overview` rather than duplicated
+  across every AI system's own screens.
+- **Obligation-level PM sub-hub.** Each obligation's own checklist (`/compliance-plan/[id]/
+  obligations/[obligationId]`) is driven by `src/lib/obligations/pm-steps.json` (a `PM_STEPS`
+  map keyed by obligation id) — same configurable-data principle as the catalog and decision
+  trees. Only two example templates are populated; any obligation without one falls back to
+  the plain status control. Step completion (`ObligationPmStepCompletion`) rolls the
+  obligation's own `status` up automatically.
+- **Cross-regulation shell.** `/overview` aggregates AI Act readiness (per system and
+  org-wide) plus each org's general obligations; the persistent top bar (`nav-shell.tsx`)
+  covers Overview/AI Act/GDPR/NIS2/DORA/CRA, with only AI Act built — the rest are "Coming
+  soon" stubs. `OrganizationRegulationScope` (set via `/settings/regulations`) records which
+  regulations apply per org; the actual sector/size-based scoping questionnaire is still to be
+  supplied, so today it's a direct checklist.
 - **Everything AI-generated is marked preliminary.** Role and risk classification results
   (`AiSystem.legalRole` / `riskClassification`) are written with
   `*ReviewedByConsultant: false`; only a `CONSULTANT`/`SENECAI_ADMIN` can flip it to `true`

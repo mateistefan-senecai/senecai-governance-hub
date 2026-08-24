@@ -46,7 +46,7 @@ export default async function GapAssessmentPage({
     <>
       {notice && <NoticeBar message={notice} />}
       <PageHeader
-        crumb="Module 2 / Feature 2.2"
+        crumb="AI Act / Step 3"
         title="Gap assessment"
         subtitle={`${system.name} — answer each obligation's gap question; the score updates live.`}
         actions={
@@ -59,9 +59,9 @@ export default async function GapAssessmentPage({
       <div className="p-8">
         {notClassified && (
           <div className="border-2 border-ink bg-gold-tint p-4 text-[13px] text-gold-deep">
-            This system hasn&rsquo;t completed Module 1 classification yet.{" "}
+            This system hasn&rsquo;t completed Inventory & Classification yet.{" "}
             <Link href={`/inventory/${system.id}`} className="underline">
-              Go to Module 1
+              Go to Inventory & Classification
             </Link>
             .
           </div>
@@ -77,7 +77,15 @@ export default async function GapAssessmentPage({
           </div>
         )}
 
-        {!notClassified && !prohibited && !outOfScope && (
+        {!notClassified && !prohibited && !outOfScope && items.length === 0 && (
+          <div className="border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+            No obligations for this system — its role/risk classification doesn&rsquo;t map any
+            system-specific duty. General obligations still apply at the organization level — see the
+            Overview tab.
+          </div>
+        )}
+
+        {!notClassified && !prohibited && !outOfScope && items.length > 0 && (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start">
             <div>
               {CATEGORY_ORDER.map((category: ObligationCategory) => {
@@ -99,9 +107,17 @@ export default async function GapAssessmentPage({
                     <div className="divide-y divide-hairline border border-t-0 border-ink bg-surface">
                       {groupItems.map(({ obligation, assessment }) => (
                         <div key={obligation.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-                          <p className="min-w-0 max-w-[60ch] text-[13px] text-body">
-                            {obligation.gapQuestion ?? obligation.description}
-                          </p>
+                          <div className="min-w-0 max-w-[60ch]">
+                            <Link
+                              href={`/compliance-plan/${system.id}/obligations/${obligation.id}`}
+                              className="text-[12px] font-semibold text-ink hover:underline"
+                            >
+                              {obligation.title}
+                            </Link>
+                            <p className="mt-0.5 text-[13px] text-body">
+                              {obligation.gapQuestion ?? obligation.description}
+                            </p>
+                          </div>
                           <StatusSegmentedForm
                             action={setObligationStatus}
                             hiddenFields={{ id: assessment.id, aiSystemId: system.id, redirectTo }}

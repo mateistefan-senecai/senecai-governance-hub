@@ -105,7 +105,7 @@ export default async function AiSystemDetailPage({
                 : "Complete classification to see the obligations that apply to this system."}
             </p>
             <Button variant="ghost" href={`/compliance-plan/${system.id}/obligations`} className="mt-3 w-full justify-start">
-              Module 2 — Obligations →
+              Obligations →
             </Button>
           </div>
 
