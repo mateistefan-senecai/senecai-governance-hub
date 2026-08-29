@@ -48,7 +48,7 @@ export default async function CompliancePlanReadinessPage({
     <>
       {notice && <NoticeBar message={notice} />}
       <PageHeader
-        crumb="Module 2 / Feature 2.3"
+        crumb="AI Act / Step 4"
         title="Plan & Readiness"
         subtitle={`${system.name} — every open gap as an action point with an owner, a deadline, and an expert-review flag.`}
         actions={
@@ -61,9 +61,9 @@ export default async function CompliancePlanReadinessPage({
       <div className="p-8">
         {notClassified && (
           <div className="border-2 border-ink bg-gold-tint p-4 text-[13px] text-gold-deep">
-            This system hasn&rsquo;t completed Module 1 classification yet.{" "}
+            This system hasn&rsquo;t completed Inventory & Classification yet.{" "}
             <Link href={`/inventory/${system.id}`} className="underline">
-              Go to Module 1
+              Go to Inventory & Classification
             </Link>
             .
           </div>
@@ -79,7 +79,15 @@ export default async function CompliancePlanReadinessPage({
           </div>
         )}
 
-        {!notClassified && !prohibited && !outOfScope && (
+        {!notClassified && !prohibited && !outOfScope && items.length === 0 && (
+          <div className="border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+            No obligations for this system — its role/risk classification doesn&rsquo;t map any
+            system-specific duty. General obligations still apply at the organization level — see the
+            Overview tab.
+          </div>
+        )}
+
+        {!notClassified && !prohibited && !outOfScope && items.length > 0 && (
           <>
             <div className="grid grid-cols-1 border-2 border-ink bg-surface md:grid-cols-[minmax(240px,0.7fr)_minmax(0,1.6fr)]">
               <div className="border-b-2 border-ink p-5 md:border-b-0 md:border-r-2">
@@ -122,7 +130,7 @@ export default async function CompliancePlanReadinessPage({
                 </div>
                 <p className="mt-4 text-[12.5px] leading-relaxed text-muted">
                   Each open gap becomes an action point with a deadline, an owner, and an expert-review flag. The
-                  score recalculates as action points complete — the same figure Module 3 will later update from
+                  score recalculates as action points complete — the same figure Tracking will later update from
                   progress marks and attached evidence.
                 </p>
               </div>

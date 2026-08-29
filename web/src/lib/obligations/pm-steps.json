@@ -1,0 +1,14 @@
+{
+  "provider-hr.art9-risk-management": [
+    { "id": "brainstorm-risks", "label": "Brainstorm risks" },
+    { "id": "assess-risks", "label": "Assess risks" },
+    { "id": "define-mitigation", "label": "Define mitigation" },
+    { "id": "review-signoff", "label": "Review & sign-off" }
+  ],
+  "provider-hr.art14-human-oversight": [
+    { "id": "identify-oversight-points", "label": "Identify human oversight points" },
+    { "id": "design-hmi", "label": "Design human-machine interface controls" },
+    { "id": "train-overseers", "label": "Train the people who will exercise oversight" },
+    { "id": "test-intervention", "label": "Test the stop/intervention capability" }
+  ]
+}

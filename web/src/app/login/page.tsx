@@ -6,7 +6,7 @@ import { Suspense, useState } from "react";
 
 function LoginForm() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") ?? "/inventory";
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/overview";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 

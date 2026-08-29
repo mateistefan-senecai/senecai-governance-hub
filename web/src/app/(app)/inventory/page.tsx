@@ -35,7 +35,8 @@ export default async function InventoryPage() {
   return (
     <>
       <PageHeader
-        title="Module 1 — AI Inventory & Risk Classification"
+        crumb="AI Act / Step 1"
+        title="Inventory & Classification"
         subtitle="One row per AI system. Role and risk classification are preliminary until a consultant reviews them."
         actions={
           <Button variant="primary" href="/inventory/new">

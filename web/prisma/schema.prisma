@@ -30,6 +30,8 @@ model Organization {
   users                 User[]
   aiSystems             AiSystem[]
   consultantAssignments ConsultantAssignment[] @relation("ClientOrgAssignments")
+  regulationScopes             OrganizationRegulationScope[]
+  generalObligationAssessments OrganizationObligationAssessment[]
 }
 
 enum UserRole {
@@ -54,6 +56,9 @@ model User {
   createdAiSystems      AiSystem[]             @relation("CreatedBy")
   decisionRuns          DecisionRun[]
   obligationAssessments ObligationAssessment[]
+  regulationScopeUpdates      OrganizationRegulationScope[]      @relation("RegulationScopeUpdatedBy")
+  orgObligationAssessments    OrganizationObligationAssessment[] @relation("OrgObligationUpdatedBy")
+  pmStepCompletions           ObligationPmStepCompletion[]       @relation("PmStepUpdatedBy")
 }
 
 // A SenecAI consultant is granted access to specific client organizations.
@@ -215,5 +220,88 @@ model ObligationAssessment {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  pmStepCompletions ObligationPmStepCompletion[]
+
   @@unique([aiSystemId, obligationId])
+}
+
+// ── Cross-regulation scope (Overview / round-2 spec Section 6) ────────────
+// Which regulations (beyond AI Act) apply to a given client organization.
+// Captured by a simple org-level intake; the actual scoping questionnaire
+// is still to be supplied — this only stores the resulting yes/no per
+// regulation so Overview and the top nav bar can reflect it.
+
+enum RegulationCode {
+  AI_ACT
+  GDPR
+  NIS2
+  DORA
+  CRA
+}
+
+model OrganizationRegulationScope {
+  id             String         @id @default(cuid())
+  organizationId String
+  organization   Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  regulation     RegulationCode
+  applicable     Boolean        @default(true)
+
+  updatedById String
+  updatedBy   User     @relation("RegulationScopeUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([organizationId, regulation])
+}
+
+// ── General (non-system-tied) AI Act obligations (round-2 spec Section 5) ──
+// GENERAL catalog obligations (AI literacy, internal governance policy,
+// transparency) apply to the organization as a whole, not to any one AI
+// system, so they get their own assessment row instead of being duplicated
+// per system. Same shape as ObligationAssessment by design.
+
+model OrganizationObligationAssessment {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Key into the obligations catalog, category === GENERAL.
+  obligationId String
+
+  status ObligationStatus @default(NOT_STARTED)
+
+  ownerName String?
+  dueDate   DateTime?
+  note      String?
+
+  reviewedByConsultant Boolean @default(false)
+
+  updatedById String
+  updatedBy   User     @relation("OrgObligationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([organizationId, obligationId])
+}
+
+// ── Obligation-level PM sub-hub (round-2 spec Section 4) ───────────────────
+// The step templates themselves are configurable data
+// (src/lib/obligations/pm-steps.json), not modeled here — this table only
+// records, per system-obligation assessment, whether each template step is
+// done. The assessment's own `status` still rolls up from step completion.
+
+model ObligationPmStepCompletion {
+  id                     String               @id @default(cuid())
+  obligationAssessmentId String
+  obligationAssessment   ObligationAssessment @relation(fields: [obligationAssessmentId], references: [id], onDelete: Cascade)
+
+  // Key into the PM_STEPS template for this obligation.
+  stepId String
+  done   Boolean @default(false)
+
+  updatedById String
+  updatedBy   User     @relation("PmStepUpdatedBy", fields: [updatedById], references: [id])
+  updatedAt   DateTime @updatedAt
+
+  @@unique([obligationAssessmentId, stepId])
 }
