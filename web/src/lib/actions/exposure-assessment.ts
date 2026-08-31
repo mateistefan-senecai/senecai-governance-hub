@@ -3,7 +3,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getAccessibleOrgIds } from "@/lib/authz";
-import type { Prisma } from "@/generated/prisma/client";
+import { Prisma } from "@/generated/prisma/client";
 import type { RegulationCode } from "@/generated/prisma/enums";
 import type { AssessmentResult, RegulationKey } from "@/components/regulatory-exposure/types";
 import { revalidatePath } from "next/cache";
@@ -29,7 +29,17 @@ export async function getExposureAssessment(organizationId: string): Promise<Ass
   const orgIds = await getAccessibleOrgIds(session);
   if (!orgIds.includes(organizationId)) throw new Error("Not authorized for this organization");
 
-  const row = await prisma.organizationExposureAssessment.findUnique({ where: { organizationId } });
+  // Overview calls this for every accessible org on every load, so a
+  // database whose migrations haven't caught up to this table yet must not
+  // take the whole page down with it — degrade to "not yet assessed"
+  // instead. Once the migration lands this stops triggering.
+  let row;
+  try {
+    row = await prisma.organizationExposureAssessment.findUnique({ where: { organizationId } });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2021") return null;
+    throw e;
+  }
   if (!row) return null;
 
   return {
