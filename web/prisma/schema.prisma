@@ -27,11 +27,12 @@ model Organization {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  users                 User[]
-  aiSystems             AiSystem[]
-  consultantAssignments ConsultantAssignment[] @relation("ClientOrgAssignments")
+  users                        User[]
+  aiSystems                    AiSystem[]
+  consultantAssignments        ConsultantAssignment[]             @relation("ClientOrgAssignments")
   regulationScopes             OrganizationRegulationScope[]
   generalObligationAssessments OrganizationObligationAssessment[]
+  exposureAssessment           OrganizationExposureAssessment?
 }
 
 enum UserRole {
@@ -52,13 +53,14 @@ model User {
   createdAt      DateTime     @default(now())
   updatedAt      DateTime     @updatedAt
 
-  consultantAssignments ConsultantAssignment[] @relation("ConsultantAssignments")
-  createdAiSystems      AiSystem[]             @relation("CreatedBy")
-  decisionRuns          DecisionRun[]
-  obligationAssessments ObligationAssessment[]
-  regulationScopeUpdates      OrganizationRegulationScope[]      @relation("RegulationScopeUpdatedBy")
-  orgObligationAssessments    OrganizationObligationAssessment[] @relation("OrgObligationUpdatedBy")
-  pmStepCompletions           ObligationPmStepCompletion[]       @relation("PmStepUpdatedBy")
+  consultantAssignments        ConsultantAssignment[]             @relation("ConsultantAssignments")
+  createdAiSystems             AiSystem[]                         @relation("CreatedBy")
+  decisionRuns                 DecisionRun[]
+  obligationAssessments        ObligationAssessment[]
+  regulationScopeUpdates       OrganizationRegulationScope[]      @relation("RegulationScopeUpdatedBy")
+  orgObligationAssessments     OrganizationObligationAssessment[] @relation("OrgObligationUpdatedBy")
+  pmStepCompletions            ObligationPmStepCompletion[]       @relation("PmStepUpdatedBy")
+  exposureAssessmentsCompleted OrganizationExposureAssessment[]
 }
 
 // A SenecAI consultant is granted access to specific client organizations.
@@ -227,9 +229,10 @@ model ObligationAssessment {
 
 // ── Cross-regulation scope (Overview / round-2 spec Section 6) ────────────
 // Which regulations (beyond AI Act) apply to a given client organization.
-// Captured by a simple org-level intake; the actual scoping questionnaire
-// is still to be supplied — this only stores the resulting yes/no per
-// regulation so Overview and the top nav bar can reflect it.
+// Seeded from the Regulatory Exposure assessment below when one exists
+// (OrganizationExposureAssessment.results -> applicable=false only for a
+// not_applicable read); always hand-editable afterward as an override,
+// e.g. by a consultant who knows more than the self-reported questionnaire.
 
 enum RegulationCode {
   AI_ACT
@@ -252,6 +255,31 @@ model OrganizationRegulationScope {
   updatedAt   DateTime @updatedAt
 
   @@unique([organizationId, regulation])
+}
+
+// ── Regulatory Exposure assessment (Overview onboarding step) ─────────────
+// The self-reported triage questionnaire (org profile, data handling, AI
+// use, products, critical services, financial activity — see
+// src/components/regulatory-exposure/) that a client takes once per
+// organization to get a first read on which of the five frameworks apply.
+// `answers`/`results` are stored verbatim (Answers / RegulationResult[] from
+// src/components/regulatory-exposure/types.ts) so the full triage — reasons,
+// score, timing — can be re-rendered later, not just the pass/fail. One row
+// per org: retaking the assessment overwrites it, same as
+// OrganizationRegulationScope and the other org-level singletons.
+model OrganizationExposureAssessment {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  completedAt DateTime
+  answers     Json
+  results     Json
+
+  completedById String
+  completedBy   User     @relation(fields: [completedById], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 // ── General (non-system-tied) AI Act obligations (round-2 spec Section 5) ──

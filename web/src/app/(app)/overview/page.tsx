@@ -1,10 +1,13 @@
 import { getAccessibleOrganizations, listAiSystems } from "@/lib/actions/ai-systems";
 import { getRegulationScope } from "@/lib/actions/regulation-scope";
+import { getExposureAssessment } from "@/lib/actions/exposure-assessment";
 import { REGULATIONS } from "@/lib/regulations";
 import { getOrgObligationPlan, setOrgObligationStatus } from "@/lib/actions/org-obligations";
 import { computeSystemReadiness } from "@/lib/obligations/readiness";
 import { computeComplianceScore } from "@/lib/obligations/score";
 import type { RegulationCode } from "@/generated/prisma/enums";
+import type { AssessmentResult } from "@/components/regulatory-exposure/types";
+import { ExposureBadges } from "@/components/regulatory-exposure";
 import { PageHeader } from "@/components/ui/page-header";
 import { PanelHeading } from "@/components/ui/panel";
 import { ProgressBar } from "@/components/ui/progress-bar";
@@ -53,9 +56,10 @@ export default async function OverviewPage({
 
   const orgSections = await Promise.all(
     organizations.map(async (org) => {
-      const [scope, { items: generalItems }] = await Promise.all([
+      const [scope, { items: generalItems }, exposureAssessment] = await Promise.all([
         getRegulationScope(org.id),
         getOrgObligationPlan(org.id),
+        getExposureAssessment(org.id),
       ]);
       const orgSystems = systemsByOrg.get(org.id) ?? [];
       const systemPercents = orgSystems
@@ -64,7 +68,7 @@ export default async function OverviewPage({
       const generalScore = computeComplianceScore(generalItems.map((i) => ({ status: i.assessment.status })));
       const orgPercents = generalScore.percent !== null ? [...systemPercents, generalScore.percent] : systemPercents;
 
-      return { org, scope, generalItems, orgSystems, aiActPercent: average(orgPercents) };
+      return { org, scope, generalItems, orgSystems, exposureAssessment, aiActPercent: average(orgPercents) };
     }),
   );
 
@@ -140,7 +144,7 @@ export default async function OverviewPage({
           </div>
         </div>
 
-        {orgSections.map(({ org, orgSystems, generalItems }) => (
+        {orgSections.map(({ org, orgSystems, generalItems, exposureAssessment }) => (
           <div key={org.id} className="mt-8">
             <PanelHeading
               title={org.name}
@@ -151,6 +155,7 @@ export default async function OverviewPage({
                 </span>
               }
             />
+            <ExposureNudge organizationId={org.id} assessment={exposureAssessment} />
             <div className="mt-3 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
               {orgSystems.length === 0 ? (
                 <p className="p-5 text-[13px] text-muted">No AI systems yet for this organization.</p>
@@ -249,5 +254,57 @@ export default async function OverviewPage({
         </p>
       </div>
     </>
+  );
+}
+
+/**
+ * "First action when accessing the platform" (concept note) — a prominent
+ * card inviting the org to take the Regulatory Exposure assessment if it
+ * hasn't yet, or a compact completed summary + retake link once it has.
+ * A nudge, not a gate: nothing else on the platform is blocked by this.
+ */
+function ExposureNudge({
+  organizationId,
+  assessment,
+}: {
+  organizationId: string;
+  assessment: AssessmentResult | null;
+}) {
+  const href = `/overview/assessment/${organizationId}`;
+
+  if (!assessment) {
+    return (
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-transparent bg-gold-tint p-4">
+        <div>
+          <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-gold-deep">
+            Suggested first step
+          </p>
+          <p className="mt-1 text-[13.5px] font-medium text-ink">Take the regulatory exposure assessment</p>
+          <p className="mt-0.5 max-w-[62ch] text-[12.5px] text-gold-deep">
+            A 20-question triage read on which of AI Act, GDPR, NIS2, DORA and CRA likely apply — the fastest way
+            to see the full picture before diving into Inventory & Classification.
+          </p>
+        </div>
+        <Button variant="primary" href={href} className="shrink-0">
+          Start assessment →
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
+      <div className="min-w-0">
+        <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-label">
+          Regulatory exposure — completed {new Date(assessment.completedAt).toLocaleDateString()}
+        </p>
+        <div className="mt-1.5">
+          <ExposureBadges results={assessment.results} />
+        </div>
+      </div>
+      <Button variant="ghost" size="sm" href={href} className="shrink-0">
+        Retake
+      </Button>
+    </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import type { TreeNode } from "@/lib/decision-trees/types";
-import { OptionRow } from "./option-row";
+import { OptionRow } from "@/components/ui/option-row";
 
 export function QuestionBody({
   node,

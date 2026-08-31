@@ -24,10 +24,11 @@ const REGULATION_HELP: Record<RegulationCode, string> = {
 };
 
 /**
- * Round-2 spec Section 6 — org-level regulation-scoping intake. This is
- * intentionally a direct checklist, not a derivation questionnaire: the
- * actual "which regulations apply given sector/size/etc." scoping logic
- * still needs to be supplied, so this only stores the resulting yes/no.
+ * Round-2 spec Section 6 — org-level regulation-scoping intake. A direct
+ * hand-editable checklist: seeded from the Overview Regulatory Exposure
+ * assessment (src/components/regulatory-exposure/) when one has been taken
+ * for that org, but always overridable here — a consultant may know more
+ * than a self-reported questionnaire can capture.
  */
 export default async function RegulationScopePage({
   searchParams,
@@ -44,7 +45,7 @@ export default async function RegulationScopePage({
       <PageHeader
         crumb="Overview"
         title="Which regulations apply"
-        subtitle="Determines which regulation tabs and the Overview dashboard treat as in scope for each organization. A full scoping questionnaire (sector, size, financial-sector status, etc.) is still to come — for now, set this directly."
+        subtitle="Determines which regulation tabs and the Overview dashboard treat as in scope for each organization. Seeded by the Regulatory Exposure assessment on Overview when one exists — editable directly here at any time."
       />
 
       <div className="p-8">
