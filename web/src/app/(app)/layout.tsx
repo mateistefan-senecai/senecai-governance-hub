@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { isConsultantOrAbove } from "@/lib/authz";
+import { UserRole } from "@/generated/prisma/enums";
 import { NavShell } from "@/components/nav-shell";
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
@@ -20,6 +21,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       email={session.user.email ?? "—"}
       roleLabel={session.user.role.replace(/_/g, " ")}
       canReview={isConsultantOrAbove(session)}
+      isSenecaiAdmin={session.user.role === UserRole.SENECAI_ADMIN}
     >
       {children}
     </NavShell>

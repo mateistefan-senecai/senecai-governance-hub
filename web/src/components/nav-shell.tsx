@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { Tag } from "@/components/ui/tag";
+import { LoadDemoDataButton } from "@/components/load-demo-data-button";
 
 // ── Top bar: cross-regulation primary navigation ───────────────────────────
 
@@ -136,12 +137,14 @@ export function NavShell({
   email,
   roleLabel,
   canReview,
+  isSenecaiAdmin,
 }: {
   children: ReactNode;
   orgName: string;
   email: string;
   roleLabel: string;
   canReview: boolean;
+  isSenecaiAdmin: boolean;
 }) {
   const pathname = usePathname();
   const showAiActNav = isAiActRoute(pathname);
@@ -211,6 +214,7 @@ export function NavShell({
             >
               Sign out
             </button>
+            {isSenecaiAdmin && <LoadDemoDataButton />}
           </div>
         </aside>
         <main className="flex min-w-0 flex-1 flex-col">{children}</main>
