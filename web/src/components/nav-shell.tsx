@@ -36,28 +36,40 @@ function buildTopBar(pathname: string): TopBarEntry[] {
 function TopBar({ pathname }: { pathname: string }) {
   const entries = buildTopBar(pathname);
   return (
-    <div className="flex h-11 shrink-0 items-stretch bg-ink shadow-sm">
-      {entries.map((entry) => (
-        <Link
-          key={entry.href}
-          href={entry.href}
-          className={`flex items-center gap-2 border-r border-white/10 px-5 font-narrow text-[11.5px] font-semibold uppercase tracking-micro-wide transition-colors ${
-            entry.active ? "bg-gold text-white" : "text-panel/90 hover:bg-white/5"
-          }`}
-        >
-          {entry.label}
-          {entry.comingSoon && (
-            <span
-              className={`rounded-full border px-1.5 py-0.5 text-[8.5px] normal-case tracking-normal ${
-                entry.active ? "border-white/40 text-white" : "border-white/15 text-white/50"
-              }`}
-            >
-              Coming soon
-            </span>
-          )}
-        </Link>
-      ))}
-    </div>
+    <header className="flex h-16 shrink-0 items-stretch bg-ink shadow-sm">
+      <div className="flex w-sidebar shrink-0 items-center gap-3 border-r border-white/10 px-5">
+        {/* eslint-disable-next-line @next/next/no-img-element -- external brand asset, next/image remote-pattern config not worth it here */}
+        <img src="https://senecai.eu/logo_white.png" alt="SenecAI" className="h-6 w-auto shrink-0" />
+        <div className="min-w-0 leading-tight">
+          <p className="font-narrow text-[12px] font-semibold uppercase tracking-micro-wide text-gold-light">
+            SenecAI
+          </p>
+          <p className="text-[9.5px] leading-[1.25] text-white/50">Compliance Governance Hub</p>
+        </div>
+      </div>
+      <div className="flex flex-1 items-stretch overflow-x-auto">
+        {entries.map((entry) => (
+          <Link
+            key={entry.href}
+            href={entry.href}
+            className={`flex items-center gap-2 border-r border-white/10 px-5 font-narrow text-[11.5px] font-semibold uppercase tracking-micro-wide transition-colors ${
+              entry.active ? "bg-gold text-white" : "text-panel/90 hover:bg-white/5"
+            }`}
+          >
+            {entry.label}
+            {entry.comingSoon && (
+              <span
+                className={`rounded-full border px-1.5 py-0.5 text-[8.5px] normal-case tracking-normal ${
+                  entry.active ? "border-white/40 text-white" : "border-white/15 text-white/50"
+                }`}
+              >
+                Coming soon
+              </span>
+            )}
+          </Link>
+        ))}
+      </div>
+    </header>
   );
 }
 
@@ -155,14 +167,11 @@ export function NavShell({
       <TopBar pathname={pathname} />
       <div className="flex flex-1">
         <aside className="flex w-sidebar shrink-0 flex-col border-r border-hairline bg-panel">
-          <div className="bg-ink px-5 pb-5 pt-[22px]">
-            {/* eslint-disable-next-line @next/next/no-img-element -- external brand asset, next/image remote-pattern config not worth it here */}
-            <img src="https://senecai.eu/logo_white.png" alt="SenecAI" className="h-[26px] w-auto" />
-            <p className="mt-3.5 font-narrow text-[11px] font-semibold uppercase tracking-micro-wide text-gold-light">
-              SenecAI Compliance Governance Hub
+          <div className="border-b border-hairline px-5 py-4">
+            <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
+              Organization
             </p>
-            <p className="mt-1 text-[11px] italic text-white/50">One-stop shop for EU Digital Compliance</p>
-            <p className="mt-2.5 text-xs text-white/50">{orgName}</p>
+            <p className="mt-1 truncate text-[13px] font-medium text-ink">{orgName}</p>
           </div>
 
           {showAiActNav && (
