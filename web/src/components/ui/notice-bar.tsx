@@ -21,7 +21,7 @@ export function NoticeBar({ message, onDismiss }: { message: string; onDismiss?:
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b-2 border-ink bg-gold-tint px-8 py-2.5">
+    <div className="flex items-center justify-between gap-4 border-b border-hairline bg-gold-tint px-8 py-2.5 shadow-sm">
       <p className="text-[13px] text-gold-deep">
         <span className="mr-2 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide">Notice</span>
         {message}

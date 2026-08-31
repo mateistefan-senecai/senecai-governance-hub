@@ -32,7 +32,7 @@ export function OutcomePanel({
     <div>
       <div className="grid grid-cols-2 gap-4">
         {completed.map((run) => (
-          <div key={run.treeId} className="border-2 border-ink p-4">
+          <div key={run.treeId} className="rounded-xl border border-hairline bg-white p-4 shadow-sm">
             <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
               {RESULT_LABEL[run.resultField]}
             </p>
@@ -44,7 +44,7 @@ export function OutcomePanel({
         ))}
       </div>
 
-      <div className="mt-4 border-2 border-ink bg-gold-tint p-4 text-[13px] text-gold-deep">
+      <div className="mt-4 rounded-xl border border-transparent bg-gold-tint p-4 text-[13px] text-gold-deep">
         {noteFor(completed.map((r) => r.outcome))}
       </div>
 

@@ -34,7 +34,7 @@ function Field({
         id={name}
         name={name}
         type={type}
-        className="mt-1.5 block w-full rounded-none border-2 border-ink px-2.5 py-2 text-[13px] text-ink focus:outline-none"
+        className="mt-1.5 block w-full rounded-lg border border-hairline px-2.5 py-2 text-[13px] text-ink"
       />
       {help && <p className="mt-1 text-[11px] text-muted">{help}</p>}
     </div>
@@ -63,7 +63,7 @@ function TextArea({
         id={name}
         name={name}
         rows={2}
-        className="mt-1.5 block w-full rounded-none border-2 border-ink px-2.5 py-2 text-[13px] text-ink focus:outline-none"
+        className="mt-1.5 block w-full rounded-lg border border-hairline px-2.5 py-2 text-[13px] text-ink"
       />
       {help && <p className="mt-1 text-[11px] text-muted">{help}</p>}
     </div>
@@ -94,7 +94,7 @@ function Select({
         id={name}
         name={name}
         defaultValue=""
-        className="mt-1.5 block w-full rounded-none border-2 border-ink bg-white px-2.5 py-2 text-[13px] text-ink focus:outline-none"
+        className="mt-1.5 block w-full rounded-lg border border-hairline bg-white px-2.5 py-2 text-[13px] text-ink"
       >
         <option value="">—</option>
         {options.map((o) => (
@@ -113,14 +113,14 @@ export function IntakeForm({ orgs }: { orgs: { id: string; name: string }[] }) {
   const showOrgPicker = orgs.length > 1;
 
   return (
-    <div className="mx-auto max-w-[1040px] border-2 border-ink bg-surface">
-      <div className="grid grid-cols-3 border-b-2 border-ink">
+    <div className="mx-auto max-w-[1040px] overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
+      <div className="grid grid-cols-3 border-b border-hairline">
         {STEPS.map((s, i) => (
           <button
             key={s.label}
             type="button"
             onClick={() => setActiveStep(i)}
-            className={`border-r-2 border-ink px-4 py-3 text-left last:border-r-0 ${
+            className={`border-r border-hairline px-4 py-3 text-left transition-colors last:border-r-0 ${
               i === activeStep ? "bg-ink text-panel" : "bg-surface text-ink hover:bg-row-hover"
             }`}
           >
@@ -146,7 +146,7 @@ export function IntakeForm({ orgs }: { orgs: { id: string; name: string }[] }) {
               id="organizationId"
               name="organizationId"
               required
-              className="mt-1.5 block w-full rounded-none border-2 border-ink bg-white px-2.5 py-2 text-[13px] text-ink"
+              className="mt-1.5 block w-full rounded-lg border border-hairline bg-white px-2.5 py-2 text-[13px] text-ink"
             >
               {orgs.map((o) => (
                 <option key={o.id} value={o.id}>

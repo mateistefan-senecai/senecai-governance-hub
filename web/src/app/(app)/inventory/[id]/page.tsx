@@ -57,8 +57,8 @@ export default async function AiSystemDetailPage({
       />
 
       <div className="grid grid-cols-1 gap-6 p-8 lg:grid-cols-[minmax(0,1.5fr)_minmax(300px,0.85fr)] lg:items-start">
-        <div className="border-2 border-ink bg-surface">
-          <div className="flex items-center justify-between border-b-2 border-ink px-5 py-3">
+        <div className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
+          <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
             <div>
               <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-gold-hover">
                 Feature 1.1 — inventory record
@@ -93,7 +93,7 @@ export default async function AiSystemDetailPage({
             canReview={canReview}
           />
 
-          <div className="border-2 border-ink bg-panel p-4">
+          <div className="rounded-xl border border-hairline bg-panel p-4 shadow-sm">
             <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
               Next step
             </p>
@@ -110,7 +110,7 @@ export default async function AiSystemDetailPage({
           </div>
 
           {system.decisionRuns.length > 0 && (
-            <div className="border-2 border-ink bg-surface p-4">
+            <div className="rounded-xl border border-hairline bg-surface p-4 shadow-sm">
               <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
                 Classification run history
               </p>

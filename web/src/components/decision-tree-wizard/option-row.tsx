@@ -23,7 +23,7 @@ export function OptionRow({
       }`}
     >
       <span
-        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center border-2 border-ink text-[12px] font-bold ${
+        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-ink text-[12px] font-bold ${
           selected ? "bg-ink text-white" : "bg-white text-transparent"
         }`}
       >

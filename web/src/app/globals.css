@@ -1,30 +1,33 @@
 @import "tailwindcss";
 
 @theme {
-  /* Color — senecai.eu gold/cream/black, "Modernist" system */
-  --color-ink: #16130f;
-  --color-ink-hover: #3e3930;
-  --color-body: #3e3930;
-  --color-muted: #6e6656;
-  --color-label: #8b8375;
-  --color-disabled: #9c9486;
-  --color-ground: #f2eee4;
-  --color-panel: #f7f4ec;
+  /* Color — "Elevated Soft UI" system: warm-gray neutrals + a single blue
+     accent, replacing the original senecai.eu gold/cream/black Modernist
+     palette. Token names (gold-*, ink, hairline, ...) are kept as-is so no
+     component needed to change — only what they resolve to. */
+  --color-ink: #1a1f2b;
+  --color-ink-hover: #2b3242;
+  --color-body: #454b58;
+  --color-muted: #6b7180;
+  --color-label: #8a8fa0;
+  --color-disabled: #b4b8c2;
+  --color-ground: #f6f6f9;
+  --color-panel: #ffffff;
   --color-surface: #ffffff;
-  --color-row-hover: #fbf9f3;
-  --color-hairline: #d9d2c2;
-  --color-hairline-light: #ede6d5;
-  --color-gold: #a8801f;
-  --color-gold-hover: #8a6a16;
-  --color-gold-light: #c9a227;
-  --color-gold-tint: #f2e6c8;
-  --color-gold-deep: #5c4712;
-  --color-border-neutral: #b9b1a0;
-  --color-backdrop: rgb(22 19 15 / 72%);
+  --color-row-hover: #f4f5fa;
+  --color-hairline: #e3e5ec;
+  --color-hairline-light: #edeef3;
+  --color-gold: #3b5fe0;
+  --color-gold-hover: #2c49b8;
+  --color-gold-light: #7c93ff;
+  --color-gold-tint: #e8ecfe;
+  --color-gold-deep: #1f3480;
+  --color-border-neutral: #c7cad3;
+  --color-backdrop: rgb(15 17 24 / 55%);
 
   /* Fonts — wired to next/font CSS vars in layout.tsx */
-  --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
-  --font-narrow: var(--font-archivo-narrow), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-narrow: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 
   /* Letter-spacing tokens from the design spec's type scale */
   --tracking-tightest: -0.04em; /* plan readiness score */
@@ -47,6 +50,20 @@
 
   ::selection {
     background: var(--color-gold-tint);
+  }
+
+  input,
+  textarea,
+  select {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px var(--color-gold-tint);
   }
 
   :focus-visible {

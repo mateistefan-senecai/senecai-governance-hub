@@ -35,20 +35,20 @@ function buildTopBar(pathname: string): TopBarEntry[] {
 function TopBar({ pathname }: { pathname: string }) {
   const entries = buildTopBar(pathname);
   return (
-    <div className="flex h-11 shrink-0 items-stretch border-b-2 border-ink bg-ink">
+    <div className="flex h-11 shrink-0 items-stretch bg-ink shadow-sm">
       {entries.map((entry) => (
         <Link
           key={entry.href}
           href={entry.href}
-          className={`flex items-center gap-2 border-r border-[#3A3428] px-5 font-narrow text-[11.5px] font-semibold uppercase tracking-micro-wide ${
-            entry.active ? "bg-gold text-ink" : "text-panel hover:bg-[#241F16]"
+          className={`flex items-center gap-2 border-r border-white/10 px-5 font-narrow text-[11.5px] font-semibold uppercase tracking-micro-wide transition-colors ${
+            entry.active ? "bg-gold text-white" : "text-panel/90 hover:bg-white/5"
           }`}
         >
           {entry.label}
           {entry.comingSoon && (
             <span
-              className={`rounded-none border px-1.5 py-0.5 text-[8.5px] normal-case tracking-normal ${
-                entry.active ? "border-ink text-ink" : "border-[#5A5240] text-[#A19A8C]"
+              className={`rounded-full border px-1.5 py-0.5 text-[8.5px] normal-case tracking-normal ${
+                entry.active ? "border-white/40 text-white" : "border-white/15 text-white/50"
               }`}
             >
               Coming soon
@@ -151,30 +151,28 @@ export function NavShell({
     <div className="flex min-h-screen flex-col">
       <TopBar pathname={pathname} />
       <div className="flex flex-1">
-        <aside className="flex w-sidebar shrink-0 flex-col border-r-2 border-ink bg-panel">
+        <aside className="flex w-sidebar shrink-0 flex-col border-r border-hairline bg-panel">
           <div className="bg-ink px-5 pb-5 pt-[22px]">
             {/* eslint-disable-next-line @next/next/no-img-element -- external brand asset, next/image remote-pattern config not worth it here */}
             <img src="https://senecai.eu/logo_white.png" alt="SenecAI" className="h-[26px] w-auto" />
             <p className="mt-3.5 font-narrow text-[11px] font-semibold uppercase tracking-micro-wide text-gold-light">
               SenecAI Compliance Governance Hub
             </p>
-            <p className="mt-1 text-[11px] italic text-[#A19A8C]">One-stop shop for EU Digital Compliance</p>
-            <p className="mt-2.5 text-xs text-[#A19A8C]">{orgName}</p>
+            <p className="mt-1 text-[11px] italic text-white/50">One-stop shop for EU Digital Compliance</p>
+            <p className="mt-2.5 text-xs text-white/50">{orgName}</p>
           </div>
 
           {showAiActNav && (
-            <nav className="flex flex-col pt-[18px]">
-              <p className="px-5 pb-2.5 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
+            <nav className="flex flex-col gap-0.5 p-2.5 pt-[18px]">
+              <p className="px-2.5 pb-2 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
                 AI Act
               </p>
               {navEntries.map((entry) => (
                 <Link
                   key={entry.label}
                   href={entry.href}
-                  className={`border-l-4 px-5 py-2.5 ${
-                    entry.active
-                      ? "border-l-gold bg-hairline-light"
-                      : "border-l-transparent hover:bg-hairline-light"
+                  className={`rounded-lg px-3.5 py-2.5 transition-colors ${
+                    entry.active ? "bg-gold-tint shadow-sm" : "hover:bg-row-hover"
                   }`}
                 >
                   {entry.step !== undefined && (
@@ -184,7 +182,7 @@ export function NavShell({
                   )}
                   <span
                     className={`mt-[3px] block text-[13.5px] font-medium ${
-                      entry.outOfScope ? "text-disabled" : "text-ink"
+                      entry.outOfScope ? "text-disabled" : entry.active ? "text-gold-deep" : "text-ink"
                     }`}
                   >
                     {entry.label}
@@ -194,7 +192,7 @@ export function NavShell({
             </nav>
           )}
 
-          <div className="mt-auto border-t-2 border-ink px-5 py-4">
+          <div className="mt-auto border-t border-hairline px-5 py-4">
             <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
               Signed in as
             </p>

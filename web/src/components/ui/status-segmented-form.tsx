@@ -16,7 +16,7 @@ export function StatusSegmentedForm({
   options: { value: string; label: string }[];
 }) {
   return (
-    <div className="inline-flex border-[1.5px] border-ink">
+    <div className="inline-flex gap-1 rounded-lg border border-hairline bg-hairline-light p-1">
       {options.map((opt) => (
         <form key={opt.value} action={action}>
           {Object.entries(hiddenFields).map(([name, val]) => (
@@ -25,8 +25,8 @@ export function StatusSegmentedForm({
           <input type="hidden" name="status" value={opt.value} />
           <button
             type="submit"
-            className={`px-3 py-1.5 font-narrow text-[11px] font-semibold uppercase tracking-tag ${
-              opt.value === activeValue ? "bg-ink text-panel" : "bg-transparent text-ink hover:bg-gold-tint"
+            className={`rounded-md px-3 py-1.5 font-narrow text-[11px] font-semibold uppercase tracking-tag transition-colors ${
+              opt.value === activeValue ? "bg-ink text-panel shadow-sm" : "bg-transparent text-muted hover:text-ink"
             }`}
           >
             {opt.label}

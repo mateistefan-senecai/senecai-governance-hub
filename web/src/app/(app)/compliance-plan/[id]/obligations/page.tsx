@@ -51,7 +51,7 @@ export default async function ObligationsPage({
 
       <div className="p-8">
         {notClassified && (
-          <div className="border-2 border-ink bg-gold-tint p-4 text-[13px] text-gold-deep">
+          <div className="rounded-xl border border-transparent bg-gold-tint p-4 text-[13px] text-gold-deep">
             This system hasn&rsquo;t completed Inventory & Classification yet — obligations can&rsquo;t be mapped
             without a legal role and risk classification.{" "}
             <Link href={`/inventory/${system.id}`} className="underline">
@@ -62,14 +62,14 @@ export default async function ObligationsPage({
         )}
 
         {!notClassified && prohibited && (
-          <div className="border-2 border-ink bg-ink p-4 text-[13px] text-panel">
+          <div className="rounded-xl border border-transparent bg-ink p-4 text-[13px] text-panel shadow-sm">
             Classified as <strong>prohibited</strong> under Art. 5 — this system must not be placed on the market or
             put into service. No compliance plan applies; escalate to a consultant immediately.
           </div>
         )}
 
         {!notClassified && outOfScope && (
-          <div className="border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+          <div className="rounded-xl border border-hairline bg-surface p-4 text-[13px] text-muted shadow-sm">
             Out of scope of the AI Act — no obligations apply to this system.
           </div>
         )}
@@ -92,7 +92,7 @@ export default async function ObligationsPage({
             </div>
 
             {items.length === 0 && (
-              <div className="mt-6 border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+              <div className="mt-6 rounded-xl border border-hairline bg-surface p-4 text-[13px] text-muted shadow-sm">
                 No obligations for this system — its role/risk classification doesn&rsquo;t map any
                 system-specific duty. General obligations (AI literacy, internal governance policy,
                 transparency) still apply at the organization level — see the Overview tab.
@@ -106,7 +106,7 @@ export default async function ObligationsPage({
               return (
                 <div key={category} className="mt-6">
                   <PanelHeading title={heading} kicker={feature} action={<span className="text-[12px] text-muted">{groupItems.length}</span>} />
-                  <div className="divide-y divide-hairline border border-t-0 border-ink bg-surface">
+                  <div className="mt-3 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
                     {groupItems.map(({ obligation, assessment }) => (
                       <div key={obligation.id} className="grid grid-cols-[minmax(0,1fr)_150px] gap-4 px-5 py-4">
                         <div className="min-w-0">

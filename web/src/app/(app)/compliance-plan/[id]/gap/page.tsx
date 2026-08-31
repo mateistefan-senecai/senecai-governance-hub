@@ -58,7 +58,7 @@ export default async function GapAssessmentPage({
 
       <div className="p-8">
         {notClassified && (
-          <div className="border-2 border-ink bg-gold-tint p-4 text-[13px] text-gold-deep">
+          <div className="rounded-xl border border-transparent bg-gold-tint p-4 text-[13px] text-gold-deep">
             This system hasn&rsquo;t completed Inventory & Classification yet.{" "}
             <Link href={`/inventory/${system.id}`} className="underline">
               Go to Inventory & Classification
@@ -67,18 +67,18 @@ export default async function GapAssessmentPage({
           </div>
         )}
         {!notClassified && prohibited && (
-          <div className="border-2 border-ink bg-ink p-4 text-[13px] text-panel">
+          <div className="rounded-xl border border-transparent bg-ink p-4 text-[13px] text-panel shadow-sm">
             Classified as <strong>prohibited</strong> — no compliance plan applies.
           </div>
         )}
         {!notClassified && outOfScope && (
-          <div className="border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+          <div className="rounded-xl border border-hairline bg-surface p-4 text-[13px] text-muted shadow-sm">
             Out of scope of the AI Act — no obligations apply to this system.
           </div>
         )}
 
         {!notClassified && !prohibited && !outOfScope && items.length === 0 && (
-          <div className="border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+          <div className="rounded-xl border border-hairline bg-surface p-4 text-[13px] text-muted shadow-sm">
             No obligations for this system — its role/risk classification doesn&rsquo;t map any
             system-specific duty. General obligations still apply at the organization level — see the
             Overview tab.
@@ -104,7 +104,7 @@ export default async function GapAssessmentPage({
                         </span>
                       }
                     />
-                    <div className="divide-y divide-hairline border border-t-0 border-ink bg-surface">
+                    <div className="mt-3 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
                       {groupItems.map(({ obligation, assessment }) => (
                         <div key={obligation.id} className="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
                           <div className="min-w-0 max-w-[60ch]">
@@ -132,7 +132,7 @@ export default async function GapAssessmentPage({
               })}
             </div>
 
-            <div className="border-2 border-ink bg-surface p-4 lg:sticky lg:top-5">
+            <div className="rounded-xl border border-hairline bg-surface p-4 shadow-sm lg:sticky lg:top-5">
               <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
                 Live compliance score
               </p>

@@ -60,7 +60,7 @@ export default async function CompliancePlanReadinessPage({
 
       <div className="p-8">
         {notClassified && (
-          <div className="border-2 border-ink bg-gold-tint p-4 text-[13px] text-gold-deep">
+          <div className="rounded-xl border border-transparent bg-gold-tint p-4 text-[13px] text-gold-deep">
             This system hasn&rsquo;t completed Inventory & Classification yet.{" "}
             <Link href={`/inventory/${system.id}`} className="underline">
               Go to Inventory & Classification
@@ -69,18 +69,18 @@ export default async function CompliancePlanReadinessPage({
           </div>
         )}
         {!notClassified && prohibited && (
-          <div className="border-2 border-ink bg-ink p-4 text-[13px] text-panel">
+          <div className="rounded-xl border border-transparent bg-ink p-4 text-[13px] text-panel shadow-sm">
             Classified as <strong>prohibited</strong> — no compliance plan applies.
           </div>
         )}
         {!notClassified && outOfScope && (
-          <div className="border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+          <div className="rounded-xl border border-hairline bg-surface p-4 text-[13px] text-muted shadow-sm">
             Out of scope of the AI Act — no obligations apply to this system.
           </div>
         )}
 
         {!notClassified && !prohibited && !outOfScope && items.length === 0 && (
-          <div className="border-2 border-ink bg-surface p-4 text-[13px] text-muted">
+          <div className="rounded-xl border border-hairline bg-surface p-4 text-[13px] text-muted shadow-sm">
             No obligations for this system — its role/risk classification doesn&rsquo;t map any
             system-specific duty. General obligations still apply at the organization level — see the
             Overview tab.
@@ -89,8 +89,8 @@ export default async function CompliancePlanReadinessPage({
 
         {!notClassified && !prohibited && !outOfScope && items.length > 0 && (
           <>
-            <div className="grid grid-cols-1 border-2 border-ink bg-surface md:grid-cols-[minmax(240px,0.7fr)_minmax(0,1.6fr)]">
-              <div className="border-b-2 border-ink p-5 md:border-b-0 md:border-r-2">
+            <div className="grid grid-cols-1 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm md:grid-cols-[minmax(240px,0.7fr)_minmax(0,1.6fr)]">
+              <div className="border-b border-hairline p-5 md:border-b-0 md:border-r">
                 <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
                   AI Act readiness
                 </p>
@@ -113,7 +113,7 @@ export default async function CompliancePlanReadinessPage({
                 <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
                   Roadmap summary
                 </p>
-                <div className="mt-3 grid grid-cols-2 gap-px border border-hairline bg-hairline sm:grid-cols-4">
+                <div className="mt-3 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-hairline bg-hairline sm:grid-cols-4">
                   {[
                     ["Action points", actionPlan.length],
                     ["Expert review", expertReviewCount],
@@ -136,7 +136,7 @@ export default async function CompliancePlanReadinessPage({
               </div>
             </div>
 
-            <div className="mt-6 overflow-x-auto border-2 border-ink bg-surface">
+            <div className="mt-6 overflow-x-auto rounded-xl border border-hairline bg-surface shadow-sm">
               <table className="w-full min-w-[960px] border-collapse text-left">
                 <thead className="bg-ink">
                   <tr>

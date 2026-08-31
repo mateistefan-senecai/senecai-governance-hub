@@ -12,7 +12,7 @@ export function StepRail({ answeredCount, done }: { answeredCount: number; done:
   });
 
   return (
-    <div className="grid border-b-2 border-ink" style={{ gridTemplateColumns: `repeat(${cells.length}, 1fr)` }}>
+    <div className="grid border-b border-hairline" style={{ gridTemplateColumns: `repeat(${cells.length}, 1fr)` }}>
       {cells.map((label, i) => {
         const active = i === cells.length - 1;
         return (

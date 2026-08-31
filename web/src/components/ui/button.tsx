@@ -5,9 +5,9 @@ type Variant = "primary" | "ink" | "ghost";
 type Size = "md" | "sm";
 
 const VARIANT_CLASS: Record<Variant, string> = {
-  primary: "border-ink bg-gold text-white hover:bg-gold-hover",
-  ink: "border-ink bg-ink text-panel hover:bg-ink-hover",
-  ghost: "border-ink bg-transparent text-ink hover:bg-gold-tint",
+  primary: "border-transparent bg-gold text-white shadow-sm hover:bg-gold-hover hover:shadow-md",
+  ink: "border-transparent bg-ink text-panel shadow-sm hover:bg-ink-hover hover:shadow-md",
+  ghost: "border-hairline bg-transparent text-ink hover:border-gold hover:bg-gold-tint",
 };
 
 const SIZE_CLASS: Record<Size, string> = {
@@ -30,7 +30,7 @@ export function Button({
   children,
   ...rest
 }: CommonProps & { href?: string } & Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className">) {
-  const classes = `inline-flex items-center justify-center gap-1.5 rounded-none border-2 font-semibold transition-none ${VARIANT_CLASS[variant]} ${SIZE_CLASS[size]} ${className}`;
+  const classes = `inline-flex items-center justify-center gap-1.5 rounded-lg border font-semibold transition-colors ${VARIANT_CLASS[variant]} ${SIZE_CLASS[size]} ${className}`;
 
   if (href) {
     return (

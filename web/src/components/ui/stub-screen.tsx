@@ -1,7 +1,7 @@
 export function StubScreen({ title, description }: { title: string; description: string }) {
   return (
     <div className="p-8">
-      <div className="max-w-[760px] border-2 border-ink bg-surface p-6">
+      <div className="max-w-[760px] rounded-xl border border-hairline bg-surface p-6 shadow-sm">
         <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-label">
           Out of scope for this pass
         </p>

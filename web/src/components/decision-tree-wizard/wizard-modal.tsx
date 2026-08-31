@@ -37,7 +37,7 @@ export function WizardModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="mx-auto max-w-[760px] border-2 border-ink bg-white shadow-[0_24px_60px_rgba(22,19,15,0.35)]">
+      <div className="mx-auto max-w-[760px] overflow-hidden rounded-2xl border border-hairline bg-white shadow-2xl">
         <div className="flex items-start justify-between gap-4 bg-ink px-6 py-4">
           <div>
             <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-gold-light">
@@ -48,7 +48,7 @@ export function WizardModal({
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 border border-muted px-3 py-1 text-[12px] text-white hover:bg-ink-hover"
+            className="shrink-0 rounded-lg border border-white/20 px-3 py-1 text-[12px] text-white hover:bg-white/10"
           >
             Close
           </button>

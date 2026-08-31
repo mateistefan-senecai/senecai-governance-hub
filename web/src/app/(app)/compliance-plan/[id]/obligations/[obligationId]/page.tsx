@@ -37,7 +37,7 @@ export default async function ObligationPmHubPage({
       />
 
       <div className="p-8">
-        <div className="flex flex-wrap items-center justify-between gap-3 border-2 border-ink bg-surface p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-hairline bg-surface p-4 shadow-sm">
           <div>
             <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
               Status
@@ -63,15 +63,15 @@ export default async function ObligationPmHubPage({
         </div>
 
         {steps === null ? (
-          <div className="mt-6 border-2 border-ink bg-panel p-5 text-[13px] leading-relaxed text-body">
+          <div className="mt-6 rounded-xl border border-hairline bg-panel p-5 text-[13px] leading-relaxed text-body shadow-sm">
             No step-by-step template is configured yet for this obligation type — set its status directly
             above. The PM sub-hub engine is generic (see{" "}
             <code className="font-mono text-[12px]">src/lib/obligations/pm-steps.json</code>); adding a
             template here is all that&rsquo;s needed to give this obligation its own checklist.
           </div>
         ) : (
-          <div className="mt-6 border-2 border-ink bg-surface">
-            <div className="flex items-center justify-between border-b-2 border-ink px-5 py-3">
+          <div className="mt-6 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
+            <div className="flex items-center justify-between border-b border-hairline px-5 py-3">
               <h2 className="text-base font-semibold text-ink">Steps</h2>
               <span className="text-[12px] text-muted">
                 {doneCount}/{steps.length} done
@@ -87,7 +87,7 @@ export default async function ObligationPmHubPage({
                   <button
                     type="submit"
                     aria-pressed={step.done}
-                    className={`flex h-6 w-6 shrink-0 items-center justify-center border-2 border-ink text-[13px] font-semibold ${
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md border border-ink text-[13px] font-semibold ${
                       step.done ? "bg-ink text-panel" : "bg-transparent text-transparent"
                     }`}
                   >
@@ -103,7 +103,7 @@ export default async function ObligationPmHubPage({
                 </form>
               ))}
             </div>
-            <p className="border-t-2 border-ink bg-panel px-5 py-3 text-[12px] leading-relaxed text-muted">
+            <p className="border-t border-hairline bg-panel px-5 py-3 text-[12px] leading-relaxed text-muted">
               Status rolls up automatically from these steps — all done marks the obligation
               &ldquo;Implemented&rdquo;, some done marks it &ldquo;In progress&rdquo;.
             </p>

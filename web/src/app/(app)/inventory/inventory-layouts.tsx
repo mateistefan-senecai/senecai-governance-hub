@@ -58,7 +58,9 @@ export function InventoryLayouts({
 
       <div className="p-8">
         {rows.length === 0 ? (
-          <p className="border-2 border-ink bg-surface p-8 text-center text-[13px] text-muted">No AI systems yet.</p>
+          <p className="rounded-xl border border-hairline bg-surface p-8 text-center text-[13px] text-muted shadow-sm">
+            No AI systems yet.
+          </p>
         ) : layout === "table" ? (
           <LayoutA rows={rows} />
         ) : (
@@ -76,7 +78,7 @@ export function InventoryLayouts({
 
 function LayoutA({ rows }: { rows: InventoryRow[] }) {
   return (
-    <div className="overflow-x-auto border-2 border-ink bg-surface">
+    <div className="overflow-x-auto rounded-xl border border-hairline bg-surface shadow-sm">
       <table className="w-full min-w-[1120px] border-collapse text-left">
         <thead className="bg-ink">
           <tr>
@@ -141,8 +143,8 @@ function LayoutB({
   const selected = rows.find((r) => r.id === selectedId) ?? rows[0];
 
   return (
-    <div className="grid grid-cols-1 border-2 border-ink bg-surface md:grid-cols-[minmax(300px,1fr)_minmax(0,1.35fr)]">
-      <div className="divide-y divide-hairline border-b-2 border-ink md:border-b-0 md:border-r-2">
+    <div className="grid grid-cols-1 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm md:grid-cols-[minmax(300px,1fr)_minmax(0,1.35fr)]">
+      <div className="divide-y divide-hairline border-b border-hairline md:border-b-0 md:border-r">
         {rows.map((r) => (
           <button
             key={r.id}
@@ -174,7 +176,7 @@ function LayoutB({
         <h3 className="mt-1 text-[21px] font-semibold text-ink">{selected.name}</h3>
         {selected.description && <p className="mt-1.5 text-[13px] leading-relaxed text-body">{selected.description}</p>}
 
-        <div className="mt-4 grid grid-cols-2 gap-px bg-hairline border border-hairline">
+        <div className="mt-4 grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-hairline bg-hairline">
           <MetaCell label="Organization" value={selected.organizationName} />
           <MetaCell label="Business process" value={selected.businessProcess} />
           <MetaCell label="Autonomy" value={selected.autonomyLevel} />

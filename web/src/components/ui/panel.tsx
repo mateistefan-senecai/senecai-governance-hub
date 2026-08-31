@@ -13,7 +13,7 @@ export function Panel({
 }) {
   return (
     <div
-      className={`border-2 border-ink ${surface === "panel" ? "bg-panel" : "bg-surface"} ${padded ? "p-5" : ""} ${className}`}
+      className={`rounded-xl border border-hairline shadow-sm ${surface === "panel" ? "bg-panel" : "bg-surface"} ${padded ? "p-5" : ""} ${className}`}
     >
       {children}
     </div>
@@ -30,7 +30,7 @@ export function PanelHeading({
   action?: ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-b-2 border-ink px-5 py-3">
+    <div className="flex items-center justify-between gap-4 border-b border-hairline px-5 py-3">
       <div>
         {kicker && (
           <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-gold-hover">

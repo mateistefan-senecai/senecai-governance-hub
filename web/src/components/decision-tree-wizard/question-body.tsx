@@ -25,7 +25,7 @@ export function QuestionBody({
       {node.help && <p className="mt-1.5 text-[12.5px] leading-relaxed text-muted">{node.help}</p>}
 
       {node.kind === "boolean" && (
-        <div className="mt-4 divide-y divide-hairline border border-hairline">
+        <div className="mt-4 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
           <OptionRow label="Yes" selected={false} multi={false} onClick={() => onAnswerYesNo(true)} />
           <OptionRow label="No" selected={false} multi={false} onClick={() => onAnswerYesNo(false)} />
         </div>
@@ -33,7 +33,7 @@ export function QuestionBody({
 
       {(node.kind === "checklist" || node.kind === "signalChecklist") && (
         <>
-          <div className="mt-4 divide-y divide-hairline border border-hairline">
+          <div className="mt-4 divide-y divide-hairline overflow-hidden rounded-xl border border-hairline">
             {node.options.map((opt) => (
               <OptionRow
                 key={opt.id}
@@ -53,7 +53,7 @@ export function QuestionBody({
             <button
               type="button"
               onClick={() => onSubmitChecklist(checked)}
-              className="border-2 border-ink bg-gold px-4 py-2 text-[12.5px] font-semibold text-white hover:bg-gold-hover"
+              className="rounded-lg border border-transparent bg-gold px-4 py-2 text-[12.5px] font-semibold text-white shadow-sm hover:bg-gold-hover hover:shadow-md"
             >
               Continue →
             </button>

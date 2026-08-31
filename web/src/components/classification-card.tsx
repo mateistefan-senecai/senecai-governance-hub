@@ -31,7 +31,7 @@ export function ClassificationCard({
   const hasClassification = legalRole !== null || riskClassification !== null;
 
   return (
-    <div className="border-2 border-ink bg-surface p-4">
+    <div className="rounded-xl border border-hairline bg-surface p-4 shadow-sm">
       <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
         Features 1.2 &amp; 1.3 — classification
       </p>

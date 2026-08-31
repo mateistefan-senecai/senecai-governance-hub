@@ -49,7 +49,7 @@ export default async function RegulationScopePage({
 
       <div className="p-8">
         {organizations.length === 0 && (
-          <p className="border-2 border-ink bg-surface p-8 text-center text-[13px] text-muted">
+          <p className="rounded-xl border border-hairline bg-surface p-8 text-center text-[13px] text-muted shadow-sm">
             No organizations accessible yet.
           </p>
         )}
@@ -59,7 +59,10 @@ export default async function RegulationScopePage({
           return (
             <div key={org.id} className="mt-6 first:mt-0">
               <PanelHeading title={org.name} kicker="Organization" />
-              <form action={setRegulationScope} className="border border-t-0 border-ink bg-surface p-5">
+              <form
+                action={setRegulationScope}
+                className="mt-3 rounded-xl border border-hairline bg-surface p-5 shadow-sm"
+              >
                 <input type="hidden" name="organizationId" value={org.id} />
                 {/* AI Act is always in scope — it's the only module actually built — so its checkbox is
                     disabled (a disabled input never submits) and a hidden field carries the fixed value. */}
@@ -68,7 +71,7 @@ export default async function RegulationScopePage({
                   {REGULATIONS.map((reg) => (
                     <label
                       key={reg}
-                      className="flex cursor-pointer items-start gap-2.5 border-2 border-ink bg-panel p-3"
+                      className="flex cursor-pointer items-start gap-2.5 rounded-lg border border-hairline bg-panel p-3 has-[:checked]:border-gold has-[:checked]:bg-gold-tint"
                     >
                       <input
                         type="checkbox"

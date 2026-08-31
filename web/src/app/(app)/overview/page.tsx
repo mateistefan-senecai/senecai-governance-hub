@@ -98,7 +98,7 @@ export default async function OverviewPage({
 
       <div className="p-8">
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(240px,0.6fr)_minmax(0,1.4fr)]">
-          <div className="border-2 border-ink bg-surface p-5">
+          <div className="rounded-xl border border-hairline bg-surface p-5 shadow-sm">
             <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
               Aggregate compliance score
             </p>
@@ -114,7 +114,7 @@ export default async function OverviewPage({
             </p>
           </div>
 
-          <div className="border-2 border-ink bg-surface p-5">
+          <div className="rounded-xl border border-hairline bg-surface p-5 shadow-sm">
             <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
               Per-regulation score
             </p>
@@ -151,7 +151,7 @@ export default async function OverviewPage({
                 </span>
               }
             />
-            <div className="border border-t-0 border-ink bg-surface">
+            <div className="mt-3 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
               {orgSystems.length === 0 ? (
                 <p className="p-5 text-[13px] text-muted">No AI systems yet for this organization.</p>
               ) : (
@@ -197,7 +197,7 @@ export default async function OverviewPage({
                 </div>
               )}
 
-              <div className="border-t-2 border-ink">
+              <div className="border-t border-hairline">
                 <p className="px-5 pt-4 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-gold-hover">
                   General obligations
                 </p>
@@ -236,7 +236,7 @@ export default async function OverviewPage({
         ))}
 
         {organizations.length === 0 && (
-          <p className="mt-8 border-2 border-ink bg-surface p-8 text-center text-[13px] text-muted">
+          <p className="mt-8 rounded-xl border border-hairline bg-surface p-8 text-center text-[13px] text-muted shadow-sm">
             No organizations accessible yet.
           </p>
         )}

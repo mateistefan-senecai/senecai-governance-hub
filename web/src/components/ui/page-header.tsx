@@ -12,7 +12,7 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex items-end justify-between gap-7 border-b-2 border-ink bg-ground px-8 pb-5 pt-6">
+    <header className="flex items-end justify-between gap-7 border-b border-hairline bg-ground px-8 pb-5 pt-6">
       <div className="min-w-0 flex-1">
         {crumb && (
           <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-gold-hover">

@@ -18,11 +18,11 @@ export default async function CompliancePlanPage() {
 
       <div className="p-8">
         {systems.length === 0 ? (
-          <p className="border-2 border-ink bg-surface p-8 text-center text-[13px] text-muted">
+          <p className="rounded-xl border border-hairline bg-surface p-8 text-center text-[13px] text-muted shadow-sm">
             No AI systems yet — add one in Inventory & Classification.
           </p>
         ) : (
-          <div className="overflow-x-auto border-2 border-ink bg-surface">
+          <div className="overflow-x-auto rounded-xl border border-hairline bg-surface shadow-sm">
             <table className="w-full min-w-[900px] border-collapse text-left">
               <thead className="bg-ink">
                 <tr>
