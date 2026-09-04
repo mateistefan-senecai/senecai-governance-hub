@@ -1,7 +1,8 @@
 import bcrypt from "bcryptjs";
 import type { PrismaClient } from "@/generated/prisma/client";
-import type { LegalRole, RegulationCode, RiskClassification } from "@/generated/prisma/enums";
+import type { GdprCharacteristic, LegalRole, RegulationCode, RiskClassification } from "@/generated/prisma/enums";
 import { getApplicableObligations } from "@/lib/obligations";
+import { getApplicableGdprObligations } from "@/lib/gdpr-obligations";
 
 /**
  * The 3-synthetic-client demo dataset (NovaBank / MediCore / LogiFlow), shared
@@ -157,6 +158,79 @@ async function seedRegulationScope(
       create: { organizationId, regulation, applicable, updatedById },
     });
   }
+}
+
+/** GDPR mirror of seedGeneralObligations, writing OrganizationGdprObligationAssessment rows. */
+async function seedGdprGeneralObligations(
+  prisma: PrismaClient,
+  organizationId: string,
+  statuses: Record<string, "NOT_STARTED" | "IN_PROGRESS" | "IMPLEMENTED">,
+  ownerName: string,
+  updatedById: string,
+) {
+  for (const [obligationId, status] of Object.entries(statuses)) {
+    await prisma.organizationGdprObligationAssessment.upsert({
+      where: { organizationId_obligationId: { organizationId, obligationId } },
+      update: {},
+      create: {
+        organizationId,
+        obligationId,
+        status,
+        ownerName,
+        dueDate: status === "IMPLEMENTED" ? addDays(-45) : addDays(60),
+        reviewedByConsultant: status === "IMPLEMENTED",
+        updatedById,
+      },
+    });
+  }
+}
+
+/** GDPR mirror of seedSystemObligations, for a processing activity's TIED obligations. */
+async function seedGdprActivityObligations(
+  prisma: PrismaClient,
+  params: {
+    processingActivityId: string;
+    characteristics: GdprCharacteristic[];
+    profile: ObligationProfile;
+    ownerName: string;
+    updatedById: string;
+  },
+) {
+  const applicable = getApplicableGdprObligations({ characteristics: params.characteristics });
+  const created: Record<string, string> = {};
+
+  for (const [index, obligation] of applicable.entries()) {
+    const status = statusForIndex(params.profile, index);
+    const reviewedByConsultant = status === "IMPLEMENTED" && params.profile !== "early";
+    const dueDate =
+      status === "IMPLEMENTED"
+        ? addDays(-60 - index * 5)
+        : status === "IN_PROGRESS"
+          ? addDays(20 + index * 4)
+          : addDays(45 + index * 5);
+
+    const row = await prisma.gdprObligationAssessment.upsert({
+      where: {
+        processingActivityId_obligationId: {
+          processingActivityId: params.processingActivityId,
+          obligationId: obligation.id,
+        },
+      },
+      update: {},
+      create: {
+        processingActivityId: params.processingActivityId,
+        obligationId: obligation.id,
+        status,
+        ownerName: params.ownerName,
+        dueDate,
+        reviewedByConsultant,
+        updatedById: params.updatedById,
+      },
+    });
+    created[obligation.id] = row.id;
+  }
+
+  return created;
 }
 
 export async function seedDemoData(prisma: PrismaClient): Promise<void> {
@@ -1248,5 +1322,371 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
     },
   });
 
-  console.log("Demo data seeded: 3 client orgs (NovaBank, MediCore, LogiFlow), 12 AI systems.");
+  // ══════════════════════════════════════════════════════════════════════
+  // GDPR — org-level general obligations, processing activities, DPIA, DSAR
+  // ══════════════════════════════════════════════════════════════════════
+
+  await seedGdprGeneralObligations(
+    prisma,
+    novabank.id,
+    {
+      "general.art30-ropa": "IMPLEMENTED",
+      "general.art32-security": "IMPLEMENTED",
+      "general.art33-34-breach-response": "IN_PROGRESS",
+      "general.art12-22-dsr-procedure": "IMPLEMENTED",
+      "general.art37-dpo": "IMPLEMENTED",
+      "general.art25-dpbdd": "IN_PROGRESS",
+      "general.art5-24-accountability": "IMPLEMENTED",
+    },
+    "Radu Ionescu",
+    consultant.id,
+  );
+  await seedGdprGeneralObligations(
+    prisma,
+    medicore.id,
+    {
+      "general.art30-ropa": "IN_PROGRESS",
+      "general.art32-security": "IMPLEMENTED",
+      "general.art33-34-breach-response": "NOT_STARTED",
+      "general.art12-22-dsr-procedure": "IN_PROGRESS",
+      "general.art37-dpo": "IMPLEMENTED",
+      "general.art25-dpbdd": "NOT_STARTED",
+      "general.art5-24-accountability": "IN_PROGRESS",
+    },
+    "Ioana Dumitrescu",
+    anaConsultant.id,
+  );
+  await seedGdprGeneralObligations(
+    prisma,
+    logiflow.id,
+    {
+      "general.art30-ropa": "NOT_STARTED",
+      "general.art32-security": "IN_PROGRESS",
+      "general.art33-34-breach-response": "NOT_STARTED",
+      "general.art12-22-dsr-procedure": "NOT_STARTED",
+      "general.art37-dpo": "NOT_STARTED",
+      "general.art25-dpbdd": "NOT_STARTED",
+      "general.art5-24-accountability": "IN_PROGRESS",
+    },
+    "Mihai Stănescu",
+    logiflowAdmin.id,
+  );
+
+  // ── NovaBank — processing activities ──────────────────────────────────
+  const novabankCreditActivity = await prisma.processingActivity.upsert({
+    where: { id: "novabank-pa-credit-scoring" },
+    update: {},
+    create: {
+      id: "novabank-pa-credit-scoring",
+      organizationId: novabank.id,
+      name: "Credit scoring — customer data processing",
+      description: "Processing of customer financial and behavioral data to generate a credit risk score.",
+      businessFunction: "Retail lending",
+      dataSubjectCategories: "Retail banking customers, loan applicants",
+      dataCategories: "Financial history, transaction data, employment status, credit bureau data",
+      purposeOfProcessing: "Automated credit risk scoring to support lending decisions",
+      recipients: "Internal underwriting team; credit scoring model vendor (processor)",
+      retentionPeriod: "7 years after account closure (statutory)",
+      securityMeasures: "Encryption at rest and in transit, role-based access control, audit logging",
+      complianceOwnerName: "Radu Ionescu",
+      complianceOwnerRole: "Chief Risk Officer",
+      implementationStage: "PRODUCTION",
+      role: "CONTROLLER",
+      characteristics: ["AUTOMATED_DECISION_MAKING", "USES_PROCESSOR"],
+      createdById: novabankAdmin.id,
+    },
+  });
+  await seedGdprActivityObligations(prisma, {
+    processingActivityId: novabankCreditActivity.id,
+    characteristics: novabankCreditActivity.characteristics,
+    profile: "mature",
+    ownerName: "Radu Ionescu",
+    updatedById: consultant.id,
+  });
+  await prisma.dataProtectionImpactAssessment.upsert({
+    where: { processingActivityId: novabankCreditActivity.id },
+    update: {},
+    create: {
+      processingActivityId: novabankCreditActivity.id,
+      necessityProportionality:
+        "Automated scoring is necessary to process loan volumes at scale; a fully manual review process was assessed as not commercially viable at current application volumes.",
+      risksIdentified:
+        "Risk of discriminatory outcomes from proxy variables correlated with protected characteristics; risk of applicants not understanding the basis for a decision.",
+      mitigationMeasures:
+        "Quarterly model fairness testing; human review available on request; clear adverse-action notices sent to declined applicants.",
+      dpoSignOffName: "Radu Ionescu",
+      dpoSignOffDate: addDays(-40),
+      outcome: "RESIDUAL_RISK_ACCEPTABLE",
+      outcomeNote: "Residual risk acceptable given the mitigations in place and the quarterly fairness review.",
+      updatedById: consultant.id,
+    },
+  });
+  await prisma.gdprObligationAssessment.updateMany({
+    where: { processingActivityId: novabankCreditActivity.id, obligationId: "tied.art35-dpia" },
+    data: { status: "IMPLEMENTED", reviewedByConsultant: true },
+  });
+
+  const novabankPayrollActivity = await prisma.processingActivity.upsert({
+    where: { id: "novabank-pa-payroll" },
+    update: {},
+    create: {
+      id: "novabank-pa-payroll",
+      organizationId: novabank.id,
+      name: "Employee payroll processing",
+      description: "Monthly payroll processing for all NovaBank staff.",
+      businessFunction: "Human Resources",
+      dataSubjectCategories: "Employees",
+      dataCategories: "Salary data, bank account details, tax identifiers",
+      purposeOfProcessing: "Payroll administration and statutory reporting",
+      recipients: "Payroll processing vendor (processor); tax authority",
+      retentionPeriod: "10 years after employment ends (statutory)",
+      securityMeasures: "Encrypted storage, access limited to HR & Finance",
+      complianceOwnerName: "Radu Ionescu",
+      complianceOwnerRole: "Chief Risk Officer",
+      implementationStage: "PRODUCTION",
+      role: "CONTROLLER",
+      characteristics: ["USES_PROCESSOR"],
+      createdById: novabankAdmin.id,
+    },
+  });
+  await seedGdprActivityObligations(prisma, {
+    processingActivityId: novabankPayrollActivity.id,
+    characteristics: novabankPayrollActivity.characteristics,
+    profile: "mature",
+    ownerName: "Radu Ionescu",
+    updatedById: consultant.id,
+  });
+
+  // ── MediCore — processing activities ──────────────────────────────────
+  const medicorePatientActivity = await prisma.processingActivity.upsert({
+    where: { id: "medicore-pa-patient-records" },
+    update: {},
+    create: {
+      id: "medicore-pa-patient-records",
+      organizationId: medicore.id,
+      name: "Patient diagnostic records processing",
+      description: "Storage and processing of patient diagnostic imaging records and clinical history.",
+      businessFunction: "Clinical operations",
+      dataSubjectCategories: "Patients",
+      dataCategories: "Health data, diagnostic images, clinical notes",
+      purposeOfProcessing: "Diagnosis, treatment planning, and clinical record-keeping",
+      recipients: "Referring physicians; cloud imaging storage vendor (processor)",
+      retentionPeriod: "10 years after last treatment (statutory, healthcare records)",
+      securityMeasures: "Encryption at rest, access limited to treating clinicians, audit logging",
+      complianceOwnerName: "Ioana Dumitrescu",
+      complianceOwnerRole: "Clinical Data Protection Lead",
+      implementationStage: "PRODUCTION",
+      role: "CONTROLLER",
+      characteristics: ["SPECIAL_CATEGORY_DATA", "LARGE_SCALE", "USES_PROCESSOR"],
+      createdById: medicoreAdmin.id,
+    },
+  });
+  await seedGdprActivityObligations(prisma, {
+    processingActivityId: medicorePatientActivity.id,
+    characteristics: medicorePatientActivity.characteristics,
+    profile: "early",
+    ownerName: "Ioana Dumitrescu",
+    updatedById: anaConsultant.id,
+  });
+  await prisma.dataProtectionImpactAssessment.upsert({
+    where: { processingActivityId: medicorePatientActivity.id },
+    update: {},
+    create: {
+      processingActivityId: medicorePatientActivity.id,
+      necessityProportionality:
+        "Draft: processing of diagnostic imaging and clinical history is necessary for patient care; scope limited to treating clinicians.",
+      risksIdentified:
+        "Draft: unauthorized access to special-category health data; re-identification risk if imaging data is shared outside clinical systems.",
+      updatedById: anaConsultant.id,
+    },
+  });
+
+  const medicorePhysicianActivity = await prisma.processingActivity.upsert({
+    where: { id: "medicore-pa-physician-sharing" },
+    update: {},
+    create: {
+      id: "medicore-pa-physician-sharing",
+      organizationId: medicore.id,
+      name: "Referring physician data sharing",
+      description: "Sharing of relevant diagnostic results with referring physicians, including some outside the EU.",
+      businessFunction: "Clinical operations",
+      dataSubjectCategories: "Patients",
+      dataCategories: "Diagnostic results, referral letters",
+      purposeOfProcessing: "Continuity of care with referring physicians",
+      recipients: "Referring physicians, including some based outside the EEA",
+      retentionPeriod: "10 years after last treatment (statutory, healthcare records)",
+      securityMeasures: "Encrypted transfer channel, recipient verification before sharing",
+      complianceOwnerName: "Ioana Dumitrescu",
+      complianceOwnerRole: "Clinical Data Protection Lead",
+      implementationStage: "PRODUCTION",
+      role: "PROCESSOR",
+      characteristics: ["CROSS_BORDER_TRANSFER"],
+      createdById: medicoreAdmin.id,
+    },
+  });
+  await seedGdprActivityObligations(prisma, {
+    processingActivityId: medicorePhysicianActivity.id,
+    characteristics: medicorePhysicianActivity.characteristics,
+    profile: "mid",
+    ownerName: "Ioana Dumitrescu",
+    updatedById: anaConsultant.id,
+  });
+
+  // ── LogiFlow — processing activities ───────────────────────────────────
+  const logiflowFatigueActivity = await prisma.processingActivity.upsert({
+    where: { id: "logiflow-pa-driver-fatigue" },
+    update: {},
+    create: {
+      id: "logiflow-pa-driver-fatigue",
+      organizationId: logiflow.id,
+      name: "Driver fatigue monitoring data processing",
+      description: "Continuous in-cab monitoring of driver alertness signals during shifts.",
+      businessFunction: "Fleet safety",
+      dataSubjectCategories: "Drivers",
+      dataCategories: "Alertness/fatigue signals, shift logs",
+      purposeOfProcessing: "Real-time fatigue detection and safety alerts",
+      recipients: "Fleet safety team",
+      retentionPeriod: "12 months",
+      securityMeasures: "Access limited to fleet safety team, data minimized to alert-relevant signals",
+      complianceOwnerName: "Mihai Stănescu",
+      complianceOwnerRole: "Operations & Compliance Director",
+      implementationStage: "PRODUCTION",
+      role: "CONTROLLER",
+      characteristics: ["SYSTEMATIC_MONITORING"],
+      createdById: logiflowAdmin.id,
+    },
+  });
+  await seedGdprActivityObligations(prisma, {
+    processingActivityId: logiflowFatigueActivity.id,
+    characteristics: logiflowFatigueActivity.characteristics,
+    profile: "early",
+    ownerName: "Mihai Stănescu",
+    updatedById: logiflowAdmin.id,
+  });
+
+  const logiflowTelematicsActivity = await prisma.processingActivity.upsert({
+    where: { id: "logiflow-pa-fleet-telematics" },
+    update: {},
+    create: {
+      id: "logiflow-pa-fleet-telematics",
+      organizationId: logiflow.id,
+      name: "Fleet telematics — subcontractor data processing",
+      description: "Vehicle location and driving-behavior data processed by a third-party telematics subcontractor.",
+      businessFunction: "Fleet operations",
+      dataSubjectCategories: "Drivers",
+      dataCategories: "GPS location, speed, driving-behavior events",
+      purposeOfProcessing: "Route optimization and driving-behavior scoring",
+      recipients: "Telematics subcontractor (processor), based outside the EEA",
+      retentionPeriod: "24 months",
+      securityMeasures: "Contractual data processing agreement, encrypted transmission",
+      complianceOwnerName: "Mihai Stănescu",
+      complianceOwnerRole: "Operations & Compliance Director",
+      implementationStage: "PRODUCTION",
+      role: "PROCESSOR",
+      characteristics: ["USES_PROCESSOR", "CROSS_BORDER_TRANSFER"],
+      createdById: logiflowAdmin.id,
+    },
+  });
+  await seedGdprActivityObligations(prisma, {
+    processingActivityId: logiflowTelematicsActivity.id,
+    characteristics: logiflowTelematicsActivity.characteristics,
+    profile: "mid",
+    ownerName: "Mihai Stănescu",
+    updatedById: anaConsultant.id,
+  });
+
+  // ── DSAR log ────────────────────────────────────────────────────────────
+  await prisma.dsarRequest.upsert({
+    where: { id: "novabank-dsar-1" },
+    update: {},
+    create: {
+      id: "novabank-dsar-1",
+      organizationId: novabank.id,
+      requestType: "ACCESS",
+      dateReceived: addDays(-20),
+      statutoryDeadline: addDays(10),
+      status: "IN_PROGRESS",
+      requesterNote: "Customer requesting a copy of all personal data held on their loan application.",
+      processingActivityId: novabankCreditActivity.id,
+      createdById: novabankAdmin.id,
+    },
+  });
+  await prisma.dsarRequest.upsert({
+    where: { id: "novabank-dsar-2" },
+    update: {},
+    create: {
+      id: "novabank-dsar-2",
+      organizationId: novabank.id,
+      requestType: "RECTIFICATION",
+      dateReceived: addDays(-55),
+      statutoryDeadline: addDays(-25),
+      status: "COMPLETED",
+      requesterNote: "Former employee requesting correction of an outdated bank account number.",
+      processingActivityId: novabankPayrollActivity.id,
+      createdById: novabankAdmin.id,
+    },
+  });
+  await prisma.dsarRequest.upsert({
+    where: { id: "medicore-dsar-1" },
+    update: {},
+    create: {
+      id: "medicore-dsar-1",
+      organizationId: medicore.id,
+      requestType: "ERASURE",
+      dateReceived: addDays(-3),
+      statutoryDeadline: addDays(27),
+      status: "RECEIVED",
+      requesterNote: "Patient requesting erasure of historic records beyond the statutory retention period.",
+      createdById: medicoreAdmin.id,
+    },
+  });
+  await prisma.dsarRequest.upsert({
+    where: { id: "medicore-dsar-2" },
+    update: {},
+    create: {
+      id: "medicore-dsar-2",
+      organizationId: medicore.id,
+      requestType: "ACCESS",
+      dateReceived: addDays(-40),
+      statutoryDeadline: addDays(-10),
+      status: "IN_PROGRESS",
+      requesterNote: "Patient requesting a full copy of their diagnostic imaging records.",
+      processingActivityId: medicorePatientActivity.id,
+      createdById: medicoreAdmin.id,
+    },
+  });
+  await prisma.dsarRequest.upsert({
+    where: { id: "logiflow-dsar-1" },
+    update: {},
+    create: {
+      id: "logiflow-dsar-1",
+      organizationId: logiflow.id,
+      requestType: "OBJECTION",
+      dateReceived: addDays(-15),
+      statutoryDeadline: addDays(15),
+      status: "REJECTED",
+      requesterNote: "Driver objected to fatigue monitoring; rejected as necessary for statutory road-safety duties.",
+      processingActivityId: logiflowFatigueActivity.id,
+      createdById: logiflowAdmin.id,
+    },
+  });
+  await prisma.dsarRequest.upsert({
+    where: { id: "logiflow-dsar-2" },
+    update: {},
+    create: {
+      id: "logiflow-dsar-2",
+      organizationId: logiflow.id,
+      requestType: "PORTABILITY",
+      dateReceived: addDays(-2),
+      statutoryDeadline: addDays(28),
+      status: "RECEIVED",
+      requesterNote: "Driver requesting a portable export of their telematics data.",
+      processingActivityId: logiflowTelematicsActivity.id,
+      createdById: logiflowAdmin.id,
+    },
+  });
+
+  console.log(
+    "Demo data seeded: 3 client orgs (NovaBank, MediCore, LogiFlow), 12 AI systems, 6 GDPR processing activities, 6 DSAR requests.",
+  );
 }

@@ -33,7 +33,6 @@ export default async function GapAssessmentPage({
   const outOfScope = system.riskClassification === "OUT_OF_SCOPE";
 
   const score = computeComplianceScore(items.map((i) => ({ status: i.assessment.status })));
-  const openGaps = score.applicable - score.implemented - score.partially;
 
   const grouped = items.reduce<Record<string, typeof items>>((acc, item) => {
     (acc[item.obligation.category] ??= []).push(item);
@@ -147,7 +146,7 @@ export default async function GapAssessmentPage({
                   ["Applicable obligations", score.applicable],
                   ["Implemented", score.implemented],
                   ["Partially", score.partially],
-                  ["Open gaps", openGaps],
+                  ["Open gaps", score.openGaps],
                 ].map(([label, value]) => (
                   <div key={label} className="flex items-center justify-between py-2 text-[12.5px]">
                     <span className="text-muted">{label}</span>

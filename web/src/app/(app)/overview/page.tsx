@@ -1,9 +1,12 @@
 import { getAccessibleOrganizations, listAiSystems } from "@/lib/actions/ai-systems";
+import { listProcessingActivities } from "@/lib/actions/processing-activities";
 import { getRegulationScope } from "@/lib/actions/regulation-scope";
 import { getExposureAssessment } from "@/lib/actions/exposure-assessment";
 import { REGULATIONS } from "@/lib/regulations";
 import { getOrgObligationPlan, setOrgObligationStatus } from "@/lib/actions/org-obligations";
+import { getOrgGdprObligationPlan, setOrgGdprObligationStatus } from "@/lib/actions/org-gdpr-obligations";
 import { computeSystemReadiness } from "@/lib/obligations/readiness";
+import { computeProcessingActivityReadiness } from "@/lib/gdpr-obligations/readiness";
 import { computeComplianceScore } from "@/lib/obligations/score";
 import type { RegulationCode } from "@/generated/prisma/enums";
 import type { AssessmentResult } from "@/components/regulatory-exposure/types";
@@ -45,7 +48,7 @@ export default async function OverviewPage({
 }) {
   const { notice } = await searchParams;
   const organizations = await getAccessibleOrganizations();
-  const systems = await listAiSystems();
+  const [systems, activities] = await Promise.all([listAiSystems(), listProcessingActivities()]);
 
   const systemsByOrg = new Map<string, typeof systems>();
   for (const s of systems) {
@@ -54,27 +57,69 @@ export default async function OverviewPage({
     systemsByOrg.set(s.organizationId, list);
   }
 
+  const activitiesByOrg = new Map<string, typeof activities>();
+  for (const a of activities) {
+    const list = activitiesByOrg.get(a.organizationId) ?? [];
+    list.push(a);
+    activitiesByOrg.set(a.organizationId, list);
+  }
+
   const orgSections = await Promise.all(
     organizations.map(async (org) => {
-      const [scope, { items: generalItems }, exposureAssessment] = await Promise.all([
+      const [scope, { items: generalItems }, { items: gdprGeneralItems }, exposureAssessment] = await Promise.all([
         getRegulationScope(org.id),
         getOrgObligationPlan(org.id),
+        getOrgGdprObligationPlan(org.id),
         getExposureAssessment(org.id),
       ]);
       const orgSystems = systemsByOrg.get(org.id) ?? [];
-      const systemPercents = orgSystems
-        .map((s) => computeSystemReadiness(s).percent)
-        .filter((p): p is number => p !== null);
-      const generalScore = computeComplianceScore(generalItems.map((i) => ({ status: i.assessment.status })));
-      const orgPercents = generalScore.percent !== null ? [...systemPercents, generalScore.percent] : systemPercents;
+      const orgActivities = activitiesByOrg.get(org.id) ?? [];
 
-      return { org, scope, generalItems, orgSystems, exposureAssessment, aiActPercent: average(orgPercents) };
+      const systemScores = orgSystems.map((s) => computeSystemReadiness(s));
+      const systemPercents = systemScores.map((sc) => sc.percent).filter((p): p is number => p !== null);
+      const generalScore = computeComplianceScore(generalItems.map((i) => ({ status: i.assessment.status })));
+      const aiActOpenGaps = systemScores.reduce((sum, sc) => sum + sc.openGaps, 0) + generalScore.openGaps;
+      const aiActOrgPercents =
+        generalScore.percent !== null ? [...systemPercents, generalScore.percent] : systemPercents;
+      const aiActPercent = average(aiActOrgPercents);
+
+      const activityScores = orgActivities.map((a) => computeProcessingActivityReadiness(a));
+      const activityPercents = activityScores.map((sc) => sc.percent).filter((p): p is number => p !== null);
+      const gdprGeneralScore = computeComplianceScore(gdprGeneralItems.map((i) => ({ status: i.assessment.status })));
+      const gdprOpenGaps = activityScores.reduce((sum, sc) => sum + sc.openGaps, 0) + gdprGeneralScore.openGaps;
+      const gdprOrgPercents =
+        gdprGeneralScore.percent !== null ? [...activityPercents, gdprGeneralScore.percent] : activityPercents;
+      const gdprPercent = average(gdprOrgPercents);
+
+      return {
+        org,
+        scope,
+        generalItems,
+        gdprGeneralItems,
+        orgSystems,
+        orgActivities,
+        exposureAssessment,
+        aiActPercent,
+        aiActOpenGaps,
+        gdprPercent,
+        gdprOpenGaps,
+      };
     }),
   );
 
-  const aggregatePercent = average(
+  const aiActAggregatePercent = average(
     orgSections.map((s) => s.aiActPercent).filter((p): p is number => p !== null),
   );
+  const gdprAggregatePercent = average(
+    orgSections.map((s) => s.gdprPercent).filter((p): p is number => p !== null),
+  );
+  const aggregatePercent = average(
+    orgSections
+      .flatMap((s) => [s.aiActPercent, s.gdprPercent])
+      .filter((p): p is number => p !== null),
+  );
+  const totalOpenGaps = orgSections.reduce((sum, s) => sum + s.aiActOpenGaps + s.gdprOpenGaps, 0);
+
   const anyGdprApplicable = orgSections.some((s) => s.scope.GDPR);
   const anyNis2Applicable = orgSections.some((s) => s.scope.NIS2);
   const anyDoraApplicable = orgSections.some((s) => s.scope.DORA);
@@ -113,9 +158,13 @@ export default async function OverviewPage({
               <ProgressBar percent={aggregatePercent} height="lg" />
             </div>
             <p className="mt-3 text-[12px] leading-relaxed text-muted">
-              Averages every AI system&rsquo;s readiness plus each organization&rsquo;s general obligations.
-              100% is the target across every applicable regulation.
+              Averages every AI system and processing activity&rsquo;s readiness plus each organization&rsquo;s
+              general obligations, across AI Act and GDPR. 100% is the target across every applicable regulation.
             </p>
+            <div className="mt-3 flex items-center justify-between border-t border-hairline-light pt-3 text-[12.5px]">
+              <span className="text-muted">Open gaps, all regulations</span>
+              <span className="font-semibold tabular-nums text-ink">{totalOpenGaps}</span>
+            </div>
           </div>
 
           <div className="rounded-xl border border-hairline bg-surface p-5 shadow-sm">
@@ -133,7 +182,11 @@ export default async function OverviewPage({
                   </div>
                   {reg === "AI_ACT" ? (
                     <div className="flex w-[180px] items-center">
-                      <ProgressBar percent={aggregatePercent} showLabel />
+                      <ProgressBar percent={aiActAggregatePercent} showLabel />
+                    </div>
+                  ) : reg === "GDPR" ? (
+                    <div className="flex w-[180px] items-center">
+                      <ProgressBar percent={gdprAggregatePercent} showLabel />
                     </div>
                   ) : (
                     <Tag tone="muted">Coming soon</Tag>
@@ -144,19 +197,24 @@ export default async function OverviewPage({
           </div>
         </div>
 
-        {orgSections.map(({ org, orgSystems, generalItems, exposureAssessment }) => (
+        {orgSections.map(({ org, orgSystems, orgActivities, generalItems, gdprGeneralItems, exposureAssessment }) => (
           <div key={org.id} className="mt-8">
             <PanelHeading
               title={org.name}
               kicker="Organization"
               action={
                 <span className="text-[12px] text-muted">
-                  {orgSystems.length} AI system{orgSystems.length === 1 ? "" : "s"}
+                  {orgSystems.length} AI system{orgSystems.length === 1 ? "" : "s"} · {orgActivities.length}{" "}
+                  processing activit{orgActivities.length === 1 ? "y" : "ies"}
                 </span>
               }
             />
             <ExposureNudge organizationId={org.id} assessment={exposureAssessment} />
-            <div className="mt-3 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
+
+            <p className="mt-4 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-gold-hover">
+              AI Act
+            </p>
+            <div className="mt-2 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
               {orgSystems.length === 0 ? (
                 <p className="p-5 text-[13px] text-muted">No AI systems yet for this organization.</p>
               ) : (
@@ -237,6 +295,89 @@ export default async function OverviewPage({
                 </div>
               </div>
             </div>
+
+            <p className="mt-6 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-gold-hover">
+              GDPR
+            </p>
+            <div className="mt-2 overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">
+              {orgActivities.length === 0 ? (
+                <p className="p-5 text-[13px] text-muted">No processing activities yet for this organization.</p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[760px] border-collapse text-left">
+                    <thead className="bg-ink">
+                      <tr>
+                        {["Processing activity", "Role", "Readiness", ""].map((h) => (
+                          <th
+                            key={h}
+                            className="px-3.5 py-2.5 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-panel"
+                          >
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-hairline">
+                      {orgActivities.map((a) => (
+                        <tr key={a.id} className="hover:bg-row-hover">
+                          <td className="px-3.5 py-3 text-[13px] font-medium text-ink">{a.name}</td>
+                          <td className="px-3.5 py-3">
+                            {a.role ? (
+                              <Tag tone="outline">{a.role.replace(/_/g, " ")}</Tag>
+                            ) : (
+                              <Tag tone="muted">Not classified</Tag>
+                            )}
+                          </td>
+                          <td className="px-3.5 py-3">
+                            <ProgressBar percent={computeProcessingActivityReadiness(a).percent} showLabel />
+                          </td>
+                          <td className="px-3.5 py-3 text-right">
+                            <Button variant="ghost" size="sm" href={`/gdpr/compliance-plan/${a.id}/obligations`}>
+                              View plan
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="border-t border-hairline">
+                <p className="px-5 pt-4 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-gold-hover">
+                  General obligations
+                </p>
+                <p className="px-5 pb-1 text-[12px] text-muted">
+                  Apply to {org.name} as a whole, regardless of any one processing activity&rsquo;s classification.
+                </p>
+                <div className="divide-y divide-hairline">
+                  {gdprGeneralItems.map(({ obligation, assessment }) => (
+                    <div
+                      key={obligation.id}
+                      className="flex flex-wrap items-center justify-between gap-4 px-5 py-3.5"
+                    >
+                      <div className="min-w-0 max-w-[60ch]">
+                        <p className="text-[13px] font-semibold text-ink">
+                          {obligation.title}{" "}
+                          <span className="font-narrow text-[10.5px] font-normal tracking-citation text-gold-hover">
+                            {obligation.citation}
+                          </span>
+                        </p>
+                        <p className="mt-0.5 text-[12.5px] text-muted">
+                          {obligation.gapQuestion ?? obligation.description}
+                        </p>
+                      </div>
+                      <StatusSegmentedForm
+                        action={setOrgGdprObligationStatus}
+                        hiddenFields={{ id: assessment.id, redirectTo: "/overview" }}
+                        activeValue={assessment.status}
+                        options={GENERAL_STATUS_OPTIONS}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         ))}
 
@@ -250,7 +391,11 @@ export default async function OverviewPage({
           <Link href="/inventory" className="underline">
             Go to Inventory & Classification
           </Link>{" "}
-          to add AI systems and see them reflected here.
+          or{" "}
+          <Link href="/gdpr/inventory" className="underline">
+            Processing Inventory & Classification
+          </Link>{" "}
+          to add systems and activities and see them reflected here.
         </p>
       </div>
     </>

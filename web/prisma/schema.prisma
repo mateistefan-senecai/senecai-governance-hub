@@ -27,12 +27,15 @@ model Organization {
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
 
-  users                        User[]
-  aiSystems                    AiSystem[]
-  consultantAssignments        ConsultantAssignment[]             @relation("ClientOrgAssignments")
-  regulationScopes             OrganizationRegulationScope[]
-  generalObligationAssessments OrganizationObligationAssessment[]
-  exposureAssessment           OrganizationExposureAssessment?
+  users                            User[]
+  aiSystems                        AiSystem[]
+  consultantAssignments            ConsultantAssignment[]                 @relation("ClientOrgAssignments")
+  regulationScopes                 OrganizationRegulationScope[]
+  generalObligationAssessments     OrganizationObligationAssessment[]
+  exposureAssessment               OrganizationExposureAssessment?
+  processingActivities             ProcessingActivity[]
+  generalGdprObligationAssessments OrganizationGdprObligationAssessment[]
+  dsarRequests                     DsarRequest[]
 }
 
 enum UserRole {
@@ -61,6 +64,12 @@ model User {
   orgObligationAssessments     OrganizationObligationAssessment[] @relation("OrgObligationUpdatedBy")
   pmStepCompletions            ObligationPmStepCompletion[]       @relation("PmStepUpdatedBy")
   exposureAssessmentsCompleted OrganizationExposureAssessment[]
+
+  createdProcessingActivities  ProcessingActivity[]                   @relation("GdprCreatedBy")
+  gdprObligationAssessments    GdprObligationAssessment[]
+  orgGdprObligationAssessments OrganizationGdprObligationAssessment[] @relation("OrgGdprObligationUpdatedBy")
+  dpiaUpdates                  DataProtectionImpactAssessment[]
+  dsarRequestsCreated          DsarRequest[]                          @relation("DsarCreatedBy")
 }
 
 // A SenecAI consultant is granted access to specific client organizations.
@@ -332,4 +341,198 @@ model ObligationPmStepCompletion {
   updatedAt   DateTime @updatedAt
 
   @@unique([obligationAssessmentId, stepId])
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// GDPR module (built parallel to AI Act, per docs/context/ai-act-platform-
+// concept.md — same "rules as data" architecture, own inventory unit).
+// ═══════════════════════════════════════════════════════════════════════
+
+// ── Module 1: Processing Inventory & Classification ────────────────────
+// GDPR's native inventory unit is the Processing Activity (the Art. 30
+// "ROPA" unit — e.g. "employee payroll", "marketing newsletter"), not the
+// AI system — deliberately a parallel entity, not a reuse of AiSystem's
+// shape. Role and characteristics are direct self-report selects, not a
+// decision-tree output, so — unlike AiSystem.legalRole/riskClassification —
+// they carry no "reviewedByConsultant" flag.
+
+enum GdprRole {
+  CONTROLLER
+  PROCESSOR
+  JOINT_CONTROLLER
+}
+
+// Multi-select tags that gate TIED obligations (see gdpr-obligations/
+// catalog.json) — the same role×characteristic gating mechanism as AI
+// Act's role×risk gating, just with a tag set instead of a single enum.
+enum GdprCharacteristic {
+  SPECIAL_CATEGORY_DATA
+  LARGE_SCALE
+  SYSTEMATIC_MONITORING
+  AUTOMATED_DECISION_MAKING
+  CHILDRENS_DATA
+  CROSS_BORDER_TRANSFER
+  USES_PROCESSOR
+}
+
+model ProcessingActivity {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Feature 1.1 — inventory (Art. 30(1) ROPA fields)
+  name                  String
+  description           String?
+  businessFunction      String?
+  dataSubjectCategories String? // who: employees, customers, job applicants...
+  dataCategories        String? // what: names, emails, health data...
+  purposeOfProcessing   String?
+  recipients            String? // who this data is shared with, if anyone
+  retentionPeriod       String?
+  securityMeasures      String? // Art. 32 measures specific to this activity
+  complianceOwnerName   String?
+  complianceOwnerRole   String?
+  implementationStage   ImplementationStage?
+
+  // Feature 1.2 — classification (direct self-report, no decision tree)
+  role            GdprRole?
+  characteristics GdprCharacteristic[] @default([])
+
+  createdById String
+  createdBy   User     @relation("GdprCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  obligationAssessments GdprObligationAssessment[]
+  dpia                  DataProtectionImpactAssessment?
+  dsarRequests          DsarRequest[]
+}
+
+// ── Module 2: GDPR Obligations, Gap Assessment, Roadmap ─────────────────
+// Same GENERAL/TIED split and rows-as-data catalog principle as the AI Act
+// module (src/lib/obligations/catalog.json) — see src/lib/gdpr-obligations/
+// catalog.json. GENERAL rows are org-wide (ROPA maintenance, security of
+// processing, breach response, ...); TIED rows are per-activity, gated by
+// GdprCharacteristic tags instead of legalRole/riskClassification.
+
+model GdprObligationAssessment {
+  id                   String             @id @default(cuid())
+  processingActivityId String
+  processingActivity   ProcessingActivity @relation(fields: [processingActivityId], references: [id], onDelete: Cascade)
+
+  // Key into the gdpr-obligations catalog, category === TIED.
+  obligationId String
+
+  status ObligationStatus @default(NOT_STARTED)
+
+  ownerName String?
+  dueDate   DateTime?
+  note      String?
+
+  reviewedByConsultant Boolean @default(false)
+
+  updatedById String
+  updatedBy   User     @relation(fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([processingActivityId, obligationId])
+}
+
+model OrganizationGdprObligationAssessment {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  // Key into the gdpr-obligations catalog, category === GENERAL.
+  obligationId String
+
+  status ObligationStatus @default(NOT_STARTED)
+
+  ownerName String?
+  dueDate   DateTime?
+  note      String?
+
+  reviewedByConsultant Boolean @default(false)
+
+  updatedById String
+  updatedBy   User     @relation("OrgGdprObligationUpdatedBy", fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([organizationId, obligationId])
+}
+
+// ── DPIA — bespoke sub-workflow, not the AI Act PM sub-hub ─────────────
+// Resolved (GDPR spec Section 5): a substantive document-building process,
+// not a flat obligation with a "generate" button, and deliberately not a
+// shared component with AI Act's (still-unbuilt) obligation-level PM
+// sub-hub. One per processing activity, created lazily the first time its
+// page is opened, matching the lazy-row-creation pattern used everywhere
+// else in this codebase (see getObligationPlan).
+
+enum DpiaOutcome {
+  RESIDUAL_RISK_ACCEPTABLE
+  FLAGGED_FOR_AUTHORITY_CONSULTATION
+}
+
+model DataProtectionImpactAssessment {
+  id                   String             @id @default(cuid())
+  processingActivityId String             @unique
+  processingActivity   ProcessingActivity @relation(fields: [processingActivityId], references: [id], onDelete: Cascade)
+
+  // Step 1 (processing description) is never duplicated here — the DPIA
+  // page reads it straight off the parent ProcessingActivity's own fields.
+  necessityProportionality String? // Step 2
+  risksIdentified          String? // Step 3
+  mitigationMeasures       String? // Step 4
+  dpoSignOffName           String? // Step 5
+  dpoSignOffDate           DateTime?
+  outcome                  DpiaOutcome? // Step 6
+  outcomeNote              String?
+
+  updatedById String
+  updatedBy   User     @relation(fields: [updatedById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ── DSAR log (GDPR spec Section 6) ──────────────────────────────────────
+// Resolved: a static list for v1 — no deadline reminders/notifications.
+// Breach register is explicitly deferred, not built here.
+
+enum DsarRequestType {
+  ACCESS
+  ERASURE
+  RECTIFICATION
+  OBJECTION
+  PORTABILITY
+  RESTRICTION
+}
+
+enum DsarStatus {
+  RECEIVED
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+model DsarRequest {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  requestType       DsarRequestType
+  dateReceived      DateTime
+  statutoryDeadline DateTime // Art. 12(3): 1 month from receipt, extendable — edited by hand if extended
+  status            DsarStatus      @default(RECEIVED)
+  requesterNote     String?
+
+  processingActivityId String?
+  processingActivity   ProcessingActivity? @relation(fields: [processingActivityId], references: [id], onDelete: SetNull)
+
+  createdById String
+  createdBy   User     @relation("DsarCreatedBy", fields: [createdById], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }

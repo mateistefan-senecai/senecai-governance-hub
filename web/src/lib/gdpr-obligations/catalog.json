@@ -1,0 +1,140 @@
+[
+  {
+    "id": "general.art30-ropa",
+    "title": "Records of Processing Activities (ROPA) maintenance",
+    "citation": "Art. 30",
+    "category": "GENERAL",
+    "description": "Maintain a written (including electronic) record of processing activities, containing purposes, categories of data subjects and personal data, recipients, transfers, retention periods, and a general description of security measures.",
+    "gapQuestion": "Is the organization's Records of Processing Activities kept current across all processing activities?"
+  },
+  {
+    "id": "general.art32-security",
+    "title": "Security of processing",
+    "citation": "Art. 32",
+    "category": "GENERAL",
+    "description": "Implement appropriate technical and organizational measures to ensure a level of security appropriate to the risk, considering the state of the art, costs, and the nature/scope/context/purposes of processing.",
+    "gapQuestion": "Are technical and organizational security measures documented and in place across the organization's processing?"
+  },
+  {
+    "id": "general.art33-34-breach-response",
+    "title": "Data breach response procedure",
+    "citation": "Art. 33/34",
+    "category": "GENERAL",
+    "description": "Maintain a procedure to detect, assess, and — where required — notify a personal data breach to the supervisory authority within 72 hours and to affected data subjects without undue delay.",
+    "gapQuestion": "Is there a documented, tested procedure for detecting and responding to a personal data breach?"
+  },
+  {
+    "id": "general.art12-22-dsr-procedure",
+    "title": "Data subject rights procedure",
+    "citation": "Art. 12–22",
+    "category": "GENERAL",
+    "description": "Maintain a procedure to receive, verify, and respond to data subject requests (access, erasure, rectification, portability, objection, restriction) within the statutory one-month deadline.",
+    "gapQuestion": "Is there a documented procedure for handling data subject rights requests within the one-month deadline?"
+  },
+  {
+    "id": "general.art37-dpo",
+    "title": "DPO appointment assessment",
+    "citation": "Art. 37",
+    "category": "GENERAL",
+    "description": "Assess whether a Data Protection Officer must be appointed — mandatory for public authorities, or where core activities involve large-scale regular and systematic monitoring, or large-scale processing of special-category or criminal-conviction data.",
+    "gapQuestion": "Has the organization assessed whether a DPO is mandatory and, if so, appointed one?"
+  },
+  {
+    "id": "general.art25-dpbdd",
+    "title": "Data protection by design and default",
+    "citation": "Art. 25",
+    "category": "GENERAL",
+    "description": "Implement data protection by design and by default as an organizational policy — considered at the point of determining the means of processing, and applied to each specific processing activity.",
+    "gapQuestion": "Is there a documented data-protection-by-design-and-default policy applied when new processing is introduced?"
+  },
+  {
+    "id": "general.art5-24-accountability",
+    "title": "Accountability documentation / governance framework",
+    "citation": "Art. 5(2), Art. 24",
+    "category": "GENERAL",
+    "description": "Be able to demonstrate compliance with the data protection principles — implement appropriate governance, policies, and documentation, and review/update them as needed.",
+    "gapQuestion": "Is there a documented internal GDPR governance framework (roles, policies, oversight) covering the organization's processing?"
+  },
+  {
+    "id": "tied.art6-legal-basis",
+    "title": "Legal basis identified",
+    "citation": "Art. 6",
+    "category": "TIED",
+    "description": "Identify and document a valid legal basis (consent, contract, legal obligation, vital interests, public task, or legitimate interests) for this processing activity.",
+    "gapQuestion": "Has a valid Art. 6 legal basis been identified and documented for this activity?"
+  },
+  {
+    "id": "tied.art9-special-category-basis",
+    "title": "Special-category legal basis",
+    "citation": "Art. 9",
+    "category": "TIED",
+    "requiresTagGroups": [["SPECIAL_CATEGORY_DATA"]],
+    "description": "Where special category data (health, biometric, religious, etc.) is processed, identify an Art. 9(2) condition in addition to the Art. 6 legal basis — e.g. explicit consent or another applicable ground.",
+    "gapQuestion": "Has a valid Art. 9(2) condition been identified for the special-category data this activity processes?"
+  },
+  {
+    "id": "tied.art13-14-transparency",
+    "title": "Transparency / privacy notice",
+    "citation": "Art. 13/14",
+    "category": "TIED",
+    "description": "Provide data subjects with the required transparency information at the point of collection (or within a reasonable period, if not collected directly): identity of the controller, purposes, legal basis, recipients, retention, and their rights.",
+    "gapQuestion": "Is there a privacy notice covering this activity that meets the Art. 13/14 information requirements?"
+  },
+  {
+    "id": "tied.art35-dpia",
+    "title": "DPIA required",
+    "citation": "Art. 35",
+    "category": "TIED",
+    "requiresTagGroups": [
+      ["SPECIAL_CATEGORY_DATA", "LARGE_SCALE"],
+      ["AUTOMATED_DECISION_MAKING"],
+      ["SYSTEMATIC_MONITORING"]
+    ],
+    "description": "Carry out a Data Protection Impact Assessment before processing likely to result in a high risk to individuals' rights and freedoms — large-scale special-category processing, automated decision-making with legal/similarly significant effect, or systematic monitoring (including of publicly accessible areas).",
+    "gapQuestion": "Has a DPIA been completed for this activity? Use the dedicated DPIA workflow below, not this status control."
+  },
+  {
+    "id": "tied.art28-processor-agreement",
+    "title": "Processor agreement (DPA) in place",
+    "citation": "Art. 28",
+    "category": "TIED",
+    "requiresTagGroups": [["USES_PROCESSOR"]],
+    "description": "Where a processor (or sub-processor) is used, have a written data processing agreement in place covering the Art. 28(3) mandatory terms — subject matter, duration, nature/purpose, data types, obligations and rights.",
+    "gapQuestion": "Is there a signed Art. 28 data processing agreement with every processor/sub-processor used in this activity?"
+  },
+  {
+    "id": "tied.art44-49-transfer-safeguards",
+    "title": "International transfer safeguards",
+    "citation": "Art. 44–49",
+    "category": "TIED",
+    "requiresTagGroups": [["CROSS_BORDER_TRANSFER"]],
+    "description": "Where personal data is transferred outside the EU/EEA, ensure an adequate transfer mechanism is in place — an adequacy decision, Standard Contractual Clauses, Binding Corporate Rules, or another Chapter V safeguard.",
+    "gapQuestion": "Is a valid international transfer safeguard (adequacy, SCCs, BCRs, etc.) documented for this activity's third-country transfers?"
+  },
+  {
+    "id": "tied.art22-adm-safeguards",
+    "title": "Automated decision-making safeguards",
+    "citation": "Art. 22",
+    "category": "TIED",
+    "requiresTagGroups": [["AUTOMATED_DECISION_MAKING"]],
+    "description": "Where a decision is based solely on automated processing (including profiling) and produces legal or similarly significant effects, ensure the data subject can obtain human intervention, express their view, and contest the decision.",
+    "gapQuestion": "Are human-intervention and contest-the-decision safeguards in place for this activity's automated decision-making?"
+  },
+  {
+    "id": "tied.art8-childrens-data",
+    "title": "Children's data special protections",
+    "citation": "Art. 8",
+    "category": "TIED",
+    "requiresTagGroups": [["CHILDRENS_DATA"]],
+    "description": "For information-society services offered directly to children, verify age and, where the child is below the relevant national threshold (13–16), obtain verifiable parental/guardian consent.",
+    "gapQuestion": "Are age-verification and, where required, parental-consent mechanisms in place for this activity?"
+  },
+  {
+    "id": "tied.art5-retention-minimization",
+    "title": "Retention & minimization documented",
+    "citation": "Art. 5(1)(c), (e)",
+    "category": "TIED",
+    "description": "Document that only the data necessary for this activity's purpose is collected (minimization) and that it is kept no longer than necessary for that purpose (storage limitation), with a defined retention/deletion schedule.",
+    "gapQuestion": "Is a data minimization and retention/deletion schedule documented for this activity?"
+  }
+]

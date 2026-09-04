@@ -28,7 +28,6 @@ export default async function ObligationsPage({
   const outOfScope = system.riskClassification === "OUT_OF_SCOPE";
 
   const score = computeComplianceScore(items.map((i) => ({ status: i.assessment.status })));
-  const openGaps = score.applicable - score.implemented - score.partially;
 
   const grouped = items.reduce<Record<string, typeof items>>((acc, item) => {
     (acc[item.obligation.category] ??= []).push(item);
@@ -86,8 +85,8 @@ export default async function ObligationsPage({
                 />
               </div>
               <p className="text-[12.5px] text-muted">
-                {items.length} obligation{items.length === 1 ? "" : "s"} mapped · {openGaps} open gap
-                {openGaps === 1 ? "" : "s"}
+                {items.length} obligation{items.length === 1 ? "" : "s"} mapped · {score.openGaps} open gap
+                {score.openGaps === 1 ? "" : "s"}
               </p>
             </div>
 

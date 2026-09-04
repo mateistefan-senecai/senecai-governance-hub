@@ -10,9 +10,14 @@ import { LoadDemoDataButton } from "@/components/load-demo-data-button";
 // ── Top bar: cross-regulation primary navigation ───────────────────────────
 
 const AI_ACT_PREFIXES = ["/inventory", "/compliance-plan", "/tracking", "/regulatory-watch", "/research"];
+const GDPR_PREFIXES = ["/gdpr"];
 
 function isAiActRoute(pathname: string): boolean {
   return AI_ACT_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+function isGdprRoute(pathname: string): boolean {
+  return GDPR_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
 type TopBarEntry = {
@@ -26,7 +31,7 @@ function buildTopBar(pathname: string): TopBarEntry[] {
   return [
     { label: "Overview", href: "/overview", active: pathname.startsWith("/overview") },
     { label: "AI Act", href: "/inventory", active: isAiActRoute(pathname) },
-    { label: "GDPR", href: "/gdpr", active: pathname.startsWith("/gdpr"), comingSoon: true },
+    { label: "GDPR", href: "/gdpr/inventory", active: isGdprRoute(pathname) },
     { label: "NIS2", href: "/nis2", active: pathname.startsWith("/nis2"), comingSoon: true },
     { label: "DORA", href: "/dora", active: pathname.startsWith("/dora"), comingSoon: true },
     { label: "CRA", href: "/cra", active: pathname.startsWith("/cra"), comingSoon: true },
@@ -143,6 +148,53 @@ function buildAiActNavEntries(pathname: string): NavEntry[] {
   ];
 }
 
+/** /gdpr/inventory/{id} or /gdpr/compliance-plan/{id}/... — "new" is a route segment, not an activity id. */
+function activityIdFromPathname(pathname: string): string | null {
+  const match = pathname.match(/^\/gdpr\/(?:inventory|compliance-plan)\/([^/]+)/);
+  const id = match?.[1];
+  return id && id !== "new" ? id : null;
+}
+
+function buildGdprNavEntries(pathname: string): NavEntry[] {
+  const activityId = activityIdFromPathname(pathname);
+  const planBase = activityId ? `/gdpr/compliance-plan/${activityId}` : "/gdpr/compliance-plan";
+
+  return [
+    {
+      step: 1,
+      label: "Processing Inventory & Classification",
+      href: "/gdpr/inventory",
+      active: pathname.startsWith("/gdpr/inventory"),
+    },
+    {
+      step: 2,
+      label: "Obligations",
+      href: activityId ? `${planBase}/obligations` : planBase,
+      active: activityId
+        ? pathname === `${planBase}/obligations` || pathname.startsWith(`${planBase}/obligations/`)
+        : pathname === "/gdpr/compliance-plan",
+    },
+    {
+      step: 3,
+      label: "Gap Assessment",
+      href: activityId ? `${planBase}/gap` : planBase,
+      active: activityId ? pathname === `${planBase}/gap` : false,
+    },
+    {
+      step: 4,
+      label: "Compliance Roadmap & Reports",
+      href: activityId ? `${planBase}/plan` : planBase,
+      active: activityId ? pathname === `${planBase}/plan` : false,
+    },
+    {
+      step: 5,
+      label: "Tracking & DSAR Log",
+      href: "/gdpr/tracking",
+      active: pathname.startsWith("/gdpr/tracking"),
+    },
+  ];
+}
+
 export function NavShell({
   children,
   orgName,
@@ -160,7 +212,8 @@ export function NavShell({
 }) {
   const pathname = usePathname();
   const showAiActNav = isAiActRoute(pathname);
-  const navEntries = showAiActNav ? buildAiActNavEntries(pathname) : [];
+  const showGdprNav = isGdprRoute(pathname);
+  const navEntries = showAiActNav ? buildAiActNavEntries(pathname) : showGdprNav ? buildGdprNavEntries(pathname) : [];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -174,10 +227,10 @@ export function NavShell({
             <p className="mt-1 truncate text-[13px] font-medium text-ink">{orgName}</p>
           </div>
 
-          {showAiActNav && (
+          {(showAiActNav || showGdprNav) && (
             <nav className="flex flex-col gap-0.5 p-2.5 pt-[18px]">
               <p className="px-2.5 pb-2 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
-                AI Act
+                {showAiActNav ? "AI Act" : "GDPR"}
               </p>
               {navEntries.map((entry) => (
                 <Link
