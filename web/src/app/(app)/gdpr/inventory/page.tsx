@@ -19,6 +19,7 @@ const CHARACTERISTIC_LABEL: Record<string, string> = {
 
 export default async function GdprInventoryPage() {
   const activities = await listProcessingActivities();
+  const showOrgColumn = new Set(activities.map((a) => a.organizationId)).size > 1;
 
   const stats = {
     activities: activities.length,
@@ -68,7 +69,16 @@ export default async function GdprInventoryPage() {
             <table className="w-full min-w-[1080px] border-collapse text-left">
               <thead className="bg-ink">
                 <tr>
-                  {["Processing activity", "Business function", "Role", "Characteristics", "Stage", "Readiness", ""].map(
+                  {[
+                    "Processing activity",
+                    ...(showOrgColumn ? ["Organization"] : []),
+                    "Business function",
+                    "Role",
+                    "Characteristics",
+                    "Stage",
+                    "Readiness",
+                    "",
+                  ].map(
                     (h) => (
                       <th
                         key={h}
@@ -94,6 +104,9 @@ export default async function GdprInventoryPage() {
                         </Link>
                         {a.description && <p className="mt-0.5 text-[11.5px] text-muted">{a.description}</p>}
                       </td>
+                      {showOrgColumn && (
+                        <td className="px-3.5 py-3 text-[13px] text-body">{a.organization.name}</td>
+                      )}
                       <td className="px-3.5 py-3 text-[13px] text-body">{a.businessFunction ?? "—"}</td>
                       <td className="px-3.5 py-3">
                         {a.role ? <Tag tone="outline">{a.role.replace(/_/g, " ")}</Tag> : <Tag tone="muted">Not classified</Tag>}

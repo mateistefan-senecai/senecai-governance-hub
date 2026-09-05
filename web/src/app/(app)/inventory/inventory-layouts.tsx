@@ -77,21 +77,31 @@ export function InventoryLayouts({
 }
 
 function LayoutA({ rows }: { rows: InventoryRow[] }) {
+  const showOrgColumn = new Set(rows.map((r) => r.organizationName)).size > 1;
+
   return (
     <div className="overflow-x-auto rounded-xl border border-hairline bg-surface shadow-sm">
       <table className="w-full min-w-[1120px] border-collapse text-left">
         <thead className="bg-ink">
           <tr>
-            {["AI system", "Business process", "Autonomy", "Stage", "Legal role", "Risk class", "Readiness", ""].map(
-              (h) => (
-                <th
-                  key={h}
-                  className="px-3.5 py-2.5 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-panel"
-                >
-                  {h}
-                </th>
-              ),
-            )}
+            {[
+              "AI system",
+              ...(showOrgColumn ? ["Organization"] : []),
+              "Business process",
+              "Autonomy",
+              "Stage",
+              "Legal role",
+              "Risk class",
+              "Readiness",
+              "",
+            ].map((h) => (
+              <th
+                key={h}
+                className="px-3.5 py-2.5 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-panel"
+              >
+                {h}
+              </th>
+            ))}
           </tr>
         </thead>
         <tbody className="divide-y divide-hairline">
@@ -106,6 +116,9 @@ function LayoutA({ rows }: { rows: InventoryRow[] }) {
                 </Link>
                 {r.description && <p className="mt-0.5 text-[11.5px] text-muted">{r.description}</p>}
               </td>
+              {showOrgColumn && (
+                <td className="px-3.5 py-3 text-[13px] text-body">{r.organizationName}</td>
+              )}
               <td className="px-3.5 py-3 text-[13px] text-body">{r.businessProcess ?? "—"}</td>
               <td className="px-3.5 py-3 text-[13px] text-body">{r.autonomyLevel ?? "—"}</td>
               <td className="px-3.5 py-3 text-[13px] text-body">{r.implementationStage ?? "—"}</td>
