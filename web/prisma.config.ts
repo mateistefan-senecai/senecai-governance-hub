@@ -10,6 +10,11 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Migrations need a direct (non-pooled) connection — a PgBouncer-style
+    // pooler in front of DATABASE_URL doesn't support the advisory lock
+    // `prisma migrate` takes. DATABASE_URL_UNPOOLED is only set in
+    // production/preview (Vercel + Neon); local dev has no pooler, so
+    // DATABASE_URL is the correct fallback there.
+    url: process.env["DATABASE_URL_UNPOOLED"] ?? process.env["DATABASE_URL"],
   },
 });
