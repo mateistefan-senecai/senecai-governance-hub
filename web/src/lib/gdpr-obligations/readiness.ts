@@ -1,4 +1,4 @@
-import type { GdprCharacteristic, ObligationStatus } from "@/generated/prisma/enums";
+import type { GdprCharacteristic, GdprRole, ObligationStatus } from "@/generated/prisma/enums";
 import { getApplicableGdprObligations } from "./index";
 import { computeComplianceScore, type ComplianceScore } from "@/lib/obligations/score";
 
@@ -11,6 +11,7 @@ import { computeComplianceScore, type ComplianceScore } from "@/lib/obligations/
  */
 export function computeProcessingActivityReadiness(activity: {
   characteristics: GdprCharacteristic[];
+  role?: GdprRole | null;
   obligationAssessments: { obligationId: string; status: ObligationStatus }[];
 }): ComplianceScore {
   const applicable = getApplicableGdprObligations(activity);

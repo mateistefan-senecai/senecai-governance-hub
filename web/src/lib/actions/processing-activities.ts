@@ -30,6 +30,8 @@ const VALID_CHARACTERISTICS: GdprCharacteristic[] = [
   "CHILDRENS_DATA",
   "CROSS_BORDER_TRANSFER",
   "USES_PROCESSOR",
+  "LEGITIMATE_INTEREST_BASIS",
+  "DIRECT_MARKETING",
 ];
 
 function validCharacteristics(values: FormDataEntryValue[]): GdprCharacteristic[] {

@@ -15,6 +15,8 @@ const CHARACTERISTIC_OPTIONS: { value: GdprCharacteristic; label: string }[] = [
   { value: "CHILDRENS_DATA", label: "Children's data" },
   { value: "CROSS_BORDER_TRANSFER", label: "Cross-border / third-country transfer" },
   { value: "USES_PROCESSOR", label: "Uses a processor / sub-processor" },
+  { value: "LEGITIMATE_INTEREST_BASIS", label: "Relies on legitimate interest as its Art. 6 legal basis" },
+  { value: "DIRECT_MARKETING", label: "Used for direct marketing" },
 ];
 
 function Field({ label, value }: { label: string; value: string | number | null | undefined }) {

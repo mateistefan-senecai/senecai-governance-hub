@@ -18,4 +18,6 @@ export const EXPERT_REVIEW_OBLIGATION_IDS = new Set<string>([
   "tied.art9-special-category-basis",
   "tied.art35-dpia",
   "tied.art44-49-transfer-safeguards",
+  "tied.art6-1f-lia",
+  "tied.art26-joint-controller-arrangement",
 ]);

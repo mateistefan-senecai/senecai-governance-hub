@@ -77,6 +77,11 @@ export async function updateDpia(formData: FormData) {
       dpoSignOffDate: dateOrNull(formData.get("dpoSignOffDate")),
       outcome,
       outcomeNote: emptyToNull(formData.get("outcomeNote")),
+      // Art. 36 follow-through — only meaningful once flagged for
+      // consultation, but harmless to persist either way (cleared if the
+      // outcome is changed back away from that flag with blank fields).
+      authorityConsultationDate: dateOrNull(formData.get("authorityConsultationDate")),
+      authorityConsultationOutcome: emptyToNull(formData.get("authorityConsultationOutcome")),
       updatedById: session.user.id,
     },
   });

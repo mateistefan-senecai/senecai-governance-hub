@@ -1,4 +1,4 @@
-import type { GdprCharacteristic } from "@/generated/prisma/enums";
+import type { GdprCharacteristic, GdprRole } from "@/generated/prisma/enums";
 import catalogJson from "./catalog.json";
 import type { GdprObligation } from "./types";
 
@@ -14,16 +14,21 @@ export function getGdprObligation(id: string): GdprObligation {
 
 /**
  * Which TIED obligations apply to a processing activity, given its
- * characteristics tags. Pure lookup over `requiresTagGroups` — adding or
- * changing an obligation never touches this function, same "rules as data"
- * principle as the AI Act module's `getApplicableObligations`.
+ * characteristics tags and role. Pure lookup over `requiresTagGroups` and
+ * `requiresRoles` — adding or changing an obligation never touches this
+ * function, same "rules as data" principle as the AI Act module's
+ * `getApplicableObligations`.
  */
 export function getApplicableGdprObligations(activity: {
   characteristics: GdprCharacteristic[];
+  role?: GdprRole | null;
 }): GdprObligation[] {
   const tags = new Set(activity.characteristics);
   return gdprObligationCatalog.filter((o) => {
     if (o.category !== "TIED") return false;
+    if (o.requiresRoles && o.requiresRoles.length > 0) {
+      if (!activity.role || !o.requiresRoles.includes(activity.role)) return false;
+    }
     if (!o.requiresTagGroups || o.requiresTagGroups.length === 0) return true;
     return o.requiresTagGroups.some((group) => group.every((tag) => tags.has(tag)));
   });

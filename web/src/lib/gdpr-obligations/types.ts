@@ -3,7 +3,7 @@
 // apply is a lookup over category + a Processing Activity's Module 1
 // output (characteristics tags), not per-obligation code.
 
-import type { GdprCharacteristic, ObligationStatus } from "@/generated/prisma/enums";
+import type { GdprCharacteristic, GdprRole, ObligationStatus } from "@/generated/prisma/enums";
 
 export type GdprObligationCategory =
   | "GENERAL" // org-wide, applies once any Processing Activity exists
@@ -25,6 +25,13 @@ export type GdprObligation = {
    * reads as "(special-category AND large-scale) OR automated-decision-making".
    */
   requiresTagGroups?: GdprCharacteristic[][];
+  /**
+   * TIED only. The obligation applies only when the activity's role is one
+   * of these — e.g. the Art. 26 joint-controller arrangement only applies
+   * to activities classified JOINT_CONTROLLER. Omitted = applies regardless
+   * of role (subject to requiresTagGroups, if any).
+   */
+  requiresRoles?: GdprRole[];
 };
 
 export type GdprObligationPlanItem = {

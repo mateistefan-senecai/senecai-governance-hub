@@ -373,6 +373,8 @@ enum GdprCharacteristic {
   CHILDRENS_DATA
   CROSS_BORDER_TRANSFER
   USES_PROCESSOR
+  LEGITIMATE_INTEREST_BASIS // relies on Art. 6(1)(f) as its legal basis — triggers the LIA obligation
+  DIRECT_MARKETING // triggers the Art. 21(2)-(3) marketing-objection obligation
 }
 
 model ProcessingActivity {
@@ -490,6 +492,12 @@ model DataProtectionImpactAssessment {
   dpoSignOffDate           DateTime?
   outcome                  DpiaOutcome? // Step 6
   outcomeNote              String?
+
+  // Art. 36 follow-through: when the outcome flags residual high risk for
+  // authority consultation, this tracks what actually happened next — the
+  // outcome field alone was previously a dead end in the workflow.
+  authorityConsultationDate    DateTime?
+  authorityConsultationOutcome String?
 
   updatedById String
   updatedBy   User     @relation(fields: [updatedById], references: [id])

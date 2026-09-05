@@ -167,6 +167,41 @@ export default async function DpiaPage({
                   />
                 </div>
               </div>
+
+              <div className="border-t border-hairline pt-5">
+                <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">
+                  Art. 36 — authority consultation follow-through
+                </p>
+                <p className="mt-1 text-[11px] text-muted">
+                  Only relevant if the outcome above is &ldquo;Flagged for authority consultation&rdquo; — a flag with
+                  no follow-through recorded is otherwise a dead end.
+                </p>
+                <div className="mt-3">
+                  <label
+                    htmlFor="authorityConsultationDate"
+                    className="block font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label"
+                  >
+                    Consultation submitted — date
+                  </label>
+                  <input
+                    id="authorityConsultationDate"
+                    name="authorityConsultationDate"
+                    type="date"
+                    defaultValue={
+                      dpia.authorityConsultationDate ? dpia.authorityConsultationDate.toISOString().slice(0, 10) : ""
+                    }
+                    className="mt-1.5 block w-full max-w-xs rounded-lg border border-hairline bg-white px-2.5 py-2 text-[13px] text-ink"
+                  />
+                </div>
+                <div className="mt-3">
+                  <TextArea
+                    label="Consultation outcome"
+                    name="authorityConsultationOutcome"
+                    help="The supervisory authority's response, or the current status while awaiting one."
+                    defaultValue={dpia.authorityConsultationOutcome}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex items-center justify-between border-t border-hairline px-5 py-4">
@@ -183,8 +218,13 @@ export default async function DpiaPage({
         <div className="flex flex-col gap-5">
           <div className="rounded-xl border border-hairline bg-surface p-4 shadow-sm lg:sticky lg:top-5">
             <p className="font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">Status</p>
-            <div className="mt-2">
-              {dpia.outcome ? (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              {dpia.outcome === "FLAGGED_FOR_AUTHORITY_CONSULTATION" ? (
+                <>
+                  <Tag tone="gold-fill">Flagged for authority consultation</Tag>
+                  {!dpia.authorityConsultationOutcome && <Tag tone="muted">Follow-through not recorded</Tag>}
+                </>
+              ) : dpia.outcome ? (
                 <Tag tone="ink-fill">Outcome recorded</Tag>
               ) : dpia.necessityProportionality || dpia.risksIdentified || dpia.mitigationMeasures ? (
                 <Tag tone="outline">In progress</Tag>

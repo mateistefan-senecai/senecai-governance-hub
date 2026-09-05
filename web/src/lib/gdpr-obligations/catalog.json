@@ -4,8 +4,8 @@
     "title": "Records of Processing Activities (ROPA) maintenance",
     "citation": "Art. 30",
     "category": "GENERAL",
-    "description": "Maintain a written (including electronic) record of processing activities, containing purposes, categories of data subjects and personal data, recipients, transfers, retention periods, and a general description of security measures.",
-    "gapQuestion": "Is the organization's Records of Processing Activities kept current across all processing activities?"
+    "description": "Maintain a written (including electronic) record of processing activities, containing purposes, categories of data subjects and personal data, recipients, transfers, retention periods, and a general description of security measures (Art. 30(1)). Where the organization also acts as a processor for any activity, a separate Art. 30(2) processor record is required — it covers each controller's identity, the categories of processing performed on their behalf, sub-processors, and transfer details, and is not interchangeable with the controller-side record.",
+    "gapQuestion": "Is the organization's Records of Processing Activities kept current across all processing activities — including a separate Art. 30(2) record for any activity where it acts as a processor?"
   },
   {
     "id": "general.art32-security",
@@ -64,6 +64,15 @@
     "gapQuestion": "Has a valid Art. 6 legal basis been identified and documented for this activity?"
   },
   {
+    "id": "tied.art6-1f-lia",
+    "title": "Legitimate Interests Assessment (LIA)",
+    "citation": "Art. 6(1)(f)",
+    "category": "TIED",
+    "requiresTagGroups": [["LEGITIMATE_INTEREST_BASIS"]],
+    "description": "Where legitimate interest is relied on as the Art. 6 legal basis, complete and document a Legitimate Interests Assessment before processing begins: the ICO's three-part test — (1) purpose test: is a legitimate interest being pursued; (2) necessity test: is the processing necessary for that purpose; (3) balancing test: do the individual's rights and interests override the controller's interest. All three parts must pass — an undocumented or incomplete LIA means the legal basis does not exist, regardless of whether legitimate interest would otherwise have applied.",
+    "gapQuestion": "Has a documented three-part LIA (purpose, necessity, and balancing test) been completed for this activity's legitimate-interest processing?"
+  },
+  {
     "id": "tied.art9-special-category-basis",
     "title": "Special-category legal basis",
     "citation": "Art. 9",
@@ -108,8 +117,8 @@
     "citation": "Art. 44–49",
     "category": "TIED",
     "requiresTagGroups": [["CROSS_BORDER_TRANSFER"]],
-    "description": "Where personal data is transferred outside the EU/EEA, ensure an adequate transfer mechanism is in place — an adequacy decision, Standard Contractual Clauses, Binding Corporate Rules, or another Chapter V safeguard.",
-    "gapQuestion": "Is a valid international transfer safeguard (adequacy, SCCs, BCRs, etc.) documented for this activity's third-country transfers?"
+    "description": "Where personal data is transferred outside the EU/EEA, ensure an adequate transfer mechanism is in place — an adequacy decision, Standard Contractual Clauses, Binding Corporate Rules, or another Chapter V safeguard. Following Schrems II (CJEU C-311/18) and EDPB Recommendations 01/2020, a signed SCC/BCR alone is not sufficient: a Transfer Impact Assessment (TIA) of the destination country's legal regime — and supplementary measures where needed — must also be documented.",
+    "gapQuestion": "Is a valid transfer mechanism (adequacy, SCCs, BCRs, etc.) in place AND has a Transfer Impact Assessment of the destination country been documented for this activity's third-country transfers?"
   },
   {
     "id": "tied.art22-adm-safeguards",
@@ -136,5 +145,23 @@
     "category": "TIED",
     "description": "Document that only the data necessary for this activity's purpose is collected (minimization) and that it is kept no longer than necessary for that purpose (storage limitation), with a defined retention/deletion schedule.",
     "gapQuestion": "Is a data minimization and retention/deletion schedule documented for this activity?"
+  },
+  {
+    "id": "tied.art26-joint-controller-arrangement",
+    "title": "Joint-controller arrangement",
+    "citation": "Art. 26",
+    "category": "TIED",
+    "requiresRoles": ["JOINT_CONTROLLER"],
+    "description": "Where this activity is carried out with another organization as joint controllers, maintain a written arrangement setting out each party's respective responsibilities for complying with GDPR obligations — in particular for exercising data subjects' rights and providing the Art. 13/14 transparency information — and make the essence of that arrangement available to data subjects.",
+    "gapQuestion": "Is there a documented Art. 26 arrangement covering each joint controller's respective responsibilities for this activity?"
+  },
+  {
+    "id": "tied.art21-marketing-objection",
+    "title": "Direct marketing objection handling",
+    "citation": "Art. 21(2)-(3)",
+    "category": "TIED",
+    "requiresTagGroups": [["DIRECT_MARKETING"]],
+    "description": "Where personal data is processed for direct marketing, ensure data subjects can object at any time, free of charge, with no balancing test permitted — unlike other Art. 21 objections, an objection to direct marketing must be honored unconditionally and processing for that purpose must stop immediately.",
+    "gapQuestion": "Can a data subject object to this activity's direct marketing at any time, with processing for that purpose stopping immediately and unconditionally?"
   }
 ]

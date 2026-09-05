@@ -1,6 +1,12 @@
 import bcrypt from "bcryptjs";
 import type { PrismaClient } from "@/generated/prisma/client";
-import type { GdprCharacteristic, LegalRole, RegulationCode, RiskClassification } from "@/generated/prisma/enums";
+import type {
+  GdprCharacteristic,
+  GdprRole,
+  LegalRole,
+  RegulationCode,
+  RiskClassification,
+} from "@/generated/prisma/enums";
 import { getApplicableObligations } from "@/lib/obligations";
 import { getApplicableGdprObligations } from "@/lib/gdpr-obligations";
 
@@ -191,12 +197,13 @@ async function seedGdprActivityObligations(
   params: {
     processingActivityId: string;
     characteristics: GdprCharacteristic[];
+    role: GdprRole | null;
     profile: ObligationProfile;
     ownerName: string;
     updatedById: string;
   },
 ) {
-  const applicable = getApplicableGdprObligations({ characteristics: params.characteristics });
+  const applicable = getApplicableGdprObligations({ characteristics: params.characteristics, role: params.role });
   const created: Record<string, string> = {};
 
   for (const [index, obligation] of applicable.entries()) {
@@ -1375,7 +1382,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   // ── NovaBank — processing activities ──────────────────────────────────
   const novabankCreditActivity = await prisma.processingActivity.upsert({
     where: { id: "novabank-pa-credit-scoring" },
-    update: {},
+    update: { characteristics: ["AUTOMATED_DECISION_MAKING", "USES_PROCESSOR", "LEGITIMATE_INTEREST_BASIS"] },
     create: {
       id: "novabank-pa-credit-scoring",
       organizationId: novabank.id,
@@ -1392,13 +1399,14 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
       complianceOwnerRole: "Chief Risk Officer",
       implementationStage: "PRODUCTION",
       role: "CONTROLLER",
-      characteristics: ["AUTOMATED_DECISION_MAKING", "USES_PROCESSOR"],
+      characteristics: ["AUTOMATED_DECISION_MAKING", "USES_PROCESSOR", "LEGITIMATE_INTEREST_BASIS"],
       createdById: novabankAdmin.id,
     },
   });
   await seedGdprActivityObligations(prisma, {
     processingActivityId: novabankCreditActivity.id,
     characteristics: novabankCreditActivity.characteristics,
+    role: novabankCreditActivity.role,
     profile: "mature",
     ownerName: "Radu Ionescu",
     updatedById: consultant.id,
@@ -1452,6 +1460,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   await seedGdprActivityObligations(prisma, {
     processingActivityId: novabankPayrollActivity.id,
     characteristics: novabankPayrollActivity.characteristics,
+    role: novabankPayrollActivity.role,
     profile: "mature",
     ownerName: "Radu Ionescu",
     updatedById: consultant.id,
@@ -1484,21 +1493,36 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   await seedGdprActivityObligations(prisma, {
     processingActivityId: medicorePatientActivity.id,
     characteristics: medicorePatientActivity.characteristics,
+    role: medicorePatientActivity.role,
     profile: "early",
     ownerName: "Ioana Dumitrescu",
     updatedById: anaConsultant.id,
   });
+  const medicorePatientDpiaData = {
+    necessityProportionality:
+      "Processing of diagnostic imaging and clinical history is necessary for patient care; scope limited to treating clinicians.",
+    risksIdentified:
+      "Unauthorized access to special-category health data; re-identification risk if imaging data is shared outside clinical systems; residual risk from the volume of special-category data held at scale.",
+    mitigationMeasures:
+      "Access limited to treating clinicians via role-based controls; audit logging on every record access; encryption at rest.",
+    dpoSignOffName: "Ioana Dumitrescu",
+    dpoSignOffDate: addDays(-15),
+    outcome: "FLAGGED_FOR_AUTHORITY_CONSULTATION" as const,
+    outcomeNote:
+      "Residual risk from the scale of special-category health data held remains high even after mitigations — flagged for supervisory authority consultation per Art. 36.",
+    authorityConsultationDate: addDays(-8),
+    authorityConsultationOutcome:
+      "Consultation request submitted to the national supervisory authority; awaiting written opinion on the proposed mitigations before processing continues at current scale.",
+    updatedById: anaConsultant.id,
+  };
   await prisma.dataProtectionImpactAssessment.upsert({
     where: { processingActivityId: medicorePatientActivity.id },
-    update: {},
-    create: {
-      processingActivityId: medicorePatientActivity.id,
-      necessityProportionality:
-        "Draft: processing of diagnostic imaging and clinical history is necessary for patient care; scope limited to treating clinicians.",
-      risksIdentified:
-        "Draft: unauthorized access to special-category health data; re-identification risk if imaging data is shared outside clinical systems.",
-      updatedById: anaConsultant.id,
-    },
+    update: medicorePatientDpiaData,
+    create: { processingActivityId: medicorePatientActivity.id, ...medicorePatientDpiaData },
+  });
+  await prisma.gdprObligationAssessment.updateMany({
+    where: { processingActivityId: medicorePatientActivity.id, obligationId: "tied.art35-dpia" },
+    data: { status: "IMPLEMENTED", reviewedByConsultant: true },
   });
 
   const medicorePhysicianActivity = await prisma.processingActivity.upsert({
@@ -1527,6 +1551,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   await seedGdprActivityObligations(prisma, {
     processingActivityId: medicorePhysicianActivity.id,
     characteristics: medicorePhysicianActivity.characteristics,
+    role: medicorePhysicianActivity.role,
     profile: "mid",
     ownerName: "Ioana Dumitrescu",
     updatedById: anaConsultant.id,
@@ -1559,6 +1584,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   await seedGdprActivityObligations(prisma, {
     processingActivityId: logiflowFatigueActivity.id,
     characteristics: logiflowFatigueActivity.characteristics,
+    role: logiflowFatigueActivity.role,
     profile: "early",
     ownerName: "Mihai Stănescu",
     updatedById: logiflowAdmin.id,
@@ -1590,6 +1616,7 @@ export async function seedDemoData(prisma: PrismaClient): Promise<void> {
   await seedGdprActivityObligations(prisma, {
     processingActivityId: logiflowTelematicsActivity.id,
     characteristics: logiflowTelematicsActivity.characteristics,
+    role: logiflowTelematicsActivity.role,
     profile: "mid",
     ownerName: "Mihai Stănescu",
     updatedById: anaConsultant.id,
