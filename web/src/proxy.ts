@@ -10,21 +10,27 @@ const { auth } = NextAuth(authConfig);
 
 export default auth((req) => {
   const isLoggedIn = !!req.auth;
-  const isAuthRoute = req.nextUrl.pathname.startsWith("/login");
+  const pathname = req.nextUrl.pathname;
+  const isAuthRoute = pathname.startsWith("/login");
+  // "/" is the public marketing landing page (src/components/landing-page.tsx) —
+  // signed-out visitors see it, signed-in visitors get bounced to /overview below.
+  const isPublicRoute = pathname === "/" || isAuthRoute;
 
-  if (!isLoggedIn && !isAuthRoute) {
+  if (!isLoggedIn && !isPublicRoute) {
     const url = new URL("/login", req.nextUrl.origin);
-    url.searchParams.set("callbackUrl", req.nextUrl.pathname);
+    url.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(url);
   }
 
-  if (isLoggedIn && isAuthRoute) {
-    return NextResponse.redirect(new URL("/inventory", req.nextUrl.origin));
+  if (isLoggedIn && isPublicRoute) {
+    return NextResponse.redirect(new URL("/overview", req.nextUrl.origin));
   }
 
   return NextResponse.next();
 });
 
 export const config = {
-  matcher: ["/((?!api/auth|_next/static|_next/image|favicon.ico).*)"],
+  // "images" excluded too — public/images/* backs the landing page's hero
+  // screenshot and must load for signed-out visitors.
+  matcher: ["/((?!api/auth|_next/static|_next/image|images|favicon.ico).*)"],
 };
