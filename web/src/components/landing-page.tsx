@@ -93,7 +93,15 @@ export function LandingPage() {
               </a>
             ))}
           </nav>
-          <RequestDemoLink className="px-[22px] py-3 text-[13px]" />
+          <div className="flex items-center gap-5">
+            <a
+              href="/login"
+              className="text-sm font-semibold text-[#5E594F] hover:text-[#8A6512] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#A67C1A] focus-visible:outline-offset-2"
+            >
+              Sign in
+            </a>
+            <RequestDemoLink className="px-[22px] py-3 text-[13px]" />
+          </div>
         </div>
       </header>
 
