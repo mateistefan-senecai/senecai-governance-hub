@@ -20,12 +20,15 @@ const PIPELINE = [
 
 function LogoMark({ size = 34 }: { size?: number }) {
   return (
-    <span
-      className="inline-flex shrink-0 items-center justify-center rounded-lg bg-gold font-narrow font-bold text-white"
-      style={{ width: size, height: size, fontSize: size * 0.5 }}
-    >
-      S
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element -- static local brand asset
+    <img
+      src="/images/logo-mark.png"
+      alt="SenecAI"
+      width={size}
+      height={size}
+      className="shrink-0"
+      style={{ width: size, height: size }}
+    />
   );
 }
 
