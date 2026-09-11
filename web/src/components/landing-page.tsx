@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
@@ -98,17 +97,17 @@ export function LandingPage() {
                 <span className="h-2 w-2 rounded-full bg-hairline" />
                 <span className="h-2 w-2 rounded-full bg-hairline" />
               </div>
-              <Image
+              {/* eslint-disable-next-line @next/next/no-img-element -- static local screenshot, no need for next/image's optimizer here */}
+              <img
                 src="/images/hero-preview.png"
-                alt="AI system record in the SenecAI Governance Hub"
+                alt="AI Act readiness score and compliance roadmap in the SenecAI Governance Hub"
                 width={1600}
-                height={1000}
-                priority
+                height={567}
                 className="w-full h-auto"
               />
             </div>
             <p className="mt-3 text-center font-narrow text-[11px] font-semibold uppercase tracking-micro-wide text-gold-hover">
-              Every AI system, fully documented
+              Your readiness score, always up to date
             </p>
           </div>
         </section>
