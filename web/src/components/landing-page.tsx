@@ -18,17 +18,33 @@ const PIPELINE = [
   { step: 5, label: "Tracking" },
 ];
 
-function LogoMark({ size = 34 }: { size?: number }) {
+function Logo({ size = "md" }: { size?: "md" | "sm" }) {
+  const markSize = size === "md" ? 42 : 24;
   return (
-    // eslint-disable-next-line @next/next/no-img-element -- static local brand asset
-    <img
-      src="/images/logo-mark.png"
-      alt="SenecAI"
-      width={size}
-      height={size}
-      className="shrink-0"
-      style={{ width: size, height: size }}
-    />
+    <div className="flex items-center gap-2.5">
+      {/* eslint-disable-next-line @next/next/no-img-element -- static local brand asset */}
+      <img
+        src="/images/logo-mark.png"
+        alt="SenecAI"
+        width={markSize}
+        height={markSize}
+        className="shrink-0"
+        style={{ width: markSize, height: markSize }}
+      />
+      <div className="leading-tight">
+        <p className={`font-semibold ${size === "md" ? "text-[21px]" : "text-[13.5px]"}`}>
+          <span className="text-ink">Senec</span>
+          <span className="text-gold">AI</span>
+        </p>
+        <p
+          className={`font-narrow font-semibold uppercase text-muted ${
+            size === "md" ? "text-[9.5px] tracking-micro-wide" : "text-[7px] tracking-micro"
+          }`}
+        >
+          Governance Hub
+        </p>
+      </div>
+    </div>
   );
 }
 
@@ -36,15 +52,7 @@ export function LandingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-ground">
       <header className="flex h-16 shrink-0 items-center justify-between border-b border-hairline px-6 sm:px-10">
-        <div className="flex items-center gap-3">
-          <LogoMark />
-          <div className="leading-tight">
-            <p className="font-narrow text-[12px] font-semibold uppercase tracking-micro-wide text-gold-hover">
-              SenecAI
-            </p>
-            <p className="text-[9.5px] leading-[1.25] text-muted">Compliance Governance Hub</p>
-          </div>
-        </div>
+        <Logo />
         <nav className="hidden items-center gap-6 sm:flex">
           <a href="#modules" className="font-narrow text-[11.5px] font-semibold uppercase tracking-micro-wide text-body hover:text-ink">
             How it works
@@ -168,10 +176,7 @@ export function LandingPage() {
 
       <footer className="border-t border-hairline px-6 py-8 sm:px-10">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 sm:flex-row">
-          <div className="flex items-center gap-2.5">
-            <LogoMark size={22} />
-            <span className="text-[12.5px] text-muted">SenecAI Governance Hub</span>
-          </div>
+          <Logo size="sm" />
           <Link href="/login" className="text-[12.5px] text-gold-hover underline hover:text-gold-deep">
             Sign in
           </Link>
