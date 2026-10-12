@@ -1,0 +1,390 @@
+// SenecAI Governance Hub — AI Act modules.
+// Data model follows docs/spec/concept-note-for-developers-v1.md §5 and
+// docs/spec/ai-act-product-specification-v2.md §9: a chain of
+// organisation → client → AI system → classification → system obligation →
+// assessment → action, with legal content stored as versioned data in its
+// own tables, separate from client data.
+//
+// Tenant isolation is enforced in the database with row-level security, not
+// only in application code. Every tenant-owned table carries
+// `organizationId`, and the policies in the migration
+// `..._row_level_security` compare it to the `app.org_id` setting that
+// `src/lib/tenant.ts` sets at the start of every transaction.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Identity (global, not tenant-scoped) ────────────────────────────────
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+
+  memberships Membership[]
+}
+
+// ── Tenancy ─────────────────────────────────────────────────────────────
+
+enum OrganizationType {
+  CONSULTANCY // e.g. SenecAI itself — one tenant like any other
+  LAW_FIRM
+  COMPANY // a regulated company that signed up on its own
+}
+
+/// The account holder (tenant). Nothing in one organisation is visible to another.
+model Organization {
+  id         String           @id @default(cuid())
+  name       String
+  type       OrganizationType
+  /// Name and logo printed on PDFs for this organisation's clients.
+  brandName  String?
+  brandLogo  String?
+  region     String           @default("EU")
+  createdAt  DateTime         @default(now())
+
+  memberships       Membership[]
+  clients           Client[]
+  clientAssignments ClientAssignment[]
+  aiSystems         AiSystem[]
+  vendorDocuments   VendorDocument[]
+  classifications   Classification[]
+  systemObligations SystemObligation[]
+  actions           Action[]
+  enquiries         Enquiry[]
+  auditEvents       AuditEvent[]
+}
+
+enum MemberRole {
+  ORG_ADMIN // invites users, sets branding; can do everything a reviewer can
+  REVIEWER // consultant or lawyer: edits, approves, overrides — for assigned clients
+  COMPANY_USER // a person at the regulated company: edits own inventory and evidence, cannot approve
+}
+
+/// A user's role inside one organisation. A user can hold several, e.g. a
+/// lawyer invited into a company's own workspace as a reviewer.
+model Membership {
+  id             String       @id @default(cuid())
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  role           MemberRole
+  /// Required for COMPANY_USER: the one client (company) they belong to.
+  clientId       String?
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  assignments ClientAssignment[]
+
+  @@unique([userId, organizationId])
+}
+
+/// A regulated company managed inside an organisation. A company on its own
+/// account is an organisation with exactly one client.
+model Client {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String
+  /// Answers to the applicability check (company profile), keyed by question id.
+  profile        Json?
+  /// Result of the applicability check: one finding per regulation.
+  applicability  Json?
+  applicabilityContentVersion String?
+  applicabilityAt DateTime?
+  createdAt      DateTime     @default(now())
+
+  memberships Membership[]
+  assignments ClientAssignment[]
+  aiSystems   AiSystem[]
+  actions     Action[]
+  enquiries   Enquiry[]
+
+  @@index([organizationId])
+}
+
+/// Which reviewers work on which clients. Org admins see every client.
+model ClientAssignment {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  membershipId   String
+  membership     Membership   @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  @@unique([clientId, membershipId])
+}
+
+// ── Step 1: AI inventory & vendor register ──────────────────────────────
+
+enum SystemOrigin {
+  BUILT
+  BOUGHT
+  EMBEDDED
+}
+
+enum UseType {
+  PRODUCT // offered to customers
+  INTERNAL // internal operations
+  HYBRID
+}
+
+enum Autonomy {
+  ADVISORY // human-in-the-loop
+  PARTIAL // human-on-the-loop
+  FULL // fully automated
+}
+
+enum Stage {
+  PLANNED
+  PILOT
+  PRODUCTION
+  RETIRED
+}
+
+model AiSystem {
+  id                String       @id @default(cuid())
+  organizationId    String
+  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId          String
+  client            Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name              String
+  purpose           String
+  description       String?
+  /// Accountable owner inside the company.
+  ownerName         String
+  ownerRole         String?
+  origin            SystemOrigin
+  supplier          String?
+  dataCategories    String[]
+  deploymentContext String
+  useType           UseType
+  autonomy          Autonomy
+  stage             Stage
+  affectedPersons   String?
+  /// Set when the system, its vendor, purpose or deployment changed after the
+  /// current classification was made — the classification must be redone.
+  classificationStale Boolean    @default(false)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  vendorDocuments   VendorDocument[]
+  classifications   Classification[]
+  systemObligations SystemObligation[]
+
+  @@index([organizationId, clientId])
+}
+
+enum VendorDocStatus {
+  TO_REQUEST
+  REQUESTED
+  RECEIVED
+  NOT_AVAILABLE
+}
+
+/// For bought or embedded systems: documents to obtain from the vendor.
+/// The list of kinds comes from legal content (vendor-documents.json).
+model VendorDocument {
+  id             String          @id @default(cuid())
+  organizationId String
+  organization   Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  systemId       String
+  system         AiSystem        @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  kind           String
+  status         VendorDocStatus @default(TO_REQUEST)
+  note           String?
+  updatedAt      DateTime        @updatedAt
+
+  @@unique([systemId, kind])
+}
+
+// ── Step 2: risk classification ─────────────────────────────────────────
+
+enum ClassificationStatus {
+  PRELIMINARY // computed by the rules, not yet reviewed
+  CONFIRMED // a reviewer confirmed the computed result
+  OVERRIDDEN // a reviewer replaced the result, with a written reason
+}
+
+/// One run of the classification questionnaire for one system. Every
+/// submission creates a new version; the latest is `isCurrent`.
+model Classification {
+  id             String               @id @default(cuid())
+  organizationId String
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  systemId       String
+  system         AiSystem             @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  version        Int
+  isCurrent      Boolean              @default(true)
+  contentVersion String
+  answers        Json
+  /// Outputs computed by the rules: roles, riskClass, flags.
+  computed       Json
+  /// Rules that fired, each with its citation and rationale.
+  reasoning      Json
+  /// What the platform uses downstream: `computed`, or the override.
+  effective      Json
+  status         ClassificationStatus @default(PRELIMINARY)
+  overrideReason String?
+  createdById    String
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime             @default(now())
+
+  @@unique([systemId, version])
+}
+
+// ── Steps 3, 5, 6: obligations, assessment, roadmap ─────────────────────
+
+enum ObligationStatus {
+  NOT_ASSESSED
+  COMPLIANT
+  PARTIAL
+  GAP
+}
+
+/// One obligation from the content library as it applies to one system.
+/// Regenerated whenever the effective classification changes.
+model SystemObligation {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  systemId       String
+  system         AiSystem         @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  obligationKey  String
+  contentVersion String
+  /// Which of the company's roles carries this duty (provider, deployer…).
+  party          String
+  appliesFrom    DateTime?
+  rationale      String
+  /// False when a reclassification means the obligation no longer applies.
+  active         Boolean          @default(true)
+  status         ObligationStatus @default(NOT_ASSESSED)
+  /// Platform-proposed status (Stage 2: from evidence); reviewer confirms.
+  proposedStatus ObligationStatus?
+  statusRationale String?
+  assessedById   String?
+  assessedAt     DateTime?
+  /// Set when the system or the legal content changed after assessment.
+  needsReassessment Boolean       @default(false)
+  ownerName      String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  actions Action[]
+
+  @@unique([systemId, obligationKey])
+}
+
+enum ActionType {
+  LEGAL
+  TECHNICAL
+}
+
+enum ActionStatus {
+  OPEN
+  IN_PROGRESS
+  DONE
+}
+
+model Action {
+  id                 String           @id @default(cuid())
+  organizationId     String
+  organization       Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId           String
+  client             Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  systemObligationId String
+  systemObligation   SystemObligation @relation(fields: [systemObligationId], references: [id], onDelete: Cascade)
+  title              String
+  type               ActionType
+  /// 1 = now, 2 = next, 3 = later. Derived from urgency (date) and effort.
+  phase              Int
+  effort             String
+  ownerName          String?
+  dueDate            DateTime?
+  status             ActionStatus     @default(OPEN)
+  enquiryId          String?
+  enquiry            Enquiry?         @relation(fields: [enquiryId], references: [id], onDelete: SetNull)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@unique([systemObligationId])
+}
+
+enum EnquiryRoute {
+  SENECAI
+  OWN_TEAM
+}
+
+enum EnquiryStatus {
+  NEW
+  QUOTED
+  CLOSED
+}
+
+/// A request for implementation help on one or more roadmap actions.
+model Enquiry {
+  id             String        @id @default(cuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  route          EnquiryRoute
+  message        String?
+  contactName    String
+  contactEmail   String
+  status         EnquiryStatus @default(NEW)
+  createdById    String
+  createdAt      DateTime      @default(now())
+
+  actions Action[]
+}
+
+// ── Audit ───────────────────────────────────────────────────────────────
+
+/// Append-only: UPDATE and DELETE are rejected by a database trigger.
+model AuditEvent {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  actorId        String
+  actorName      String
+  entityType     String
+  entityId       String
+  action         String
+  before         Json?
+  after          Json?
+  at             DateTime     @default(now())
+
+  @@index([organizationId, at])
+}
+
+// ── Legal content (global, versioned, not tenant data) ──────────────────
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  RETIRED
+}
+
+/// One published version of the legal content library. Each classification,
+/// obligation and (later) document records the version it was built on.
+model ContentVersion {
+  version     String        @id
+  status      ContentStatus
+  notes       String?
+  publishedAt DateTime?
+  /// Full content bundle: questionnaires, rules, obligations, dates.
+  bundle      Json
+  createdAt   DateTime      @default(now())
+}

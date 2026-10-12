@@ -1,0 +1,1328 @@
+{
+  "id": "ai-act.classification",
+  "title": "AI Act classification",
+  "sections": [
+    {
+      "id": "role",
+      "title": "The company's role",
+      "intro": "A company can hold more than one role for the same system. Answer for this system only.",
+      "questions": [
+        {
+          "id": "role.develops",
+          "type": "boolean",
+          "text": "Does the company develop this AI system (or have it developed) and place it on the market or put it into service under its own name or trademark?",
+          "help": "Developing covers designing the logic, training the model or building the software. Putting into service includes first use for the company's own purposes.",
+          "citation": "Art. 3(3)"
+        },
+        {
+          "id": "role.integrates",
+          "type": "boolean",
+          "text": "Does the company integrate a third-party AI model into a product or service it offers under its own name?",
+          "help": "For example a CRM that embeds a third-party API for predictive sales scoring. The company is then the provider of the system, even if not of the model.",
+          "citation": "Art. 3(3), Art. 3(68)"
+        },
+        {
+          "id": "role.rebrands",
+          "type": "boolean",
+          "text": "Does the company put its own name or trademark on an AI system developed by someone else?",
+          "citation": "Art. 25(1)(a)"
+        },
+        {
+          "id": "role.modifies",
+          "type": "boolean",
+          "text": "Has the company made a substantial modification to an AI system developed by someone else?",
+          "help": "A change not foreseen by the original provider that affects compliance or the intended purpose, e.g. retraining that changes the system's core outputs.",
+          "citation": "Art. 25(1)(b), Art. 3(23)"
+        },
+        {
+          "id": "role.repurposes",
+          "type": "boolean",
+          "text": "Does the company use or offer the system for a purpose other than the one its provider intended?",
+          "help": "For example using a general text-summarisation tool to assess creditworthiness.",
+          "citation": "Art. 25(1)(c)"
+        },
+        {
+          "id": "role.uses",
+          "type": "boolean",
+          "text": "Does the company use this AI system under its authority in a professional capacity?",
+          "help": "Any use in the course of business, including internal tools. Purely personal use by an individual does not count.",
+          "citation": "Art. 3(4)"
+        },
+        {
+          "id": "role.imports",
+          "type": "boolean",
+          "text": "Is the company established in the EU and places on the EU market a system bearing the name or trademark of a provider established outside the EU?",
+          "citation": "Art. 3(6)"
+        },
+        {
+          "id": "role.distributes",
+          "type": "boolean",
+          "text": "Does the company make this system available on the EU market as part of a supply chain, without being its provider or importer (e.g. as a reseller)?",
+          "citation": "Art. 3(7)"
+        },
+        {
+          "id": "role.publicBody",
+          "type": "boolean",
+          "text": "Is the company a body governed by public law, or a private entity providing public services?",
+          "help": "Relevant to the fundamental rights impact assessment and to registration duties for deployers.",
+          "citation": "Art. 27(1), Art. 49(3)",
+          "showIf": {
+            "q": "role.uses",
+            "is": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "scope",
+      "title": "Scope exclusions",
+      "intro": "The AI Act does not apply to some uses at all.",
+      "questions": [
+        {
+          "id": "scope.exclusions",
+          "type": "multi",
+          "optional": true,
+          "text": "Does any of these describe the system's use? Tick all that apply, or none.",
+          "options": [
+            {
+              "id": "military",
+              "label": "Used exclusively for military, defence or national security purposes",
+              "citation": "Art. 2(3)"
+            },
+            {
+              "id": "research",
+              "label": "Developed and put into service for the sole purpose of scientific research and development",
+              "citation": "Art. 2(6)"
+            },
+            {
+              "id": "preMarket",
+              "label": "Research, testing or development before being placed on the market or put into service (not testing in real-world conditions)",
+              "citation": "Art. 2(8)"
+            },
+            {
+              "id": "personal",
+              "label": "Used by a natural person in a purely personal, non-professional activity",
+              "citation": "Art. 2(10)"
+            },
+            {
+              "id": "intlCooperation",
+              "label": "Used by a non-EU public authority or international organisation under an international law-enforcement or judicial cooperation agreement",
+              "citation": "Art. 2(4)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "prohibited",
+      "title": "Prohibited practices",
+      "intro": "Screen against the practices banned since 2 February 2025.",
+      "questions": [
+        {
+          "id": "prohibited.practices",
+          "type": "multi",
+          "optional": true,
+          "text": "Does the system do any of the following? Tick all that apply, or none.",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "a",
+              "label": "Uses subliminal, purposefully manipulative or deceptive techniques that materially distort behaviour and are likely to cause significant harm",
+              "citation": "Art. 5(1)(a)"
+            },
+            {
+              "id": "b",
+              "label": "Exploits vulnerabilities due to age, disability or a specific social or economic situation, causing or likely to cause significant harm",
+              "citation": "Art. 5(1)(b)"
+            },
+            {
+              "id": "c",
+              "label": "Evaluates or classifies people over time by social behaviour or personal traits (social scoring), leading to unjustified or disproportionate detrimental treatment",
+              "citation": "Art. 5(1)(c)"
+            },
+            {
+              "id": "d",
+              "label": "Assesses the risk that a person will commit a criminal offence based solely on profiling or personality traits",
+              "citation": "Art. 5(1)(d)"
+            },
+            {
+              "id": "e",
+              "label": "Builds or expands facial recognition databases through untargeted scraping of facial images from the internet or CCTV",
+              "citation": "Art. 5(1)(e)"
+            },
+            {
+              "id": "f",
+              "label": "Infers emotions of people in the workplace or in education (other than for medical or safety reasons)",
+              "citation": "Art. 5(1)(f)"
+            },
+            {
+              "id": "g",
+              "label": "Categorises people by biometric data to infer race, political opinions, trade-union membership, religious or philosophical beliefs, sex life or sexual orientation",
+              "citation": "Art. 5(1)(g)"
+            },
+            {
+              "id": "h",
+              "label": "Real-time remote biometric identification in publicly accessible spaces for law enforcement (outside the narrow exceptions)",
+              "citation": "Art. 5(1)(h)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "highRisk",
+      "title": "High-risk test",
+      "intro": "A system is high-risk under Art. 6(1) (product safety, Annex I) or Art. 6(2) (sensitive use cases, Annex III).",
+      "questions": [
+        {
+          "id": "hr.annexI",
+          "type": "multi",
+          "optional": true,
+          "text": "Is the system a safety component of a product, or itself a product, covered by any of this EU product legislation? Tick all that apply, or none.",
+          "citation": "Art. 6(1), Annex I",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "machinery",
+              "label": "Machinery",
+              "citation": "Annex I, Section A, point 1"
+            },
+            {
+              "id": "toys",
+              "label": "Toys",
+              "citation": "Annex I, Section A, point 2"
+            },
+            {
+              "id": "recreationalCraft",
+              "label": "Recreational craft and personal watercraft",
+              "citation": "Annex I, Section A, point 3"
+            },
+            {
+              "id": "lifts",
+              "label": "Lifts and their safety components",
+              "citation": "Annex I, Section A, point 4"
+            },
+            {
+              "id": "atex",
+              "label": "Equipment for potentially explosive atmospheres",
+              "citation": "Annex I, Section A, point 5"
+            },
+            {
+              "id": "radio",
+              "label": "Radio equipment",
+              "citation": "Annex I, Section A, point 6"
+            },
+            {
+              "id": "pressure",
+              "label": "Pressure equipment",
+              "citation": "Annex I, Section A, point 7"
+            },
+            {
+              "id": "cableways",
+              "label": "Cableway installations",
+              "citation": "Annex I, Section A, point 8"
+            },
+            {
+              "id": "ppe",
+              "label": "Personal protective equipment",
+              "citation": "Annex I, Section A, point 9"
+            },
+            {
+              "id": "gas",
+              "label": "Appliances burning gaseous fuels",
+              "citation": "Annex I, Section A, point 10"
+            },
+            {
+              "id": "medical",
+              "label": "Medical devices",
+              "citation": "Annex I, Section A, point 11"
+            },
+            {
+              "id": "ivd",
+              "label": "In vitro diagnostic medical devices",
+              "citation": "Annex I, Section A, point 12"
+            },
+            {
+              "id": "aviation",
+              "label": "Civil aviation",
+              "citation": "Annex I, Section B"
+            },
+            {
+              "id": "vehicles",
+              "label": "Motor vehicles, two- or three-wheel vehicles, agricultural and forestry vehicles",
+              "citation": "Annex I, Section B"
+            },
+            {
+              "id": "marine",
+              "label": "Marine equipment",
+              "citation": "Annex I, Section B"
+            },
+            {
+              "id": "rail",
+              "label": "Rail systems",
+              "citation": "Annex I, Section B"
+            }
+          ]
+        },
+        {
+          "id": "hr.thirdPartyAssessment",
+          "type": "boolean",
+          "text": "Does that legislation require the product to undergo a third-party conformity assessment before it is placed on the market or put into service?",
+          "citation": "Art. 6(1)(b)",
+          "showIf": {
+            "q": "hr.annexI",
+            "hasAny": [
+              "machinery",
+              "toys",
+              "recreationalCraft",
+              "lifts",
+              "atex",
+              "radio",
+              "pressure",
+              "cableways",
+              "ppe",
+              "gas",
+              "medical",
+              "ivd",
+              "aviation",
+              "vehicles",
+              "marine",
+              "rail"
+            ]
+          }
+        },
+        {
+          "id": "hr.annexIII",
+          "type": "multi",
+          "optional": true,
+          "text": "Is the system intended to be used for any of these purposes? Tick all that apply, or none.",
+          "citation": "Art. 6(2), Annex III",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "1a",
+              "label": "Biometrics: remote biometric identification (not mere verification of identity)",
+              "citation": "Annex III, point 1(a)"
+            },
+            {
+              "id": "1b",
+              "label": "Biometrics: categorisation by sensitive or protected attributes",
+              "citation": "Annex III, point 1(b)"
+            },
+            {
+              "id": "1c",
+              "label": "Biometrics: emotion recognition",
+              "citation": "Annex III, point 1(c)"
+            },
+            {
+              "id": "2",
+              "label": "Critical infrastructure: safety component in managing digital infrastructure, road traffic, or water, gas, heating or electricity supply",
+              "citation": "Annex III, point 2"
+            },
+            {
+              "id": "3a",
+              "label": "Education: deciding access or admission to education and training",
+              "citation": "Annex III, point 3(a)"
+            },
+            {
+              "id": "3b",
+              "label": "Education: evaluating learning outcomes",
+              "citation": "Annex III, point 3(b)"
+            },
+            {
+              "id": "3c",
+              "label": "Education: assessing the level of education a person will receive or can access",
+              "citation": "Annex III, point 3(c)"
+            },
+            {
+              "id": "3d",
+              "label": "Education: monitoring prohibited behaviour of students during tests",
+              "citation": "Annex III, point 3(d)"
+            },
+            {
+              "id": "4a",
+              "label": "Employment: recruitment or selection — targeted job ads, filtering applications, evaluating candidates",
+              "citation": "Annex III, point 4(a)"
+            },
+            {
+              "id": "4b",
+              "label": "Employment: decisions on working conditions, promotion or termination, task allocation by behaviour or traits, monitoring and evaluating performance",
+              "citation": "Annex III, point 4(b)"
+            },
+            {
+              "id": "5a",
+              "label": "Essential services: public authorities assessing eligibility for public assistance benefits and services",
+              "citation": "Annex III, point 5(a)"
+            },
+            {
+              "id": "5b",
+              "label": "Essential services: evaluating creditworthiness or establishing a credit score (not fraud detection)",
+              "citation": "Annex III, point 5(b)"
+            },
+            {
+              "id": "5c",
+              "label": "Essential services: risk assessment and pricing for life and health insurance",
+              "citation": "Annex III, point 5(c)"
+            },
+            {
+              "id": "5d",
+              "label": "Essential services: evaluating and classifying emergency calls, dispatching emergency services, emergency patient triage",
+              "citation": "Annex III, point 5(d)"
+            },
+            {
+              "id": "6",
+              "label": "Law enforcement (risk of victimisation, polygraphs, evidence reliability, risk of offending, profiling)",
+              "citation": "Annex III, point 6"
+            },
+            {
+              "id": "7",
+              "label": "Migration, asylum and border control (polygraphs, risk assessment, examining applications, identification)",
+              "citation": "Annex III, point 7"
+            },
+            {
+              "id": "8a",
+              "label": "Justice: assisting a judicial authority in researching and interpreting facts and law and applying the law",
+              "citation": "Annex III, point 8(a)"
+            },
+            {
+              "id": "8b",
+              "label": "Democratic processes: influencing the outcome of an election or referendum or voting behaviour",
+              "citation": "Annex III, point 8(b)"
+            }
+          ]
+        },
+        {
+          "id": "hr.profiling",
+          "type": "boolean",
+          "text": "Does the system profile natural persons — automated processing of personal data to evaluate aspects of a person's life such as work performance, economic situation, health, preferences, behaviour or location?",
+          "citation": "Art. 6(3), last subparagraph; GDPR Art. 4(4)",
+          "showIf": {
+            "q": "hr.annexIII",
+            "hasAny": [
+              "1a",
+              "1b",
+              "1c",
+              "2",
+              "3a",
+              "3b",
+              "3c",
+              "3d",
+              "4a",
+              "4b",
+              "5a",
+              "5b",
+              "5c",
+              "5d",
+              "6",
+              "7",
+              "8a",
+              "8b"
+            ]
+          }
+        },
+        {
+          "id": "hr.derogation",
+          "type": "multi",
+          "optional": true,
+          "text": "Does the system only do one of the following, without materially influencing the outcome of decisions? Tick any that apply, or none.",
+          "citation": "Art. 6(3)",
+          "showIf": {
+            "all": [
+              {
+                "q": "hr.annexIII",
+                "hasAny": [
+                  "1a",
+                  "1b",
+                  "1c",
+                  "2",
+                  "3a",
+                  "3b",
+                  "3c",
+                  "3d",
+                  "4a",
+                  "4b",
+                  "5a",
+                  "5b",
+                  "5c",
+                  "5d",
+                  "6",
+                  "7",
+                  "8a",
+                  "8b"
+                ]
+              },
+              {
+                "q": "hr.profiling",
+                "is": false
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "a",
+              "label": "Performs a narrow procedural task",
+              "citation": "Art. 6(3)(a)"
+            },
+            {
+              "id": "b",
+              "label": "Improves the result of a previously completed human activity",
+              "citation": "Art. 6(3)(b)"
+            },
+            {
+              "id": "c",
+              "label": "Detects decision-making patterns or deviations, and is not meant to replace or influence a completed human assessment without proper human review",
+              "citation": "Art. 6(3)(c)"
+            },
+            {
+              "id": "d",
+              "label": "Performs a preparatory task to an assessment relevant to an Annex III use case",
+              "citation": "Art. 6(3)(d)"
+            }
+          ]
+        },
+        {
+          "id": "hr.rightsImpact",
+          "type": "multi",
+          "optional": true,
+          "text": "Even if no Annex III point applies: does the system materially influence a person's access to any of these?",
+          "help": "Annex III is a closed list, so this does not make the system high-risk. It flags the system for the reviewer, because the Commission can add use cases under Art. 7.",
+          "citation": "Art. 7",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "hr.annexIII",
+                  "hasAny": [
+                    "1a",
+                    "1b",
+                    "1c",
+                    "2",
+                    "3a",
+                    "3b",
+                    "3c",
+                    "3d",
+                    "4a",
+                    "4b",
+                    "5a",
+                    "5b",
+                    "5c",
+                    "5d",
+                    "6",
+                    "7",
+                    "8a",
+                    "8b"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "employment",
+              "label": "Employment"
+            },
+            {
+              "id": "finance",
+              "label": "Finance (loans, credit, insurance)"
+            },
+            {
+              "id": "health",
+              "label": "Healthcare"
+            },
+            {
+              "id": "education",
+              "label": "Education"
+            },
+            {
+              "id": "publicServices",
+              "label": "Essential public services (social security, housing)"
+            },
+            {
+              "id": "legal",
+              "label": "Legal or administrative decisions"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "transparency",
+      "title": "Transparency duties",
+      "intro": "These apply whatever the risk class.",
+      "questions": [
+        {
+          "id": "t.interacts",
+          "type": "boolean",
+          "text": "Is the system intended to interact directly with natural persons (e.g. a chatbot or voice assistant)?",
+          "citation": "Art. 50(1)",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          }
+        },
+        {
+          "id": "t.generates",
+          "type": "boolean",
+          "text": "Does the system generate synthetic audio, image, video or text content?",
+          "citation": "Art. 50(2)",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          }
+        },
+        {
+          "id": "t.emotionOrBiometric",
+          "type": "boolean",
+          "text": "Does the system perform emotion recognition or biometric categorisation of people?",
+          "citation": "Art. 50(3)",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          }
+        },
+        {
+          "id": "t.deepfake",
+          "type": "boolean",
+          "text": "Does the company use the system to generate or manipulate image, audio or video content that is a deep fake?",
+          "citation": "Art. 50(4), first subparagraph",
+          "showIf": {
+            "q": "t.generates",
+            "is": true
+          }
+        },
+        {
+          "id": "t.publicText",
+          "type": "boolean",
+          "text": "Does the company publish AI-generated or manipulated text to inform the public on matters of public interest, without human editorial review?",
+          "citation": "Art. 50(4), second subparagraph",
+          "showIf": {
+            "q": "t.generates",
+            "is": true
+          }
+        }
+      ]
+    }
+  ],
+  "defaults": {
+    "roles": [],
+    "outOfScope": false,
+    "prohibited": false,
+    "prohibitedPractices": [],
+    "highRisk": false,
+    "highRiskBasis": [],
+    "art6_3Exempt": false,
+    "publicBody": false,
+    "transparency": [],
+    "attention": [],
+    "riskClass": "MINIMAL"
+  },
+  "rules": [
+    {
+      "id": "role.provider.develops",
+      "when": {
+        "q": "role.develops",
+        "is": true
+      },
+      "add": {
+        "roles": "provider"
+      },
+      "citation": "Art. 3(3)",
+      "rationale": "The company develops the system and places it on the market or puts it into service under its own name, so it is the provider."
+    },
+    {
+      "id": "role.provider.integrates",
+      "when": {
+        "q": "role.integrates",
+        "is": true
+      },
+      "add": {
+        "roles": "provider"
+      },
+      "citation": "Art. 3(3), Art. 3(68)",
+      "rationale": "The company integrates a third-party model into a product it offers under its own name, so it is the provider of the resulting system (and a downstream provider of the model)."
+    },
+    {
+      "id": "role.provider.rebrands",
+      "when": {
+        "q": "role.rebrands",
+        "is": true
+      },
+      "add": {
+        "roles": "provider"
+      },
+      "citation": "Art. 25(1)(a)",
+      "rationale": "Putting its own name or trademark on a system developed by someone else makes the company the provider. Art. 25(1) is written for high-risk systems; for other systems the reviewer should confirm the company also meets the Art. 3(3) definition."
+    },
+    {
+      "id": "role.provider.modifies",
+      "when": {
+        "q": "role.modifies",
+        "is": true
+      },
+      "add": {
+        "roles": "provider"
+      },
+      "citation": "Art. 25(1)(b)",
+      "rationale": "A substantial modification makes the company the provider of the modified system; the original provider is generally no longer responsible for it."
+    },
+    {
+      "id": "role.provider.repurposes",
+      "when": {
+        "q": "role.repurposes",
+        "is": true
+      },
+      "add": {
+        "roles": "provider"
+      },
+      "citation": "Art. 25(1)(c)",
+      "rationale": "Changing the intended purpose of the system makes the company its provider where the system becomes high-risk as a result."
+    },
+    {
+      "id": "role.deployer",
+      "when": {
+        "q": "role.uses",
+        "is": true
+      },
+      "add": {
+        "roles": "deployer"
+      },
+      "citation": "Art. 3(4)",
+      "rationale": "The company uses the system under its authority in a professional capacity, so it is a deployer."
+    },
+    {
+      "id": "role.importer",
+      "when": {
+        "q": "role.imports",
+        "is": true
+      },
+      "add": {
+        "roles": "importer"
+      },
+      "citation": "Art. 3(6)",
+      "rationale": "The company places on the EU market a system bearing the name of a provider established outside the EU, so it is an importer."
+    },
+    {
+      "id": "role.distributor",
+      "when": {
+        "all": [
+          {
+            "q": "role.distributes",
+            "is": true
+          },
+          {
+            "not": {
+              "q": "role.imports",
+              "is": true
+            }
+          }
+        ]
+      },
+      "add": {
+        "roles": "distributor"
+      },
+      "citation": "Art. 3(7)",
+      "rationale": "The company makes the system available in the supply chain without being its provider or importer, so it is a distributor."
+    },
+    {
+      "id": "role.none",
+      "when": {
+        "all": [
+          {
+            "q": "role.develops",
+            "is": false
+          },
+          {
+            "q": "role.integrates",
+            "is": false
+          },
+          {
+            "q": "role.rebrands",
+            "is": false
+          },
+          {
+            "q": "role.modifies",
+            "is": false
+          },
+          {
+            "q": "role.repurposes",
+            "is": false
+          },
+          {
+            "q": "role.uses",
+            "is": false
+          },
+          {
+            "q": "role.imports",
+            "is": false
+          },
+          {
+            "q": "role.distributes",
+            "is": false
+          }
+        ]
+      },
+      "add": {
+        "attention": "No AI Act role was identified for this system. Check whether the company has any relationship to it that the questionnaire missed."
+      },
+      "citation": "Art. 3(3)–(7)",
+      "rationale": "None of the role tests applied. Without a role, no obligations attach to the company for this system."
+    },
+    {
+      "id": "role.publicBody",
+      "when": {
+        "q": "role.publicBody",
+        "is": true
+      },
+      "set": {
+        "publicBody": true
+      },
+      "citation": "Art. 27(1)",
+      "rationale": "The company is a body governed by public law or a private entity providing public services.",
+      "silent": true
+    },
+    {
+      "id": "scope.military",
+      "when": {
+        "q": "scope.exclusions",
+        "has": "military"
+      },
+      "set": {
+        "outOfScope": true
+      },
+      "citation": "Art. 2(3)",
+      "rationale": "Systems used exclusively for military, defence or national security purposes are outside the AI Act."
+    },
+    {
+      "id": "scope.research",
+      "when": {
+        "q": "scope.exclusions",
+        "has": "research"
+      },
+      "set": {
+        "outOfScope": true
+      },
+      "citation": "Art. 2(6)",
+      "rationale": "Systems developed and put into service solely for scientific research and development are outside the AI Act."
+    },
+    {
+      "id": "scope.preMarket",
+      "when": {
+        "q": "scope.exclusions",
+        "has": "preMarket"
+      },
+      "set": {
+        "outOfScope": true
+      },
+      "citation": "Art. 2(8)",
+      "rationale": "Research, testing and development before a system is placed on the market or put into service is outside the AI Act (testing in real-world conditions is not)."
+    },
+    {
+      "id": "scope.personal",
+      "when": {
+        "q": "scope.exclusions",
+        "has": "personal"
+      },
+      "set": {
+        "outOfScope": true
+      },
+      "citation": "Art. 2(10)",
+      "rationale": "Deployers who are natural persons using AI in a purely personal, non-professional activity are outside the AI Act's deployer obligations."
+    },
+    {
+      "id": "scope.intlCooperation",
+      "when": {
+        "q": "scope.exclusions",
+        "has": "intlCooperation"
+      },
+      "set": {
+        "outOfScope": true
+      },
+      "citation": "Art. 2(4)",
+      "rationale": "Use by non-EU public authorities or international organisations under international cooperation agreements is outside the AI Act, subject to adequate safeguards."
+    },
+    {
+      "id": "prohibited.a",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "a"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(a)"
+      },
+      "citation": "Art. 5(1)(a)",
+      "rationale": "Subliminal, manipulative or deceptive techniques that materially distort behaviour and are likely to cause significant harm are prohibited."
+    },
+    {
+      "id": "prohibited.b",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "b"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(b)"
+      },
+      "citation": "Art. 5(1)(b)",
+      "rationale": "Exploiting vulnerabilities due to age, disability or social or economic situation in a way that causes or is likely to cause significant harm is prohibited."
+    },
+    {
+      "id": "prohibited.c",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "c"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(c)"
+      },
+      "citation": "Art. 5(1)(c)",
+      "rationale": "Social scoring leading to unjustified or disproportionate detrimental treatment is prohibited."
+    },
+    {
+      "id": "prohibited.d",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "d"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(d)"
+      },
+      "citation": "Art. 5(1)(d)",
+      "rationale": "Predicting criminal offences based solely on profiling or personality traits is prohibited."
+    },
+    {
+      "id": "prohibited.e",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "e"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(e)"
+      },
+      "citation": "Art. 5(1)(e)",
+      "rationale": "Untargeted scraping of facial images to build facial recognition databases is prohibited."
+    },
+    {
+      "id": "prohibited.f",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "f"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(f)"
+      },
+      "citation": "Art. 5(1)(f)",
+      "rationale": "Emotion recognition in the workplace or in education is prohibited, except for medical or safety reasons."
+    },
+    {
+      "id": "prohibited.g",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "g"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(g)"
+      },
+      "citation": "Art. 5(1)(g)",
+      "rationale": "Biometric categorisation to infer sensitive characteristics is prohibited."
+    },
+    {
+      "id": "prohibited.h",
+      "when": {
+        "q": "prohibited.practices",
+        "has": "h"
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(h)"
+      },
+      "citation": "Art. 5(1)(h)",
+      "rationale": "Real-time remote biometric identification in publicly accessible spaces for law enforcement is prohibited outside the narrow exceptions of Art. 5(1)(h)(i)–(iii)."
+    },
+    {
+      "id": "hr.annexI",
+      "when": {
+        "all": [
+          {
+            "q": "hr.thirdPartyAssessment",
+            "is": true
+          }
+        ]
+      },
+      "set": {
+        "highRisk": true
+      },
+      "add": {
+        "highRiskBasis": "annexI"
+      },
+      "citation": "Art. 6(1), Annex I",
+      "rationale": "The system is a safety component of, or is itself, a product covered by Annex I legislation that requires third-party conformity assessment, so it is high-risk."
+    },
+    {
+      "id": "hr.annexI.noThirdParty",
+      "when": {
+        "q": "hr.thirdPartyAssessment",
+        "is": false
+      },
+      "add": {
+        "attention": "Covered by Annex I legislation but without third-party conformity assessment: not high-risk under Art. 6(1). Confirm the conformity route under the sectoral law."
+      },
+      "citation": "Art. 6(1)(b)",
+      "rationale": "The product is covered by Annex I legislation but does not require third-party conformity assessment, so Art. 6(1) does not make it high-risk."
+    },
+    {
+      "id": "hr.annexIII",
+      "when": {
+        "q": "hr.annexIII",
+        "hasAny": [
+          "1a",
+          "1b",
+          "1c",
+          "2",
+          "3a",
+          "3b",
+          "3c",
+          "3d",
+          "4a",
+          "4b",
+          "5a",
+          "5b",
+          "5c",
+          "5d",
+          "6",
+          "7",
+          "8a",
+          "8b"
+        ]
+      },
+      "set": {
+        "highRisk": true
+      },
+      "add": {
+        "highRiskBasis": "annexIII"
+      },
+      "citation": "Art. 6(2), Annex III",
+      "rationale": "The system's intended purpose is listed in Annex III, so it is high-risk unless the Art. 6(3) derogation applies."
+    },
+    {
+      "id": "hr.annexIII.5b",
+      "when": {
+        "q": "hr.annexIII",
+        "has": "5b"
+      },
+      "add": {
+        "highRiskBasis": "annexIII:5b"
+      },
+      "citation": "Annex III, point 5(b)",
+      "rationale": "Creditworthiness evaluation.",
+      "silent": true
+    },
+    {
+      "id": "hr.annexIII.5c",
+      "when": {
+        "q": "hr.annexIII",
+        "has": "5c"
+      },
+      "add": {
+        "highRiskBasis": "annexIII:5c"
+      },
+      "citation": "Annex III, point 5(c)",
+      "rationale": "Life and health insurance pricing.",
+      "silent": true
+    },
+    {
+      "id": "hr.profiling",
+      "when": {
+        "q": "hr.profiling",
+        "is": true
+      },
+      "citation": "Art. 6(3), last subparagraph",
+      "rationale": "The system profiles natural persons, so the Art. 6(3) derogation cannot apply: an Annex III system that profiles is always high-risk."
+    },
+    {
+      "id": "hr.derogation",
+      "when": {
+        "all": [
+          {
+            "q": "hr.profiling",
+            "is": false
+          },
+          {
+            "q": "hr.derogation",
+            "hasAny": [
+              "a",
+              "b",
+              "c",
+              "d"
+            ]
+          }
+        ]
+      },
+      "set": {
+        "highRisk": false,
+        "art6_3Exempt": true
+      },
+      "citation": "Art. 6(3)",
+      "rationale": "The system only performs a task listed in Art. 6(3) and does not profile, so it is not high-risk despite the Annex III use case. A provider relying on this must document the assessment (Art. 6(4)) and register the system (Art. 49(2))."
+    },
+    {
+      "id": "hr.derogation.keepsAnnexI",
+      "when": {
+        "all": [
+          {
+            "out": "art6_3Exempt",
+            "is": true
+          },
+          {
+            "out": "highRiskBasis",
+            "has": "annexI"
+          }
+        ]
+      },
+      "set": {
+        "highRisk": true
+      },
+      "citation": "Art. 6(1)",
+      "rationale": "The Art. 6(3) derogation only concerns Annex III. The system remains high-risk under Art. 6(1).",
+      "silent": true
+    },
+    {
+      "id": "hr.rightsImpact",
+      "when": {
+        "q": "hr.rightsImpact",
+        "hasAny": [
+          "employment",
+          "finance",
+          "health",
+          "education",
+          "publicServices",
+          "legal"
+        ]
+      },
+      "add": {
+        "attention": "Not listed in Annex III, but the system influences access to rights or essential services. Reviewer should check the Annex III wording closely and watch for Commission amendments under Art. 7."
+      },
+      "citation": "Art. 7",
+      "rationale": "The system influences access to rights or essential services without matching an Annex III point. This does not make it high-risk, but it is flagged for the reviewer."
+    },
+    {
+      "id": "t.50_1",
+      "when": {
+        "q": "t.interacts",
+        "is": true
+      },
+      "add": {
+        "transparency": "50(1)"
+      },
+      "citation": "Art. 50(1)",
+      "rationale": "The system interacts directly with natural persons, so they must be informed they are interacting with an AI system unless that is obvious."
+    },
+    {
+      "id": "t.50_2",
+      "when": {
+        "q": "t.generates",
+        "is": true
+      },
+      "add": {
+        "transparency": "50(2)"
+      },
+      "citation": "Art. 50(2)",
+      "rationale": "The system generates synthetic audio, image, video or text, so its outputs must be marked in a machine-readable format and detectable as artificially generated."
+    },
+    {
+      "id": "t.50_3",
+      "when": {
+        "q": "t.emotionOrBiometric",
+        "is": true
+      },
+      "add": {
+        "transparency": "50(3)"
+      },
+      "citation": "Art. 50(3)",
+      "rationale": "The system performs emotion recognition or biometric categorisation, so people exposed to it must be informed."
+    },
+    {
+      "id": "t.50_4_deepfake",
+      "when": {
+        "q": "t.deepfake",
+        "is": true
+      },
+      "add": {
+        "transparency": "50(4)-deepfake"
+      },
+      "citation": "Art. 50(4), first subparagraph",
+      "rationale": "The company uses the system to produce deep fakes, so it must disclose that the content was artificially generated or manipulated."
+    },
+    {
+      "id": "t.50_4_text",
+      "when": {
+        "q": "t.publicText",
+        "is": true
+      },
+      "add": {
+        "transparency": "50(4)-text"
+      },
+      "citation": "Art. 50(4), second subparagraph",
+      "rationale": "The company publishes AI-generated text on matters of public interest without human editorial review, so it must disclose that the text was artificially generated."
+    },
+    {
+      "id": "risk.limited",
+      "when": {
+        "out": "transparency",
+        "hasAny": [
+          "50(1)",
+          "50(2)",
+          "50(3)",
+          "50(4)-deepfake",
+          "50(4)-text"
+        ]
+      },
+      "set": {
+        "riskClass": "LIMITED"
+      },
+      "citation": "Art. 50",
+      "rationale": "Transparency duties apply, so the system is in the limited-risk category.",
+      "silent": true
+    },
+    {
+      "id": "risk.high",
+      "when": {
+        "out": "highRisk",
+        "is": true
+      },
+      "set": {
+        "riskClass": "HIGH_RISK"
+      },
+      "citation": "Art. 6",
+      "rationale": "The system is high-risk.",
+      "silent": true
+    },
+    {
+      "id": "risk.prohibited",
+      "when": {
+        "out": "prohibited",
+        "is": true
+      },
+      "set": {
+        "riskClass": "PROHIBITED"
+      },
+      "citation": "Art. 5",
+      "rationale": "The system involves a prohibited practice.",
+      "silent": true
+    },
+    {
+      "id": "risk.outOfScope",
+      "when": {
+        "out": "outOfScope",
+        "is": true
+      },
+      "set": {
+        "riskClass": "OUT_OF_SCOPE",
+        "highRisk": false,
+        "prohibited": false
+      },
+      "citation": "Art. 2",
+      "rationale": "The system is outside the scope of the AI Act.",
+      "silent": true
+    },
+    {
+      "id": "risk.minimal",
+      "when": {
+        "out": "riskClass",
+        "is": "MINIMAL"
+      },
+      "citation": "Art. 95",
+      "rationale": "No prohibited practice, high-risk use case or transparency duty applies. The system is minimal-risk: only AI literacy (Art. 4) applies, and voluntary codes of conduct are encouraged (Art. 95)."
+    }
+  ]
+}

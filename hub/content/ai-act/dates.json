@@ -1,0 +1,24 @@
+{
+  "prohibitions": {
+    "date": "2025-02-02",
+    "provision": "Art. 113(a)",
+    "label": "Prohibited practices and AI literacy (Chapters I and II)"
+  },
+  "transparency": {
+    "date": "2026-08-02",
+    "provision": "Art. 113",
+    "label": "Transparency duties (Art. 50)"
+  },
+  "highRiskAnnexIII": {
+    "date": "2026-08-02",
+    "provision": "Art. 113",
+    "label": "High-risk systems listed in Annex III (Art. 6(2))",
+    "note": "The Commission's Digital Omnibus proposal (November 2025) would delay the high-risk obligations, linking them to the availability of standards with a long-stop date of 2 December 2027 for Annex III. Confirm the adopted position before publishing this content version."
+  },
+  "highRiskAnnexI": {
+    "date": "2027-08-02",
+    "provision": "Art. 113(c)",
+    "label": "High-risk systems under Annex I product legislation (Art. 6(1))",
+    "note": "The Digital Omnibus proposal would move this to a long-stop date of 2 August 2028. Confirm the adopted position before publishing this content version."
+  }
+}

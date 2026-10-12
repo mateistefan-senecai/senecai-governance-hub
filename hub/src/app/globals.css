@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@theme {
+  /* Color — "Elevated Soft UI" system: the original senecai.eu
+     gold/cream/white/black Modernist palette, just with softer depth
+     (rounded corners, shadows) than the flat hard-edged original — see
+     panel.tsx, button.tsx, tag.tsx, etc. */
+  --color-ink: #16130f;
+  --color-ink-hover: #3e3930;
+  --color-body: #3e3930;
+  --color-muted: #6e6656;
+  --color-label: #8b8375;
+  --color-disabled: #9c9486;
+  --color-ground: #f2eee4;
+  --color-panel: #f7f4ec;
+  --color-surface: #ffffff;
+  --color-row-hover: #fbf9f3;
+  --color-hairline: #d9d2c2;
+  --color-hairline-light: #ede6d5;
+  --color-gold: #a8801f;
+  --color-gold-hover: #8a6a16;
+  --color-gold-light: #c9a227;
+  --color-gold-tint: #f2e6c8;
+  --color-gold-deep: #5c4712;
+  --color-border-neutral: #b9b1a0;
+  --color-backdrop: rgb(22 19 15 / 72%);
+
+  /* Fonts — wired to next/font CSS vars in layout.tsx */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-narrow: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+
+  /* Letter-spacing tokens from the design spec's type scale */
+  --tracking-tightest: -0.04em; /* plan readiness score */
+  --tracking-tighter: -0.03em; /* gap live score */
+  --tracking-tight: -0.015em; /* h1 */
+  --tracking-tag: 0.06em; /* tags */
+  --tracking-citation: 0.05em; /* citations */
+  --tracking-micro: 0.13em; /* micro-labels, low end */
+  --tracking-micro-wide: 0.16em; /* micro-labels, high end */
+
+  /* Layout constants */
+  --spacing-sidebar: 268px;
+}
+
+@layer base {
+  body {
+    @apply bg-ground text-body antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+
+  ::selection {
+    background: var(--color-gold-tint);
+  }
+
+  input,
+  textarea,
+  select {
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input:focus,
+  textarea:focus,
+  select:focus {
+    outline: none;
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 3px var(--color-gold-tint);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-gold);
+    outline-offset: 2px;
+  }
+}
+
+.prose-pretty {
+  text-wrap: pretty;
+}
