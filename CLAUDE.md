@@ -21,9 +21,9 @@ Do not assume scope, sequencing or positioning beyond what the spec states — a
 
 ## Code layout
 
-- `hub/` — **the rebuild**, built from the spec. All new work goes here. See `hub/README.md`.
-- `web/` — the previous prototype (AI Act + GDPR modules, landing page). Frozen: kept
-  running until the rebuild replaces it, then to be removed. Do not extend it.
+- `web/` — the app, rebuilt from the spec (see `web/README.md`). The Vercel project
+  builds from this folder. The previous prototype was deleted on 12 Oct 2026; it is in
+  git history before that date if anything needs to be looked up.
 
 ## Non-negotiables (from the spec)
 

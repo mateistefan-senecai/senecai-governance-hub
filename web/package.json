@@ -1,12 +1,15 @@
 {
-  "name": "app",
+  "name": "senecai-hub",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma migrate deploy && next build",
+    "build": "prisma migrate deploy && tsx scripts/content.ts publish && tsx prisma/seed.ts && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "tsx --test tests/*.test.ts",
+    "content:validate": "tsx scripts/content.ts validate",
+    "content:publish": "tsx scripts/content.ts publish",
     "postinstall": "prisma generate"
   },
   "dependencies": {

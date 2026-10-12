@@ -13,7 +13,7 @@ export default auth((req) => {
   const pathname = req.nextUrl.pathname;
   const isAuthRoute = pathname.startsWith("/login");
   // "/" is the public marketing landing page (src/components/landing-page.tsx) —
-  // signed-out visitors see it, signed-in visitors get bounced to /overview below.
+  // signed-out visitors see it, signed-in visitors go to /home, which routes them by role.
   const isPublicRoute = pathname === "/" || isAuthRoute;
 
   if (!isLoggedIn && !isPublicRoute) {
@@ -23,7 +23,7 @@ export default auth((req) => {
   }
 
   if (isLoggedIn && isPublicRoute) {
-    return NextResponse.redirect(new URL("/overview", req.nextUrl.origin));
+    return NextResponse.redirect(new URL("/home", req.nextUrl.origin));
   }
 
   return NextResponse.next();

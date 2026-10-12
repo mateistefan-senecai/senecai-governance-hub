@@ -1,89 +1,125 @@
-# SenecAI Governance Hub — web app
+# SenecAI Governance Hub — AI Act (rebuild)
 
-Next.js (App Router) + TypeScript + Tailwind + Prisma/PostgreSQL. Currently implements
-**Module 1 — AI Inventory & Risk Classification** and **Module 2 — Compliance Plan** of the
-AI Act module; see `../docs/context/ai-act-platform-concept.md` for the full module roadmap
-and `../CLAUDE.md` for product context that always applies to this repo.
+The Governance Hub, rebuilt from the spec in `../docs/spec/`. EU AI Act only for now.
+It replaced the earlier prototype on 12 Oct 2026.
 
-## Local setup
+**Stack:** Next.js 16 (App Router) · TypeScript · Tailwind 4 · Prisma 7 · PostgreSQL · Auth.js.
 
-Requires Node 20+ and a local PostgreSQL server.
+## Run it locally
+
+Needs Node 20+ and PostgreSQL.
 
 ```bash
 npm install
-cp .env.example .env   # then edit DATABASE_URL / AUTH_SECRET if needed
-npx prisma migrate dev
-npx prisma db seed
+cp .env.example .env            # set DATABASE_URL and AUTH_SECRET
+npx prisma migrate deploy       # tables, row-level security, the hub_app role
+npx prisma db seed              # legal content + demo data
 npm run dev
 ```
 
-Seeded accounts (password `changeme123` for all):
+Demo accounts (password `changeme123`):
 
-| Email | Role | Access |
-|---|---|---|
-| `admin@senecai.dev` | `SENECAI_ADMIN` | all organizations |
-| `consultant@senecai.dev` | `CONSULTANT` | assigned to "Demo Client SRL" via `ConsultantAssignment` |
-| `client@demo.dev` | `CLIENT_ADMIN` | "Demo Client SRL" only |
+| Email | Organisation | Role | Sees |
+|---|---|---|---|
+| `admin@senecai.dev` | SenecAI (consultancy) | Org admin | all SenecAI clients |
+| `consultant@senecai.dev` | SenecAI | Reviewer | NovaBank only (assigned) |
+| `client@novabank.dev` | SenecAI | Company user | NovaBank's own inventory |
+| `lawyer@ionescu.law` | Ionescu & Asociații (law firm) + Vitalis Health | Org admin / Reviewer | their firm's client; switches org to review Vitalis |
+| `it@vitalis.health` | Vitalis Health (company on its own) | Org admin | itself |
 
-## Architecture notes
+## Tests
 
-- **Multi-tenant, no physical isolation.** One database; every tenant-owned row is scoped
-  by `organizationId`. `src/lib/authz.ts` (`getAccessibleOrgIds`) is the single place that
-  decides which organizations a session may read/write — matches the concept note's current
-  decision not to isolate per client.
-- **Decision trees as configurable data.** `src/lib/decision-trees/` is a generic
-  engine (`engine.ts`) driven entirely by JSON (`trees/*.json`) — no AI-Act-specific logic
-  lives in code. This is what the concept note requires so GDPR/DORA/NIS2/CRA can reuse the
-  same engine later.
-- **Obligation mapping as configurable data.** `src/lib/obligations/catalog.json` lists every
-  obligation with its category (`GENERAL` / `PROVIDER_HIGH_RISK` / `DEPLOYER_HIGH_RISK`) and
-  AI Act citation; `getApplicableObligations()` in `src/lib/obligations/index.ts` is a pure
-  filter over a system's `legalRole`/`riskClassification` — same principle as the decision
-  trees, so the same shape can be reused for GDPR/DORA/NIS2/CRA obligation sets later.
-  `ObligationAssessment` rows (one per system × obligation) double as the gap-assessment
-  status (Feature 2.2) and the roadmap action item (Feature 2.3: owner, due date, status).
-  `scripts/validate-config.ts` structurally validates both the decision trees and the
-  obligation catalog, and smoke-tests example decision-tree paths
-  (`npx tsx scripts/validate-config.ts`).
-- **GENERAL obligations are org-level, not per-system.** `getApplicableObligations()` only
-  returns role/risk-gated (`PROVIDER_HIGH_RISK`/`DEPLOYER_HIGH_RISK`) items now;
-  `getGeneralObligations()` returns the `GENERAL` catalog items once, tracked per organization
-  via `OrganizationObligationAssessment` and surfaced on `/overview` rather than duplicated
-  across every AI system's own screens.
-- **Obligation-level PM sub-hub.** Each obligation's own checklist (`/compliance-plan/[id]/
-  obligations/[obligationId]`) is driven by `src/lib/obligations/pm-steps.json` (a `PM_STEPS`
-  map keyed by obligation id) — same configurable-data principle as the catalog and decision
-  trees. Only two example templates are populated; any obligation without one falls back to
-  the plain status control. Step completion (`ObligationPmStepCompletion`) rolls the
-  obligation's own `status` up automatically.
-- **Cross-regulation shell.** `/overview` aggregates AI Act readiness (per system and
-  org-wide) plus each org's general obligations; the persistent top bar (`nav-shell.tsx`)
-  covers Overview/AI Act/GDPR/NIS2/DORA/CRA, with only AI Act built — the rest are "Coming
-  soon" stubs. `OrganizationRegulationScope` (set via `/settings/regulations`) records which
-  regulations apply per org; the actual sector/size-based scoping questionnaire is still to be
-  supplied, so today it's a direct checklist.
-- **Everything AI-generated is marked preliminary.** Role and risk classification results
-  (`AiSystem.legalRole` / `riskClassification`) are written with
-  `*ReviewedByConsultant: false`; only a `CONSULTANT`/`SENECAI_ADMIN` can flip it to `true`
-  (`markReviewed` in `src/lib/actions/ai-systems.ts`). This mirrors the concept note's
-  requirement that AI-generated outputs are always human-reviewed before being treated as
-  final.
-- **Auth.js v5, split config.** `src/lib/auth.config.ts` is the Edge-safe base (no Prisma
-  import) used by `src/proxy.ts` (Next.js 16 renamed Middleware to Proxy); `src/lib/auth.ts`
-  extends it with the Credentials provider and Prisma lookups, and is only ever imported from
-  Node-runtime code (route handlers, server actions, server components).
+```bash
+npm test
+```
 
-## Known gaps (see docs/context for detail)
+- `tests/content.test.ts`: legal scenarios (credit scoring, CV screening, chatbots,
+  Art. 6(3), prohibited practices, scope exclusions, Annex I), plus the content validator.
+- `tests/tenant-isolation.test.ts`: tries to read, update and insert across tenants
+  at the database level, and to tamper with the audit log.
+- `tests/workflow.test.ts`: engine rules: the living register reopens the
+  classification, overrides need a reason, a compliant status needs a rationale,
+  and actions open and close with the assessment.
 
-- The high-risk decision tree only distinguishes `HIGH_RISK` vs. `NOT_HIGH_RISK` — it does not
-  determine `PROHIBITED` (Art. 5) or the `LIMITED`/`MINIMAL` split. Those enum values exist in
-  the schema for the concept note's full taxonomy but have no automated rule behind them yet.
-  Module 2's obligation mapping only has rules for the `HIGH_RISK` branch as a result.
-- The obligation catalog maps provider high-risk and deployer high-risk obligations only —
-  importer/distributor/downstream-provider obligations (Art. 23–25) aren't mapped yet, matching
-  the concept note's Feature 2.1 scope (provider + deployer + general only).
-- Feature 2.1a (auto-generating/templating Annex IV technical documentation) isn't built —
-  Module 2 currently tracks the *obligation* to produce it (with owner/due date/status) but not
-  document generation itself.
-- Modules 3–4 (Tracking, Regulatory Watch) are unbuilt placeholders.
-- No self-serve signup — users are provisioned via `prisma/seed.ts` or direct DB access for now.
+The last two need a seeded database.
+
+## Deploying (Vercel + Neon)
+
+The Vercel project's root directory is `web/`. Each build runs
+`prisma migrate deploy`, publishes the legal content, seeds demo data **only into an
+empty database**, then builds Next.js. Environment variables:
+
+| Variable | |
+|---|---|
+| `DATABASE_URL` | pooled connection (set by the Neon integration) |
+| `DATABASE_URL_UNPOOLED` | direct connection, used by migrations (set by the Neon integration) |
+| `AUTH_SECRET` | long random string |
+| `SEED_DEMO_DATA` | set to `false` once real clients use the platform |
+| `DB_SCHEMA` | optional, defaults to `hub` |
+
+The app keeps its tables in their own PostgreSQL schema (`hub`), so it can share a
+database with other tables. The production database still holds the retired
+prototype's tables in `public`; they are unused and can be dropped whenever convenient.
+
+The connecting role needs `CREATEROLE` once, for the migration that creates the
+`hub_app` role. Every request switches to `hub_app`, which cannot bypass row-level
+security, so tenant isolation holds even if the login role could bypass it.
+
+The legal content version in `content/ai-act/manifest.json` is immutable once
+deployed: changing content without bumping the version fails the build on purpose.
+
+## How it is built
+
+**Tenancy (spec §2, concept note §3 and §11).** An organisation (consultancy, law
+firm or company) is the tenant. It holds clients, the regulated companies it works for.
+A user can hold a membership in several organisations, with one role in each:
+`ORG_ADMIN`, `REVIEWER` or `COMPANY_USER`. Isolation is enforced by PostgreSQL
+row-level security (`prisma/migrations/*_row_level_security`). Every request runs in a
+transaction that switches to the `hub_app` role and sets `app.org_id`
+(`src/lib/tenant.ts`). Without it, no tenant row is visible. Role checks inside an
+organisation live in `src/lib/authz.ts`.
+
+**Legal content is data (concept note §2).** `content/ai-act/*.json` holds the
+applicability check, the classification questionnaire and its rules, the obligation
+library (article, parties, condition, application date, plain-language summary, action,
+expected evidence), the dates, and the vendor documents. `npm run content:validate`
+checks every reference, and `npm run content:publish` stores the library as an
+immutable `ContentVersion`. Classifications and obligations record the version they
+were built on. To change content, edit the JSON, bump `manifest.json`'s version, and
+publish.
+
+**Deterministic engine.** `src/lib/content/engine.ts` evaluates the questionnaire
+against the rules in order and records every rule that fired, with its citation and
+rationale. That trail is the "legal reasoning" shown to the reviewer. AI does not
+decide anything.
+
+**The workflow.**
+
+| Spec step | Where |
+|---|---|
+| Applicability check | `/clients/[id]/applicability`; a positive AI Act result opens the inventory |
+| 1 Inventory + vendor register | `/clients/[id]/inventory` (the main workspace), system page |
+| 2 Classification | `/systems/[id]/classify`; reviewer confirms or overrides with a written reason |
+| 3 Obligation mapping | regenerated automatically from the effective classification |
+| 4 Evidence | **Stage 2**: the obligation page shows the expected evidence |
+| 5 Gap assessment | reviewer sets compliant / partial / gap with a rationale (Stage 1: from the interview) |
+| 6 Roadmap | `/clients/[id]/roadmap`: phases, owner, deadline, request implementation |
+
+Engine rules already enforced:
+- editing a system's purpose, origin, supplier, deployment, use, autonomy or affected
+  people marks the classification outdated and flags assessed obligations;
+- an obligation is marked compliant only with a reviewer rationale (evidence from Stage 2);
+- every gap or partial obligation has one action, closed only by a compliant assessment;
+- the audit log is append-only (database trigger).
+
+## Not built yet (Stage 1 remainder and later)
+
+- PDF deliverables with draft → in review → approved → released states, input hashes and
+  "outdated" detection.
+- AI drafting of narrative sections under reviewer approval.
+- User invitations and branding settings (users are created by the seed for now), and
+  MFA for reviewers and admins.
+- A cross-tenant queue so SenecAI receives enquiries routed to it by other firms. Today
+  an enquiry is stored in the sender's tenant.
+- Stage 2: evidence repository, evidence-based gap assessment, templates. Stage 3:
+  regulatory monitoring.
