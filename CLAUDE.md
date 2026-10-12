@@ -19,6 +19,12 @@ Do not assume scope, sequencing or positioning beyond what the spec states — a
 - `docs/context/decision-trees/`, `docs/context/ai-inventory-questionnaire.md`, `docs/context/sources/` — earlier legal content (role and high-risk checklists, inventory questionnaire). Still valid source material for the questionnaires; the spec owner supplies the authoritative legal content as structured data.
 - `docs/archive/` — superseded documents. Never build from these.
 
+## Code layout
+
+- `hub/` — **the rebuild**, built from the spec. All new work goes here. See `hub/README.md`.
+- `web/` — the previous prototype (AI Act + GDPR modules, landing page). Frozen: kept
+  running until the rebuild replaces it, then to be removed. Do not extend it.
+
 ## Non-negotiables (from the spec)
 
 - Deterministic where the law is concerned: classification, obligations and dates come from versioned content data, never from AI.

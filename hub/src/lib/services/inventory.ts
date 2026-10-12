@@ -3,7 +3,7 @@
 // classification and flags its assessed obligations for review (spec §4).
 
 import type { Tx } from "@/lib/tenant";
-import type { AiSystem, Autonomy, Client, Stage, SystemOrigin, UseType } from "@/generated/prisma/client";
+import type { AiSystem, Autonomy, Client, Prisma, Stage, SystemOrigin, UseType } from "@/generated/prisma/client";
 import { evaluate, pruneAnswers } from "@/lib/content/engine";
 import type { Answers, ContentBundle } from "@/lib/content/types";
 import { audit, type Actor } from "./audit";
@@ -97,7 +97,7 @@ export function aiActApplies(client: Pick<Client, "applicability">): boolean {
 export async function runApplicability(tx: Tx, actor: Actor, client: Client, raw: Answers, bundle: ContentBundle) {
   const answers = pruneAnswers(bundle.applicability, raw);
   const { outputs, reasoning } = evaluate(bundle.applicability, answers);
-  const applicability = { findings: outputs.findings, reasoning };
+  const applicability = { findings: outputs.findings, reasoning } as Prisma.InputJsonObject;
   const updated = await tx.client.update({
     where: { id: client.id },
     data: {

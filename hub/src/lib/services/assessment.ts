@@ -48,8 +48,11 @@ export async function assessObligation(
 
   const def = bundle.obligations.find((o) => o.key === obligation.obligationKey);
   if (status === "COMPLIANT") {
-    // An open action nobody has asked for help with is no longer needed.
+    // An open action nobody has asked for help with is no longer needed; one
+    // already under way is closed by this assessment. (From Stage 2, closing
+    // an action will require completion evidence instead.)
     await tx.action.deleteMany({ where: { systemObligationId: obligation.id, status: "OPEN", enquiryId: null } });
+    await tx.action.updateMany({ where: { systemObligationId: obligation.id }, data: { status: "DONE" } });
   } else if (def) {
     await ensureAction(tx, updated, obligation.system.clientId, def);
   }
@@ -72,6 +75,8 @@ async function ensureAction(tx: Tx, so: SystemObligation, clientId: string, def:
     },
     update: { phase },
   });
+  // Reassessed from compliant back to partial or gap: the work is open again.
+  await tx.action.updateMany({ where: { systemObligationId: so.id, status: "DONE" }, data: { status: "OPEN" } });
 }
 
 /**

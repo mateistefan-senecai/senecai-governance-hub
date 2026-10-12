@@ -3,7 +3,7 @@
 // system's obligations from the content library.
 
 import type { Tx } from "@/lib/tenant";
-import type { AiSystem, Classification } from "@/generated/prisma/client";
+import type { AiSystem, Classification, Prisma } from "@/generated/prisma/client";
 import { applicableObligations, evaluate, missingAnswers, pruneAnswers, test } from "@/lib/content/engine";
 import type { Answers, ContentBundle, Firing, Outputs } from "@/lib/content/types";
 import { audit, type Actor } from "./audit";
@@ -36,9 +36,9 @@ export async function submitClassification(
       version: (previous?.version ?? 0) + 1,
       contentVersion: bundle.version,
       answers,
-      computed: outputs,
-      reasoning,
-      effective: outputs,
+      computed: outputs as Prisma.InputJsonObject,
+      reasoning: reasoning as Prisma.InputJsonArray,
+      effective: outputs as Prisma.InputJsonObject,
       createdById: actor.userId,
     },
   });
@@ -91,7 +91,7 @@ export async function overrideClassification(
     where: { id: classification.id },
     data: {
       status: "OVERRIDDEN",
-      effective,
+      effective: effective as Prisma.InputJsonObject,
       overrideReason: override.reason.trim(),
       reviewedById: actor.userId,
       reviewedAt: new Date(),

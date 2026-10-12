@@ -92,10 +92,12 @@ export function applicableObligations(bundle: ContentBundle, outputs: Outputs): 
  * and to the Annex I date otherwise — the two have different application
  * dates (Art. 113).
  */
+export function resolveDateKey(key: string, outputs: Outputs): string {
+  if (key !== "highRisk") return key;
+  const basis = Array.isArray(outputs.highRiskBasis) ? (outputs.highRiskBasis as string[]) : [];
+  return basis.some((b) => b.startsWith("annexIII")) ? "highRiskAnnexIII" : "highRiskAnnexI";
+}
+
 export function resolveDate(bundle: ContentBundle, key: string, outputs: Outputs): string | null {
-  if (key === "highRisk") {
-    const basis = Array.isArray(outputs.highRiskBasis) ? (outputs.highRiskBasis as string[]) : [];
-    key = basis.some((b) => b.startsWith("annexIII")) ? "highRiskAnnexIII" : "highRiskAnnexI";
-  }
-  return bundle.dates[key]?.date ?? null;
+  return bundle.dates[resolveDateKey(key, outputs)]?.date ?? null;
 }
