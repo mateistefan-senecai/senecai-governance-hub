@@ -1,3 +1,5 @@
+> **Superseded (12 Oct 2026).** Replaced by `docs/spec/ai-act-product-specification-v2.md` and `docs/spec/concept-note-for-developers-v1.md`. Kept for history only; do not build from it.
+
 # SenecAI — Platforma de Conformitate AI Act
 ## Notă de concept (pentru vibecoding / Claude Code)
 
