@@ -1,14 +1,33 @@
 # SenecAI Governance Hub
 
-## Context you must always draw from
+## Authoritative spec — read before any product or scope decision
 
-Before making any product or scope decision in this repo, read:
+The platform is being rebuilt from these two documents (11 Oct 2026). They win over anything else in the repo:
 
-- `docs/context/business-overview.md` — who SenecAI is, the SenecAI 2.0 rebrand (AI Act Guy → European Digital Compliance Platform), what's actually decided vs. still open, team, positioning, phasing.
-- `docs/context/ai-act-platform-concept.md` — the concept note for the AI Act compliance module (the first module being built): MVP scope, module breakdown (Inventory & Risk Classification → Compliance Plan → Tracking → Regulatory Watch, with Modules 5–6 as v2.0 bonus), and the architecture principles (decision trees/obligation mappings as configurable data, not hardcoded logic; documents always human-reviewed before delivery to clients).
+- `docs/spec/ai-act-product-specification-v2.md` — the **what**: users and workspaces, inventory as the primary workspace, the six-step workflow and its PDFs, the obligation-to-evidence engine, AI drafting + review, repository, regulatory monitoring, implementation pathway, build stages and their exit criteria, open decisions.
+- `docs/spec/concept-note-for-developers-v1.md` — the **how**: design principles, permission matrix, data model, PDF generation, document state machine, security requirements, suggested build order.
 
-These two files are the authoritative product/business context for this repository. Do not assume product scope, sequencing, or positioning beyond what they state — ask the user when something isn't covered by them.
+The original Word files are in `docs/spec/sources/`. If you edit the spec, edit the Word file and regenerate the markdown (`pandoc <file>.docx -t gfm --wrap=none`).
 
-## What this repo is
+Scope right now: **EU AI Act only.** GDPR, NIS2, DORA and CRA are out of scope for this version, but the data model must allow adding them later without redesign.
 
-The SenecAI Governance Hub: a real compliance/governance product (AI inventory, obligations, risk register, documentation, evidence, controls) for AI Act, GDPR, DORA, NIS2, CRA. It is a sister project to `senecai-website` (marketing site) but is being built independently — do not assume the website's stack, design, or scope applies here unless told so.
+Do not assume scope, sequencing or positioning beyond what the spec states — ask the user when something isn't covered.
+
+## Supporting context (lower precedence)
+
+- `docs/context/business-overview.md` — company background, team, SenecAI 2.0 rebrand. Written before the spec: where it conflicts (e.g. it says the Hub is not sold standalone and that GDPR is built in parallel), **the spec wins**.
+- `docs/context/decision-trees/`, `docs/context/ai-inventory-questionnaire.md`, `docs/context/sources/` — earlier legal content (role and high-risk checklists, inventory questionnaire). Still valid source material for the questionnaires; the spec owner supplies the authoritative legal content as structured data.
+- `docs/archive/` — superseded documents. Never build from these.
+
+## Code layout
+
+- `web/` — the app, rebuilt from the spec (see `web/README.md`). The Vercel project
+  builds from this folder. The previous prototype was deleted on 12 Oct 2026; it is in
+  git history before that date if anything needs to be looked up.
+
+## Non-negotiables (from the spec)
+
+- Deterministic where the law is concerned: classification, obligations and dates come from versioned content data, never from AI.
+- Nothing reaches a client as approved without a named human reviewer.
+- Strict tenant isolation: a firm's data is never visible to another firm or to SenecAI.
+- Legal content is data, versioned, stored separately from client data.

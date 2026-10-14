@@ -1,21 +1,17 @@
 import type { NextAuthConfig } from "next-auth";
 
-// Edge-safe base config shared between the full auth.ts (Node runtime —
-// route handlers, server actions, server components) and middleware.ts
-// (Edge runtime). Must not import anything that pulls in the generated
-// Prisma client — that's Node-only and breaks the Edge middleware bundle.
+// Edge-safe base config shared with src/proxy.ts. Must not import Prisma.
+// The token only carries the user id: roles live on memberships, which are
+// per organisation and are read from the database on every request
+// (src/lib/session.ts), so a revoked membership takes effect immediately.
 export default {
   session: { strategy: "jwt" },
   pages: { signIn: "/login" },
-  // Self-hosted behind a (trusted) reverse proxy / arbitrary port in dev —
-  // see https://errors.authjs.dev#untrustedhost.
   trustHost: true,
   providers: [],
   callbacks: {
     session({ session, token }) {
       session.user.id = token.sub as string;
-      session.user.role = token.role;
-      session.user.organizationId = token.organizationId;
       return session;
     },
   },

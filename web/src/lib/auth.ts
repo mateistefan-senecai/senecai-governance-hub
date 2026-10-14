@@ -13,35 +13,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       authorize: async (credentials) => {
-        const email = typeof credentials?.email === "string" ? credentials.email : undefined;
-        const password =
-          typeof credentials?.password === "string" ? credentials.password : undefined;
+        const email = typeof credentials?.email === "string" ? credentials.email.trim().toLowerCase() : undefined;
+        const password = typeof credentials?.password === "string" ? credentials.password : undefined;
         if (!email || !password) return null;
 
+        // "User" is global identity and not tenant-scoped, so this lookup
+        // needs no organisation context.
         const user = await prisma.user.findUnique({ where: { email } });
         if (!user) return null;
-
-        const valid = await bcrypt.compare(password, user.passwordHash);
-        if (!valid) return null;
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name ?? undefined,
-          role: user.role,
-          organizationId: user.organizationId,
-        };
+        if (!(await bcrypt.compare(password, user.passwordHash))) return null;
+        return { id: user.id, email: user.email, name: user.name };
       },
     }),
   ],
-  callbacks: {
-    ...authConfig.callbacks,
-    jwt({ token, user }) {
-      if (user) {
-        token.role = user.role;
-        token.organizationId = user.organizationId;
-      }
-      return token;
-    },
-  },
 });

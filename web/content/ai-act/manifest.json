@@ -1,0 +1,5 @@
+{
+  "version": "2026.10-draft.1",
+  "status": "DRAFT",
+  "notes": "First content version for the rebuild. Ported from the role and high-risk checklists in docs/context/decision-trees, with the Art. 2 scope, Art. 5 and Art. 50 screens added. Draft: needs legal review by the spec owner before it is published, in particular the application dates (see dates.json notes on the Digital Omnibus)."
+}

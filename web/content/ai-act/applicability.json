@@ -1,0 +1,163 @@
+{
+  "id": "applicability",
+  "title": "Applicability check",
+  "sections": [
+    {
+      "id": "company",
+      "title": "About the company",
+      "questions": [
+        {
+          "id": "co.establishedInEU",
+          "type": "boolean",
+          "text": "Is the company established (registered or with a place of establishment) in the EU?",
+          "citation": "AI Act Art. 2(1)(b); GDPR Art. 3(1)"
+        },
+        {
+          "id": "co.size",
+          "type": "single",
+          "text": "Company size",
+          "help": "Headcount and turnover as defined in Commission Recommendation 2003/361/EC.",
+          "options": [
+            { "id": "micro", "label": "Micro (fewer than 10 staff)" },
+            { "id": "small", "label": "Small (10–49 staff)" },
+            { "id": "medium", "label": "Medium (50–249 staff)" },
+            { "id": "large", "label": "Large (250 staff or more)" }
+          ]
+        },
+        {
+          "id": "co.sector",
+          "type": "single",
+          "text": "Main sector",
+          "options": [
+            { "id": "finance", "label": "Banking, insurance, investment or payments" },
+            { "id": "health", "label": "Healthcare or life sciences" },
+            { "id": "energy", "label": "Energy, transport, water or other critical infrastructure" },
+            { "id": "digital", "label": "Digital infrastructure, cloud or ICT services" },
+            { "id": "public", "label": "Public administration" },
+            { "id": "education", "label": "Education" },
+            { "id": "manufacturing", "label": "Manufacturing" },
+            { "id": "retail", "label": "Retail or consumer services" },
+            { "id": "other", "label": "Other" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ai",
+      "title": "AI activities",
+      "questions": [
+        {
+          "id": "ai.builds",
+          "type": "boolean",
+          "text": "Does the company develop AI systems, or build AI into products or services it offers under its own name?",
+          "citation": "AI Act Art. 2(1)(a), Art. 3(3)"
+        },
+        {
+          "id": "ai.placesOnEUMarket",
+          "type": "boolean",
+          "text": "Are those systems or products placed on the market, put into service or offered in the EU?",
+          "citation": "AI Act Art. 2(1)(a)",
+          "showIf": { "q": "ai.builds", "is": true }
+        },
+        {
+          "id": "ai.uses",
+          "type": "boolean",
+          "text": "Does the company use AI systems in its work, including third-party tools such as chatbots, copilots, scoring or screening tools?",
+          "citation": "AI Act Art. 2(1)(b), Art. 3(4)"
+        },
+        {
+          "id": "ai.outputUsedInEU",
+          "type": "boolean",
+          "text": "Is the output of the company's AI systems used in the EU?",
+          "citation": "AI Act Art. 2(1)(c)",
+          "showIf": { "q": "co.establishedInEU", "is": false }
+        },
+        {
+          "id": "ai.importsOrDistributes",
+          "type": "boolean",
+          "text": "Does the company import or resell AI systems made by others in the EU?",
+          "citation": "AI Act Art. 2(1)(d), Art. 3(6)–(7)"
+        }
+      ]
+    },
+    {
+      "id": "data",
+      "title": "Personal data",
+      "questions": [
+        {
+          "id": "data.personal",
+          "type": "boolean",
+          "text": "Does the company process personal data (about customers, staff or anyone else)?",
+          "citation": "GDPR Art. 2(1)"
+        }
+      ]
+    }
+  ],
+  "defaults": { "aiActApplies": false, "findings": [] },
+  "rules": [
+    {
+      "id": "aiact.provider",
+      "when": { "all": [ { "q": "ai.builds", "is": true }, { "q": "ai.placesOnEUMarket", "is": true } ] },
+      "set": { "aiActApplies": true },
+      "citation": "AI Act Art. 2(1)(a)",
+      "rationale": "The company develops AI and places it on the market or puts it into service in the EU, so it is in scope as a provider wherever it is established."
+    },
+    {
+      "id": "aiact.deployer",
+      "when": { "all": [ { "q": "ai.uses", "is": true }, { "q": "co.establishedInEU", "is": true } ] },
+      "set": { "aiActApplies": true },
+      "citation": "AI Act Art. 2(1)(b)",
+      "rationale": "The company is established in the EU and uses AI systems professionally, so it is in scope as a deployer."
+    },
+    {
+      "id": "aiact.thirdCountOutput",
+      "when": { "all": [ { "q": "co.establishedInEU", "is": false }, { "q": "ai.outputUsedInEU", "is": true } ] },
+      "set": { "aiActApplies": true },
+      "citation": "AI Act Art. 2(1)(c)",
+      "rationale": "The company is established outside the EU but the output of its AI systems is used in the EU, so it is in scope."
+    },
+    {
+      "id": "aiact.importDistribute",
+      "when": { "q": "ai.importsOrDistributes", "is": true },
+      "set": { "aiActApplies": true },
+      "citation": "AI Act Art. 2(1)(d)",
+      "rationale": "The company imports or distributes AI systems in the EU, so it is in scope."
+    },
+    {
+      "id": "finding.aiact.yes",
+      "when": { "out": "aiActApplies", "is": true },
+      "add": { "findings": { "regulation": "AI_ACT", "name": "EU AI Act (Regulation (EU) 2024/1689)", "applies": "yes", "provision": "Art. 2(1)", "summary": "Applies. The AI inventory and classification are opened for this client.", "coveredInThisVersion": true } },
+      "citation": "AI Act Art. 2(1)",
+      "rationale": "At least one AI Act scope test applies.",
+      "silent": true
+    },
+    {
+      "id": "finding.aiact.no",
+      "when": { "out": "aiActApplies", "is": false },
+      "add": { "findings": { "regulation": "AI_ACT", "name": "EU AI Act (Regulation (EU) 2024/1689)", "applies": "no", "provision": "Art. 2(1)", "summary": "No AI Act scope test applies on these answers. Re-run the check if the company starts building, using or reselling AI.", "coveredInThisVersion": true } },
+      "citation": "AI Act Art. 2(1)",
+      "rationale": "No AI Act scope test applies on these answers. If the company starts building, using or reselling AI, run the check again."
+    },
+    {
+      "id": "finding.gdpr",
+      "when": { "q": "data.personal", "is": true },
+      "add": { "findings": { "regulation": "GDPR", "name": "GDPR (Regulation (EU) 2016/679)", "applies": "yes", "provision": "Art. 2(1), Art. 3", "summary": "Applies to the processing of personal data. Not covered by the Hub in this version.", "coveredInThisVersion": false } },
+      "citation": "GDPR Art. 2(1), Art. 3",
+      "rationale": "The company processes personal data, so the GDPR applies to that processing."
+    },
+    {
+      "id": "finding.dora",
+      "when": { "q": "co.sector", "is": "finance" },
+      "add": { "findings": { "regulation": "DORA", "name": "DORA (Regulation (EU) 2022/2554)", "applies": "likely", "provision": "Art. 2(1)", "summary": "Likely applies if the company is one of the financial entities listed in Art. 2(1). Not covered by the Hub in this version.", "coveredInThisVersion": false } },
+      "citation": "DORA Art. 2(1)",
+      "rationale": "Financial-sector companies are likely within DORA, depending on their entity type."
+    },
+    {
+      "id": "finding.nis2",
+      "when": { "all": [ { "q": "co.size", "in": ["medium", "large"] }, { "q": "co.sector", "in": ["finance", "health", "energy", "digital", "public", "manufacturing"] } ] },
+      "add": { "findings": { "regulation": "NIS2", "name": "NIS2 (Directive (EU) 2022/2555)", "applies": "likely", "provision": "Art. 2(1), Annexes I–II", "summary": "Likely applies to medium and large entities in the sectors of Annexes I and II, as transposed nationally. Not covered by the Hub in this version.", "coveredInThisVersion": false } },
+      "citation": "NIS2 Art. 2(1), Annexes I–II",
+      "rationale": "A medium or large company in a sector listed in NIS2 Annex I or II is likely in scope."
+    }
+  ]
+}

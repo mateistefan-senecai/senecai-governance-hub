@@ -1,0 +1,9 @@
+[
+  { "kind": "instructionsForUse", "label": "Instructions for use", "citation": "Art. 13, Art. 26(1)" },
+  { "kind": "capabilitiesAndLimitations", "label": "Description of capabilities, limitations and accuracy metrics", "citation": "Art. 13(3)(b)" },
+  { "kind": "loggingDescription", "label": "Description of the logs the system generates and how to access them", "citation": "Art. 12, Art. 26(6)" },
+  { "kind": "declarationOfConformity", "label": "EU declaration of conformity", "citation": "Art. 47", "when": { "out": "highRisk", "is": true } },
+  { "kind": "ceMarking", "label": "Confirmation of CE marking", "citation": "Art. 48", "when": { "out": "highRisk", "is": true } },
+  { "kind": "registrationNumber", "label": "EU database registration number", "citation": "Art. 49, Art. 71", "when": { "all": [ { "out": "highRisk", "is": true }, { "out": "highRiskBasis", "hasPrefix": "annexIII" } ] } },
+  { "kind": "syntheticMarking", "label": "Description of how generated content is marked", "citation": "Art. 50(2)", "when": { "out": "transparency", "has": "50(2)" } }
+]
