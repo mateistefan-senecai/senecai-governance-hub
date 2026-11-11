@@ -1,6 +1,8 @@
 // Step 1: the AI inventory, a living register. Changing what a system is,
 // who supplies it, what it is for or where it runs reopens its
 // classification and flags its assessed obligations for review (spec §4).
+// Any change to what a PDF deliverable prints marks that PDF outdated
+// (refreshDocuments, src/lib/documents/freshness.ts).
 
 import type { Tx } from "@/lib/tenant";
 import type { AiSystem, Autonomy, Client, Prisma, Stage, SystemOrigin, UseType } from "@/generated/prisma/client";
@@ -8,6 +10,7 @@ import { evaluate, pruneAnswers } from "@/lib/content/engine";
 import type { Answers, ContentBundle } from "@/lib/content/types";
 import { audit, type Actor } from "./audit";
 import { ValidationError } from "./classification";
+import { refreshDocuments } from "@/lib/documents/freshness";
 
 export type SystemInput = {
   name: string;
@@ -45,6 +48,7 @@ export async function createSystem(tx: Tx, actor: Actor, client: Client, input: 
     data: { ...input, organizationId: client.organizationId, clientId: client.id },
   });
   await audit(tx, actor, { entityType: "AiSystem", entityId: system.id, action: "system.created", after: input });
+  await refreshDocuments(tx, actor, client.id, "AI system added");
   return system;
 }
 
@@ -71,6 +75,7 @@ export async function updateSystem(tx: Tx, actor: Actor, system: AiSystem, input
     before: pick(system, Object.keys(input) as (keyof SystemInput)[]),
     after: { ...input, reopenedBecause: reopen ? changed : undefined },
   });
+  await refreshDocuments(tx, actor, system.clientId, "AI system edited");
   return updated;
 }
 
@@ -114,5 +119,6 @@ export async function runApplicability(tx: Tx, actor: Actor, client: Client, raw
     before: client.applicability ?? undefined,
     after: applicability,
   });
+  await refreshDocuments(tx, actor, client.id, "applicability check re-run");
   return updated;
 }

@@ -7,6 +7,7 @@ import type { AiSystem, Classification, Prisma } from "@/generated/prisma/client
 import { applicableObligations, evaluate, missingAnswers, pruneAnswers, test } from "@/lib/content/engine";
 import type { Answers, ContentBundle, Firing, Outputs } from "@/lib/content/types";
 import { audit, type Actor } from "./audit";
+import { refreshDocuments } from "@/lib/documents/freshness";
 
 export const RISK_CLASSES = ["PROHIBITED", "HIGH_RISK", "LIMITED", "MINIMAL", "OUT_OF_SCOPE"] as const;
 export type RiskClass = (typeof RISK_CLASSES)[number];
@@ -52,6 +53,7 @@ export async function submitClassification(
   });
   await syncObligations(tx, system, outputs, bundle);
   await syncVendorDocuments(tx, system, outputs, bundle);
+  await refreshDocuments(tx, actor, system.clientId, "classification submitted");
   return created;
 }
 
@@ -66,6 +68,8 @@ export async function confirmClassification(tx: Tx, actor: Actor, classification
     action: "classification.confirmed",
     after: { effective: classification.effective },
   });
+  const { clientId } = await tx.aiSystem.findUniqueOrThrow({ where: { id: classification.systemId }, select: { clientId: true } });
+  await refreshDocuments(tx, actor, clientId, "classification confirmed");
   return updated;
 }
 
@@ -106,6 +110,7 @@ export async function overrideClassification(
   });
   await syncObligations(tx, system, effective, bundle);
   await syncVendorDocuments(tx, system, effective, bundle);
+  await refreshDocuments(tx, actor, system.clientId, "classification overridden");
   return updated;
 }
 
