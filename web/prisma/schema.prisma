@@ -60,6 +60,8 @@ model Organization {
   systemObligations SystemObligation[]
   actions           Action[]
   enquiries         Enquiry[]
+  documents         Document[]
+  documentFiles     DocumentFile[]
   auditEvents       AuditEvent[]
 }
 
@@ -108,6 +110,7 @@ model Client {
   aiSystems   AiSystem[]
   actions     Action[]
   enquiries   Enquiry[]
+  documents   Document[]
 
   @@index([organizationId])
 }
@@ -348,6 +351,100 @@ model Enquiry {
   createdAt      DateTime      @default(now())
 
   actions Action[]
+}
+
+// ── PDF deliverables (spec §3–4, concept note §6–7) ─────────────────────
+
+/// The five module PDFs of spec §4, plus the combined pack.
+enum DocumentKind {
+  INVENTORY
+  CLASSIFICATION
+  OBLIGATIONS
+  GAP_ASSESSMENT
+  ROADMAP
+  PACK
+}
+
+/// Concept note §7. `DRAFT` is the concept note's `ai_draft`: in Stage 1 the
+/// narrative is filled from the deterministic data, not by AI, and
+/// `Document.narrativeSource` says which. The states are the same either way.
+enum DocumentState {
+  DRAFT // generated; visible to reviewers only
+  IN_REVIEW // a reviewer is checking it
+  APPROVED // locked and signed with the reviewer's name and date
+  RELEASED // visible to the client
+}
+
+/// One version of one deliverable for one client: an immutable snapshot of
+/// the records it was built from. Regenerating creates a new version and
+/// keeps the old ones. A database trigger (migration `documents`) rejects
+/// any change to the snapshot, refuses illegal state transitions, and
+/// rejects deletes; a CHECK constraint refuses an approved or released
+/// document without a named reviewer.
+model Document {
+  id              String        @id @default(cuid())
+  organizationId  String
+  organization    Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId        String
+  client          Client        @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  kind            DocumentKind
+  version         Int
+  state           DocumentState @default(DRAFT)
+  /// SHA-256 of the canonical JSON of `snapshot`: the records and the legal
+  /// content version the document was built from (concept note §6).
+  inputHash       String
+  /// Legal content version current when the document was generated.
+  contentVersion  String
+  /// The structured data the PDF renders. Frozen at generation.
+  snapshot        Json
+  /// Written sections. `RULES` = filled from rule rationales, obligation
+  /// summaries and reviewer rationales. An AI drafter would write `AI` here,
+  /// under the same review states.
+  narrative       Json
+  narrativeSource String        @default("RULES")
+  /// Set (never cleared) once the records or the legal content behind the
+  /// snapshot change. A new version is then generated as a draft.
+  outdated        Boolean       @default(false)
+  outdatedAt      DateTime?
+  createdById     String
+  createdByName   String
+  createdAt       DateTime      @default(now())
+  submittedById   String?
+  submittedAt     DateTime?
+  /// The named human reviewer who approved the document.
+  reviewerId      String?
+  reviewerName    String?
+  approvedAt      DateTime?
+  releasedById    String?
+  releasedAt      DateTime?
+  /// Last comment when a reviewer sent the document back to draft.
+  reviewComment   String?
+
+  files DocumentFile[]
+
+  @@unique([clientId, kind, version])
+  @@index([organizationId, clientId])
+}
+
+/// A rendered PDF of a document in one state. Insert-only: each state the
+/// document passes through gets its own rendition of the same snapshot (the
+/// cover shows the state and reviewer), and none is ever overwritten.
+/// Bytes are stored in PostgreSQL for now, behind `DocumentStore`
+/// (src/lib/documents/store.ts), so they can move to object storage.
+model DocumentFile {
+  id             String        @id @default(cuid())
+  organizationId String
+  organization   Organization  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  documentId     String
+  document       Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  state          DocumentState
+  contentType    String        @default("application/pdf")
+  byteSize       Int
+  sha256         String
+  data           Bytes
+  createdAt      DateTime      @default(now())
+
+  @@unique([documentId, state])
 }
 
 // ── Audit ───────────────────────────────────────────────────────────────
