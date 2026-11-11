@@ -3,6 +3,8 @@ import { withTenant } from "@/lib/tenant";
 import { requireClient } from "@/lib/authz";
 import { PageHeader } from "@/components/ui/page-header";
 import { formatDate } from "@/lib/labels";
+import { KIND_BY_ID } from "@/lib/documents/kinds";
+import { visibleStates } from "@/lib/services/documents";
 
 const ACTION_LABEL: Record<string, string> = {
   "client.created": "Client added",
@@ -18,6 +20,12 @@ const ACTION_LABEL: Record<string, string> = {
   "vendorDocument.status": "Vendor document status changed",
   "action.updated": "Roadmap action updated",
   "enquiry.created": "Implementation requested",
+  "document.generated": "Document generated (draft)",
+  "document.submitted": "Document submitted for review",
+  "document.sentBack": "Document sent back to draft",
+  "document.approved": "Document approved",
+  "document.released": "Document released to client",
+  "document.outdated": "Document marked outdated",
 };
 
 export default async function AuditPage({ params }: PageProps<"/clients/[clientId]/audit">) {
@@ -47,6 +55,12 @@ export default async function AuditPage({ params }: PageProps<"/clients/[clientI
       }
     }
     for (const e of enquiries) names.set(e.id, client.name);
+    // Drafts are for reviewers only (concept note §7), so their history is too.
+    const documents = await tx.document.findMany({
+      where: { clientId: client.id, state: { in: visibleStates(ctx.role) } },
+      select: { id: true, kind: true, version: true },
+    });
+    for (const d of documents) names.set(d.id, `${KIND_BY_ID.get(d.kind)?.title} · version ${d.version}`);
     const events = await tx.auditEvent.findMany({ where: { entityId: { in: [...names.keys()] } }, orderBy: { at: "desc" }, take: 300 });
     return { events, names };
   });

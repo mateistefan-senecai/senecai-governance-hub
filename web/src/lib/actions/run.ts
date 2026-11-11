@@ -23,12 +23,14 @@ export async function run(back: string, fn: () => Promise<{ to?: string; notice?
 }
 
 function withParam(path: string, key: string, value: string) {
-  const [base, query = ""] = path.split("?");
+  // The query goes before any #fragment, or the browser treats it as part of the fragment.
+  const [withoutHash, hash] = path.split("#");
+  const [base, query = ""] = withoutHash.split("?");
   const params = new URLSearchParams(query);
   params.delete("notice");
   params.delete("error");
   params.set(key, value);
-  return `${base}?${params}`;
+  return `${base}?${params}${hash ? `#${hash}` : ""}`;
 }
 
 export function str(form: FormData, key: string): string {

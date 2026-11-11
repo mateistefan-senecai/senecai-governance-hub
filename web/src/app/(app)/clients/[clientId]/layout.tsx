@@ -28,6 +28,7 @@ export default async function ClientLayout({ children, params }: LayoutProps<"/c
           items={[
             { href: `${base}/inventory`, label: "AI inventory", hint: "Systems, classification, obligations", disabled: !open },
             { href: `${base}/roadmap`, label: "Compliance roadmap", hint: "Actions from the gap assessment", disabled: !open },
+            { href: `${base}/documents`, label: "Documents", hint: "PDF deliverables and their review", disabled: !open },
             { href: `${base}/applicability`, label: "Applicability check", hint: client.applicability ? undefined : "Start here" },
             { href: `${base}/audit`, label: "Audit log" },
           ]}
