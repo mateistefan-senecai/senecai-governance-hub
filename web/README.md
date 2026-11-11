@@ -40,8 +40,17 @@ npm test
 - `tests/workflow.test.ts`: engine rules: the living register reopens the
   classification, overrides need a reason, a compliant status needs a rationale,
   and actions open and close with the assessment.
+- `tests/documents.test.ts`: the PDF state machine: role rules, no approval without a
+  named reviewer (also refused by the database), open points, outdated detection after a
+  record or legal content change, old versions and their PDFs kept, every transition
+  audited.
 
-The last two need a seeded database.
+The last three, and the document tests in `tests/tenant-isolation.test.ts`, need a
+seeded database.
+
+`npx tsx scripts/pdf-samples.ts <dir>` writes one sample PDF of each deliverable from
+the demo data (rolled back afterwards). The current samples are in
+`../docs/screenshots/pdf-samples/`.
 
 ## Deploying (Vercel + Neon)
 
@@ -104,19 +113,74 @@ decide anything.
 | 4 Evidence | **Stage 2**: the obligation page shows the expected evidence |
 | 5 Gap assessment | reviewer sets compliant / partial / gap with a rationale (Stage 1: from the interview) |
 | 6 Roadmap | `/clients/[id]/roadmap`: phases, owner, deadline, request implementation |
+| PDFs (steps 1, 2, 3, 5, 6 + pack) | `/clients/[id]/documents`: generate, submit for review, approve, release, download; linked from the inventory and the roadmap |
 
 Engine rules already enforced:
 - editing a system's purpose, origin, supplier, deployment, use, autonomy or affected
   people marks the classification outdated and flags assessed obligations;
 - an obligation is marked compliant only with a reviewer rationale (evidence from Stage 2);
 - every gap or partial obligation has one action, closed only by a compliant assessment;
-- the audit log is append-only (database trigger).
+- the audit log is append-only (database trigger);
+- any change to what a PDF prints (system record, vendor register, classification,
+  obligations, assessments, owners, actions, enquiries, applicability, legal content
+  version) marks that PDF outdated.
+
+**PDF deliverables (spec §3–4, concept note §6–7).** `src/lib/documents/` and
+`src/lib/services/documents.ts`.
+
+- *Snapshot and input hash.* A document version stores the structured data it prints
+  (`snapshot.ts`) and the SHA-256 of its canonical JSON, which includes the current legal
+  content version. Each kind snapshots only what it prints, so an assessment outdates the
+  gap assessment, roadmap and pack, but not the inventory. The services call
+  `refreshDocuments` (`freshness.ts`) after every record change; the documents page calls
+  it too, which catches a newly published content version. Approval re-checks the hash.
+- *State machine.* draft → in review → approved → released, plus "send back" from review
+  to draft with a comment. Only `REVIEWER` and `ORG_ADMIN` generate and move documents;
+  `COMPANY_USER` sees and downloads released versions only (drafts are for reviewers,
+  concept note §7). Approval records the reviewer's name and date. Every transition and
+  every "marked outdated" goes to the audit log.
+- *Immutability, in the database* (migration `documents`): a trigger rejects any change
+  to the snapshot, illegal transitions, moving an outdated document forward, clearing the
+  outdated flag, changing a signed approval, and deletes; a CHECK constraint rejects an
+  approved or released row without a named reviewer. Regenerating creates a new version;
+  old versions and their PDFs stay downloadable.
+- *Storage.* One rendered PDF per state the document passes through (`DocumentFile`,
+  insert-only), all from the same frozen snapshot, so the cover always shows the true
+  state and reviewer. Bytes are in PostgreSQL under row-level security, behind
+  `DocumentStore` (`store.ts`) so they can move to EU object storage with the Stage 2
+  repository.
+- *Rendering.* `@react-pdf/renderer` (`render.tsx`): pure JavaScript, runs in a Vercel
+  function, no headless browser. Inter and Source Serif 4 (OFL) are embedded from
+  `assets/fonts/` because the standard PDF fonts cannot print Romanian diacritics.
+  The package is ESM-only, which is why `package.json` has `"type": "module"`.
+- *Narrative.* Filled from the deterministic data (rule rationales, obligation summaries,
+  reviewer rationales), every statement with its citation (`narrative.ts`). An AI drafter
+  can implement `NarrativeDrafter` later and is recorded in `Document.narrativeSource`;
+  the review states stay the same. No model is called today.
+
+Decisions taken where the spec is silent (conservative by default; to confirm):
+- A reviewer cannot approve a deliverable with *open points*: a classification,
+  obligation, gap, roadmap or pack PDF that contains an unreviewed, outdated or missing
+  classification, or (gap, roadmap, pack) an unassessed or to-be-reassessed obligation.
+  The inventory has none: it states what is recorded, including "not classified".
+- No four-eyes rule: the reviewer who generated a document may approve it (a one-lawyer
+  firm must be able to work). Both names are recorded.
+- A released document that becomes outdated stays visible to the client, flagged
+  outdated, until a new version is released.
+- Only the latest version of a deliverable can move through the states.
+- Generating when nothing changed since the latest current version is refused.
+- The PDF cover keeps a small "Governance Hub" line and the hub name in the PDF metadata
+  until the white-label question (spec §12) is decided. The logo prints once
+  `Organization.brandLogo` holds a `data:image/…` URI (no network fetch at render time);
+  branding settings are not built yet, so PDFs show the brand name or organisation name.
+- Company users do not see draft documents in the audit log either.
 
 ## Not built yet (Stage 1 remainder and later)
 
-- PDF deliverables with draft → in review → approved → released states, input hashes and
-  "outdated" detection.
-- AI drafting of narrative sections under reviewer approval.
+- AI drafting of narrative sections under reviewer approval (the PDFs carry a
+  deterministic narrative; the drafter interface is in place).
+- Reviewer comments and edits on a document beyond "send back with a comment"; the
+  evidence index in the gap assessment lists expected evidence only (Stage 2).
 - User invitations and branding settings (users are created by the seed for now), and
   MFA for reviewers and admins.
 - A cross-tenant queue so SenecAI receives enquiries routed to it by other firms. Today

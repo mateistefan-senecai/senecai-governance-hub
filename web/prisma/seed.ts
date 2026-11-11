@@ -19,6 +19,7 @@ import type { Actor } from "../src/lib/services/audit";
 import { confirmClassification, submitClassification } from "../src/lib/services/classification";
 import { createSystem, runApplicability, type SystemInput } from "../src/lib/services/inventory";
 import { assessObligation } from "../src/lib/services/assessment";
+import { generateDocument, transitionDocument } from "../src/lib/services/documents";
 import type { MemberRole, OrganizationType } from "../src/generated/prisma/enums";
 
 const PASSWORD = "changeme123";
@@ -140,6 +141,16 @@ async function main() {
       dataCategories: ["Product information"], deploymentContext: "Marketing department",
       useType: "INTERNAL", autonomy: "ADVISORY", stage: "PILOT",
     }));
+
+    // Deliverables: the inventory PDF reviewed and released to NovaBank, and
+    // a draft of the classification report (its open points block approval
+    // until the remaining classifications are reviewed).
+    const reviewer = { ...consultantActor, role: "REVIEWER" as const };
+    const inventoryPdf = await generateDocument(tx, reviewer, novabank.id, "INVENTORY");
+    for (const step of ["submit", "approve", "release"] as const) {
+      await transitionDocument(tx, reviewer, novabank.id, inventoryPdf.id, step);
+    }
+    await generateDocument(tx, reviewer, novabank.id, "CLASSIFICATION");
   });
 
   // ── Ionescu & Asociații (separate tenant) ───────────────────────────
@@ -164,6 +175,7 @@ async function main() {
       ...BASE, "role.integrates": true, "role.uses": true, "role.publicBody": false,
       "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true,
     }, bundle);
+    await generateDocument(tx, { ...actor, role: "ORG_ADMIN" }, logiflow.id, "INVENTORY");
   });
 
   // ── Vitalis Health (a company on its own account) ────────────────────
