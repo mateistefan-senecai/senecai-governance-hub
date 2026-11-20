@@ -94,3 +94,45 @@ test("tenant transactions run as hub_app, which cannot bypass row-level security
   );
   assert.deepEqual(role, { name: "hub_app", bypass: false, superuser: false });
 });
+
+// ── PDF deliverables (Document, DocumentFile) ─────────────────────────────
+// The seed generates an inventory PDF for each firm's client.
+
+test("one tenant cannot see another tenant's documents or their PDFs", async () => {
+  const theirs = await withTenant(ionescu, (tx) => tx.document.findFirstOrThrow({ include: { files: true } }));
+  assert.ok(theirs.files.length > 0);
+  await withTenant(senecai, async (tx) => {
+    assert.equal(await tx.document.findUnique({ where: { id: theirs.id } }), null);
+    assert.equal(await tx.documentFile.findUnique({ where: { id: theirs.files[0].id } }), null);
+    const orgs = new Set([
+      ...(await tx.document.findMany()).map((d) => d.organizationId),
+      ...(await tx.documentFile.findMany({ select: { organizationId: true } })).map((f) => f.organizationId),
+    ]);
+    assert.deepEqual([...orgs], [senecai.orgId]);
+    const updated = await tx.document.updateMany({ where: { id: theirs.id }, data: { outdated: true } });
+    assert.equal(updated.count, 0);
+  });
+  await withUser("someone-with-no-memberships", async (tx) => {
+    assert.equal(await tx.document.count(), 0);
+    assert.equal(await tx.documentFile.count(), 0);
+  });
+});
+
+test("one tenant cannot plant documents or PDFs in another tenant, or attach them to its records", async () => {
+  const theirs = await withTenant(ionescu, (tx) => tx.document.findFirstOrThrow());
+  const document = (organizationId: string, clientId: string) => ({
+    organizationId, clientId, kind: "ROADMAP" as const, version: 99, inputHash: "x", contentVersion: "x",
+    snapshot: {}, narrative: {}, createdById: senecai.userId, createdByName: "Intruder",
+  });
+  // Into their organisation: refused by row-level security.
+  await assert.rejects(withTenant(senecai, (tx) => tx.document.create({ data: document(ionescu.orgId, ionescuClientId) })), /row-level security/);
+  // Into our organisation but pointing at their client or their document: refused by the guard triggers
+  // (foreign keys alone would not check the tenant).
+  await assert.rejects(withTenant(senecai, (tx) => tx.document.create({ data: document(senecai.orgId, ionescuClientId) })), /not in this organisation/);
+  await assert.rejects(
+    withTenant(senecai, (tx) =>
+      tx.documentFile.create({ data: { organizationId: senecai.orgId, documentId: theirs.id, state: "DRAFT", byteSize: 1, sha256: "x", data: Buffer.from("x") } }),
+    ),
+    /does not belong/,
+  );
+});

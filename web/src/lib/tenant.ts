@@ -38,3 +38,15 @@ export async function withUser<T>(userId: string, fn: (tx: Tx) => Promise<T>): P
     return fn(tx);
   });
 }
+
+/**
+ * Runs `fn` for an anonymous visitor: no user, no organisation. Under RLS
+ * this sees no tenant rows at all; the only thing it can do is what a
+ * policy allows without a tenant, i.e. insert a demo request.
+ */
+export async function withPublic<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(SET_APP_ROLE);
+    return fn(tx);
+  });
+}

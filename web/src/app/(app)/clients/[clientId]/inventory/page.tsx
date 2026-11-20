@@ -45,7 +45,12 @@ export default async function InventoryPage({ params }: PageProps<"/clients/[cli
         crumb="Step 1 · AI inventory"
         title="AI inventory"
         subtitle="Every AI system the company builds, buys or embeds. Open a system to classify it and work through its obligations."
-        actions={<Button variant="primary" href={`${base}/systems/new`}>+ Add AI system</Button>}
+        actions={
+          <>
+            <Button href={`${base}/documents`}>Documents (PDF)</Button>
+            <Button variant="primary" href={`${base}/systems/new`}>+ Add AI system</Button>
+          </>
+        }
       />
       <div className="flex flex-wrap items-end justify-end gap-10 border-b border-hairline bg-ground px-8 py-4">
         <StatTile label="AI systems" value={systems.length} />

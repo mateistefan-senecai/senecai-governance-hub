@@ -14,6 +14,7 @@ import {
 } from "@/lib/services/classification";
 import { createSystem, updateSystem, type SystemInput } from "@/lib/services/inventory";
 import { assessObligation } from "@/lib/services/assessment";
+import { refreshDocuments } from "@/lib/documents/freshness";
 import type { Autonomy, ObligationStatus, Stage, SystemOrigin, UseType, VendorDocStatus } from "@/generated/prisma/enums";
 import { actor, parseAnswers, run, str, strOrNull } from "./run";
 
@@ -139,6 +140,7 @@ export async function setVendorDocumentStatus(clientId: string, systemId: string
         before: { status: doc.status },
         after: { status },
       });
+      await refreshDocuments(tx, actor(ctx), clientId, "vendor document status changed");
     });
   });
 }
@@ -177,6 +179,7 @@ export async function setObligationOwner(clientId: string, systemId: string, obl
         before: { ownerName: so.ownerName },
         after: { ownerName },
       });
+      await refreshDocuments(tx, actor(ctx), clientId, "obligation owner changed");
     });
     return { notice: "Owner saved." };
   });

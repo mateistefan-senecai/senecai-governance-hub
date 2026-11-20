@@ -17,7 +17,7 @@ const manrope = Manrope({
 
 export const metadata: Metadata = {
   title: "SenecAI Governance Hub",
-  description: "European Digital Compliance Platform",
+  description: "EU AI Act compliance, from the applicability check to a reviewed roadmap, for law firms, consultancies and the companies they advise.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
