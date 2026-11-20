@@ -11,9 +11,16 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { Tag } from "@/components/ui/tag";
 import { Button } from "@/components/ui/button";
 import { ORG_TYPE_LABEL } from "@/lib/labels";
+import { receivesDemoRequests } from "@/lib/services/demo-requests";
 
 export default async function ClientsPage() {
   const ctx = await getCtx();
+  // SenecAI's admins also see the landing page's demo requests.
+  const newDemoRequests = canAdmin(ctx)
+    ? await withTenant(ctx, async (tx) =>
+        (await receivesDemoRequests(tx, ctx.orgId)) ? tx.demoRequest.count({ where: { status: "NEW" } }) : null,
+      )
+    : null;
   const clients = await withTenant(ctx, (tx) =>
     tx.client.findMany({
       where: clientWhere(ctx),
@@ -38,6 +45,13 @@ export default async function ClientsPage() {
           ctx.role === "REVIEWER"
             ? "The clients you are assigned to. Open one to work in its AI inventory."
             : "Every client of your organisation. Open one to work in its AI inventory."
+        }
+        actions={
+          newDemoRequests !== null && (
+            <Button href="/demo-requests" variant={newDemoRequests ? "primary" : "ghost"}>
+              Demo requests{newDemoRequests ? ` · ${newDemoRequests} new` : ""}
+            </Button>
+          )
         }
       />
       <div className="space-y-6 p-8">

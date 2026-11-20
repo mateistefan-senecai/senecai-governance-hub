@@ -56,6 +56,12 @@ async function main() {
 
   // ── SenecAI ──────────────────────────────────────────────────────────
   const senecai = await createOrg("SenecAI", "CONSULTANCY", "SenecAI");
+  // SenecAI, as the Hub's vendor, receives the landing page's demo requests.
+  // Only a migration or the seed may set this flag (migration demo_requests).
+  await withTenant({ userId: "seed", orgId: senecai }, async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.allow_vendor_flag', 'on', true)`;
+    await tx.organization.update({ where: { id: senecai }, data: { receivesDemoRequests: true } });
+  });
   await withTenant({ userId: admin.id, orgId: senecai }, async (tx) => {
     const actor: Actor = { userId: admin.id, userName: admin.name, orgId: senecai };
     const consultantActor: Actor = { userId: consultant.id, userName: consultant.name, orgId: senecai };

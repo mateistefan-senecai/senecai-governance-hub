@@ -49,6 +49,9 @@ model Organization {
   brandName  String?
   brandLogo  String?
   region     String           @default("EU")
+  /// The organisation that receives demo requests from the public landing
+  /// page (SenecAI, as the Hub's vendor). At most one, enforced in the database.
+  receivesDemoRequests Boolean @default(false)
   createdAt  DateTime         @default(now())
 
   memberships       Membership[]
@@ -351,6 +354,44 @@ model Enquiry {
   createdAt      DateTime      @default(now())
 
   actions Action[]
+}
+
+// ── Demo requests from the public landing page ──────────────────────────
+
+enum DemoRequestStatus {
+  NEW
+  CONTACTED
+  CLOSED
+}
+
+enum DemoRequesterType {
+  LAW_FIRM
+  CONSULTANCY
+  COMPANY
+  OTHER
+}
+
+/// A request for a demo sent from the public landing page. Not tenant data
+/// of the sender (who has no account): it is addressed to the organisation
+/// with `receivesDemoRequests`, and only that organisation can read it
+/// (migration `demo_requests`). Anyone may insert; nobody may delete except
+/// in a purge.
+model DemoRequest {
+  id            String            @id @default(cuid())
+  name          String
+  email         String
+  organization  String
+  requesterType DemoRequesterType
+  role          String?
+  message       String?
+  consentAt     DateTime
+  status        DemoRequestStatus @default(NEW)
+  handledById   String?
+  handledByName String?
+  handledAt     DateTime?
+  createdAt     DateTime          @default(now())
+
+  @@index([createdAt])
 }
 
 // ── PDF deliverables (spec §3–4, concept note §6–7) ─────────────────────

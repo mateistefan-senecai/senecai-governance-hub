@@ -44,8 +44,11 @@ npm test
   named reviewer (also refused by the database), open points, outdated detection after a
   record or legal content change, old versions and their PDFs kept, every transition
   audited.
+- `tests/demo-requests.test.ts`: a visitor can send a demo request but not read one;
+  another firm can't read, update or delete them; the app can't make another
+  organisation their receiver.
 
-The last three, and the document tests in `tests/tenant-isolation.test.ts`, need a
+The last four, and the document tests in `tests/tenant-isolation.test.ts`, need a
 seeded database.
 
 `npx tsx scripts/pdf-samples.ts <dir>` writes one sample PDF of each deliverable from
@@ -175,6 +178,21 @@ Decisions taken where the spec is silent (conservative by default; to confirm):
   branding settings are not built yet, so PDFs show the brand name or organisation name.
 - Company users do not see draft documents in the audit log either.
 
+**Public pages and demo requests.** `/` is the landing page
+(`src/components/landing-page.tsx`) and `/request-demo` its form; both are public in
+`src/proxy.ts`. A visitor has no tenant, so a demo request is stored without one
+(`withPublic` in `src/lib/tenant.ts`) and addressed to the single organisation with
+`Organization.receivesDemoRequests` (SenecAI). Row-level security lets anyone insert a
+new request and only that organisation read, update or delete them (migration
+`demo_requests`). Its org admins see a "Demo requests" button on the clients page and
+an inbox at `/demo-requests`, where they mark requests contacted or closed (audited) and
+delete them for erasure or retention. Only a migration or the seed can set the flag. The
+migration flags an existing organisation named "SenecAI" of type consultancy; if
+production is ever rebuilt without demo data, set it with
+`SET app.allow_vendor_flag = 'on'` in the same transaction as the update. Spam
+protection is a hidden honeypot field and a minimum fill time; there is no rate limit
+or email notification yet.
+
 ## Not built yet (Stage 1 remainder and later)
 
 - AI drafting of narrative sections under reviewer approval (the PDFs carry a
@@ -185,5 +203,6 @@ Decisions taken where the spec is silent (conservative by default; to confirm):
   MFA for reviewers and admins.
 - A cross-tenant queue so SenecAI receives enquiries routed to it by other firms. Today
   an enquiry is stored in the sender's tenant.
+- Email notification of new demo requests, and a rate limit on the public form.
 - Stage 2: evidence repository, evidence-based gap assessment, templates. Stage 3:
   regulatory monitoring.
