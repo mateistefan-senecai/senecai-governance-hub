@@ -21,16 +21,16 @@ export function NoticeBar({ message, onDismiss }: { message: string; onDismiss?:
   }
 
   return (
-    <div className="flex items-center justify-between gap-4 border-b border-hairline bg-gold-tint px-8 py-2.5 shadow-sm">
-      <p className="text-[13px] text-gold-deep">
-        <span className="mr-2 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide">Notice</span>
+    <div className="flex items-center justify-between gap-4 bg-ink/90 px-8 py-2.5 text-rail-text backdrop-blur">
+      <p className="text-[13px]">
+        <span className="mr-2 font-mono text-[10.5px] font-medium tracking-micro text-gold-light">Notice</span>
         {message}
       </p>
       <button
         type="button"
         onClick={handleDismiss}
         aria-label="Dismiss notice"
-        className="text-ink hover:text-gold-hover"
+        className="flex size-8 items-center justify-center text-lg hover:text-gold-light"
       >
         ×
       </button>
