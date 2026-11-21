@@ -102,7 +102,7 @@ const PARTY = (p: string) => p.split(" & ").map((x) => x.charAt(0).toUpperCase()
 const SCREEN_OF: Record<string, string> = {
   role: "Role (Art. 3, Art. 25)",
   scope: "Scope (Art. 2)",
-  prohibited: "Prohibited practices (Art. 5)",
+  prohibited: "Prohibited practices: risk screening (Art. 5)",
   hr: "High-risk test (Art. 6, Annexes I and III)",
   t: "Transparency (Art. 50)",
   risk: "Risk class",
@@ -433,7 +433,7 @@ function ClassificationSection({ snap, narrative }: { snap: Snapshot; narrative:
                     <Text style={[s.strong, { fontSize: 7.8 }]}>{SCREEN_OF[screen] ?? screen}</Text>
                     {firings.map((r, j) => (
                       <Text key={j} style={{ paddingLeft: 8 }}>
-                        – {r.rationale} <Text style={s.cite}>[{r.citation}]</Text>
+                        • {r.rationale} <Text style={s.cite}>[{r.citation}]</Text>
                       </Text>
                     ))}
                   </View>

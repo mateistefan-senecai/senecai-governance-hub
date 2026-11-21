@@ -1,14 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { missingAnswers, pruneAnswers, test } from "@/lib/content/engine";
+import { missingAnswers, pruneAnswers, test, visibleOptions } from "@/lib/content/engine";
 import type { AnswerValue, Answers, Question, Questionnaire } from "@/lib/content/types";
-import { Citation } from "@/components/ui/citation";
 
 /**
  * Renders any questionnaire from the content library. Questions appear and
  * disappear as their `showIf` conditions change; answers to hidden
  * questions are dropped before submitting, exactly as the server does.
+ * Questions do not show their article references: those belong to the
+ * reasoning ("why"), which the reviewer sees with the result.
  */
 export function QuestionnaireForm({
   questionnaire,
@@ -32,7 +33,7 @@ export function QuestionnaireForm({
     <form action={action} className="space-y-6">
       <input type="hidden" name="answers" value={JSON.stringify(pruned)} />
       {questionnaire.sections.map((section, si) => {
-        const visible = section.questions.filter((q) => !q.showIf || test(q.showIf, answers, {}));
+        const visible = section.questions.filter((q) => !q.showIf || test(q.showIf, pruned, {}));
         if (!visible.length) return null;
         return (
           <fieldset key={section.id} className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm" disabled={disabled}>
@@ -46,7 +47,7 @@ export function QuestionnaireForm({
             </div>
             <div className="divide-y divide-hairline-light">
               {visible.map((q) => (
-                <QuestionRow key={q.id} q={q} value={answers[q.id]} onChange={(v) => set(q.id, v)} />
+                <QuestionRow key={q.id} q={q} answers={pruned} value={answers[q.id]} onChange={(v) => set(q.id, v)} />
               ))}
             </div>
           </fieldset>
@@ -70,13 +71,23 @@ export function QuestionnaireForm({
   );
 }
 
-function QuestionRow({ q, value, onChange }: { q: Question; value: AnswerValue | undefined; onChange: (v: AnswerValue) => void }) {
+function QuestionRow({
+  q,
+  answers,
+  value,
+  onChange,
+}: {
+  q: Question;
+  answers: Answers;
+  value: AnswerValue | undefined;
+  onChange: (v: AnswerValue) => void;
+}) {
+  const options = visibleOptions(q, answers);
   return (
     <div className="grid gap-3 px-5 py-4 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] md:gap-8">
       <div>
         <p className="text-[13.5px] font-medium leading-snug text-ink">{q.text}</p>
         {q.help && <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{q.help}</p>}
-        {q.citation && <Citation>{q.citation}</Citation>}
       </div>
       <div>
         {q.type === "boolean" && (
@@ -96,9 +107,19 @@ function QuestionRow({ q, value, onChange }: { q: Question; value: AnswerValue |
             ))}
           </div>
         )}
+        {q.type === "text" && (
+          <input
+            type="text"
+            aria-label={q.text}
+            value={typeof value === "string" ? value : ""}
+            onChange={(e) => onChange(e.target.value)}
+            maxLength={200}
+            className="block w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-[13.5px] text-ink"
+          />
+        )}
         {q.type === "single" && (
           <div className="space-y-1.5">
-            {q.options!.map((o) => (
+            {options.map((o) => (
               <label key={o.id} className="flex cursor-pointer items-start gap-2 text-[13px] text-body">
                 <input type="radio" name={q.id} checked={value === o.id} onChange={() => onChange(o.id)} className="mt-0.5 accent-[var(--color-gold)]" />
                 {o.label}
@@ -108,7 +129,7 @@ function QuestionRow({ q, value, onChange }: { q: Question; value: AnswerValue |
         )}
         {q.type === "multi" && (
           <div className="space-y-2">
-            {q.options!.map((o) => {
+            {options.map((o) => {
               const list = Array.isArray(value) ? value : [];
               const checked = list.includes(o.id);
               return (
@@ -119,10 +140,7 @@ function QuestionRow({ q, value, onChange }: { q: Question; value: AnswerValue |
                     onChange={() => onChange(checked ? list.filter((x) => x !== o.id) : [...list, o.id])}
                     className="mt-0.5 accent-[var(--color-gold)]"
                   />
-                  <span>
-                    {o.label}
-                    {o.citation && <span className="ml-1.5 whitespace-nowrap text-[11px] text-label">{o.citation}</span>}
-                  </span>
+                  <span>{o.label}</span>
                 </label>
               );
             })}

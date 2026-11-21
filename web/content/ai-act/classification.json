@@ -3,6 +3,73 @@
   "title": "AI Act classification",
   "sections": [
     {
+      "id": "use",
+      "title": "Intended use",
+      "intro": "Where the system is used decides which of the later questions are relevant.",
+      "questions": [
+        {
+          "id": "use.areas",
+          "type": "multi",
+          "text": "In which areas is the system used? Tick all that apply.",
+          "help": "Questions that cannot apply to these areas are not asked.",
+          "options": [
+            {
+              "id": "education",
+              "label": "Education or training (schools, universities, vocational training, e-learning)"
+            },
+            {
+              "id": "employment",
+              "label": "Recruitment, HR or managing workers"
+            },
+            {
+              "id": "finance",
+              "label": "Credit, lending or insurance"
+            },
+            {
+              "id": "publicServices",
+              "label": "Public services or benefits (social security, housing, emergency services)"
+            },
+            {
+              "id": "health",
+              "label": "Healthcare or medical"
+            },
+            {
+              "id": "biometrics",
+              "label": "Recognising or identifying people from their face, voice, fingerprints or other biometric data"
+            },
+            {
+              "id": "infrastructure",
+              "label": "Critical infrastructure (energy, water, gas, heating, road traffic, digital infrastructure)"
+            },
+            {
+              "id": "lawEnforcement",
+              "label": "Law enforcement or policing"
+            },
+            {
+              "id": "migration",
+              "label": "Migration, asylum or border control"
+            },
+            {
+              "id": "justice",
+              "label": "Courts, legal proceedings, elections or referendums"
+            },
+            {
+              "id": "product",
+              "label": "A physical product, or a safety component of one (machinery, toys, vehicles, lifts, medical devices…)"
+            },
+            {
+              "id": "business",
+              "label": "Customer service, marketing, content or internal operations"
+            },
+            {
+              "id": "other",
+              "label": "Something else"
+            }
+          ]
+        }
+      ]
+    },
+    {
       "id": "role",
       "title": "The company's role",
       "intro": "A company can hold more than one role for the same system. Answer for this system only.",
@@ -47,6 +114,17 @@
           "text": "Does the company use this AI system under its authority in a professional capacity?",
           "help": "Any use in the course of business, including internal tools. Purely personal use by an individual does not count.",
           "citation": "Art. 3(4)"
+        },
+        {
+          "id": "role.workplace",
+          "type": "boolean",
+          "text": "Is the system used in the company's own workplace in a way that affects its workers, for example to monitor, evaluate, schedule or allocate work to staff?",
+          "help": "Workers are the company's own staff. Pupils, customers or members of the public are not workers.",
+          "citation": "Art. 26(7)",
+          "showIf": {
+            "q": "role.uses",
+            "is": true
+          }
         },
         {
           "id": "role.imports",
@@ -115,14 +193,13 @@
     },
     {
       "id": "prohibited",
-      "title": "Prohibited practices",
-      "intro": "Screen against the practices banned since 2 February 2025.",
+      "title": "Prohibited practices: risk screening",
+      "intro": "These questions look for signs that the system could fall into a prohibited category. A \"yes\" is not a finding: it flags the system for the reviewer to assess.",
       "questions": [
         {
-          "id": "prohibited.practices",
-          "type": "multi",
-          "optional": true,
-          "text": "Does the system do any of the following? Tick all that apply, or none.",
+          "id": "p.influence",
+          "type": "boolean",
+          "citation": "Art. 5(1)(a)",
           "showIf": {
             "not": {
               "q": "scope.exclusions",
@@ -135,55 +212,457 @@
               ]
             }
           },
+          "text": "Does the system try to change what people decide or do, for example by nudging, persuading or personalising content or offers, in ways they might not notice or fully understand?"
+        },
+        {
+          "id": "p.influenceHarm",
+          "type": "boolean",
+          "citation": "Art. 5(1)(a)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.influence",
+                "is": true
+              }
+            ]
+          },
+          "text": "Could that influence lead people to decisions they would not otherwise take, in a way that could cause them or others significant harm (financial, physical or psychological)?"
+        },
+        {
+          "id": "p.vulnerable",
+          "type": "boolean",
+          "citation": "Art. 5(1)(b)",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          },
+          "text": "Is the system aimed at, or likely to be used by, people who may be easier to influence: children, older people, people with a disability, or people in a difficult social or financial situation?"
+        },
+        {
+          "id": "p.vulnerableExploit",
+          "type": "boolean",
+          "citation": "Art. 5(1)(b)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.vulnerable",
+                "is": true
+              }
+            ]
+          },
+          "text": "Could the system take advantage of those circumstances to change their behaviour in a way that could significantly harm them?"
+        },
+        {
+          "id": "p.scoring",
+          "type": "boolean",
+          "citation": "Art. 5(1)(c)",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          },
+          "text": "Does the system score, rank or rate people over time based on their behaviour or personal characteristics?"
+        },
+        {
+          "id": "p.scoringUse",
+          "type": "boolean",
+          "citation": "Art. 5(1)(c)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.scoring",
+                "is": true
+              }
+            ]
+          },
+          "text": "Could that score lead to people being treated worse in a context unrelated to where the data was collected, or in a way out of proportion to their behaviour?"
+        },
+        {
+          "id": "p.crime",
+          "type": "boolean",
+          "citation": "Art. 5(1)(d)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "use.areas",
+                "hasAny": [
+                  "lawEnforcement",
+                  "migration",
+                  "justice",
+                  "other"
+                ]
+              }
+            ]
+          },
+          "text": "Does the system assess or predict how likely a person is to commit an offence?"
+        },
+        {
+          "id": "p.crimeBasis",
+          "type": "boolean",
+          "citation": "Art. 5(1)(d)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.crime",
+                "is": true
+              }
+            ]
+          },
+          "text": "Does that assessment rely only on profiling or on personality traits, rather than supporting a person's assessment based on objective, verifiable facts linked to a criminal activity?"
+        },
+        {
+          "id": "p.synthetic",
+          "type": "boolean",
+          "citation": "Art. 5(1)(ba)–(bb)",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          },
+          "text": "Can the system generate or edit realistic images, video or audio of people?"
+        },
+        {
+          "id": "p.intimate",
+          "type": "boolean",
+          "citation": "Art. 5(1)(ba)–(bb), Art. 5(1a)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.synthetic",
+                "is": true
+              }
+            ]
+          },
+          "text": "Could it produce sexually explicit or intimate content of a real, identifiable person without their consent, or sexual content involving children, without safeguards that reliably prevent this?"
+        },
+        {
+          "id": "p.faces",
+          "type": "boolean",
+          "citation": "Art. 5(1)(e)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "use.areas",
+                "hasAny": [
+                  "biometrics",
+                  "lawEnforcement",
+                  "other"
+                ]
+              }
+            ]
+          },
+          "text": "Does the system collect facial images in bulk from the internet or from CCTV footage to create or expand a facial recognition database?"
+        },
+        {
+          "id": "p.emotions",
+          "type": "boolean",
+          "citation": "Art. 5(1)(f), Art. 3(39)",
+          "showIf": {
+            "not": {
+              "q": "scope.exclusions",
+              "hasAny": [
+                "military",
+                "research",
+                "preMarket",
+                "personal",
+                "intlCooperation"
+              ]
+            }
+          },
+          "text": "Does the system detect or infer people's emotions, mood, stress, attention or intentions from biometric signals such as their face, voice or body movements?",
+          "help": "Inferences drawn only from what people write are not covered here."
+        },
+        {
+          "id": "p.emotionsWhere",
+          "type": "multi",
+          "citation": "Art. 5(1)(f)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.emotions",
+                "is": true
+              }
+            ]
+          },
+          "text": "Whose emotions or states does it infer? Tick all that apply.",
           "options": [
             {
-              "id": "a",
-              "label": "Uses subliminal, purposefully manipulative or deceptive techniques that materially distort behaviour and are likely to cause significant harm",
-              "citation": "Art. 5(1)(a)"
+              "id": "workplace",
+              "label": "Employees or other workers, at work"
             },
             {
-              "id": "b",
-              "label": "Exploits vulnerabilities due to age, disability or a specific social or economic situation, causing or likely to cause significant harm",
-              "citation": "Art. 5(1)(b)"
+              "id": "education",
+              "label": "Pupils, students or learners, in education"
             },
             {
-              "id": "c",
-              "label": "Evaluates or classifies people over time by social behaviour or personal traits (social scoring), leading to unjustified or disproportionate detrimental treatment",
-              "citation": "Art. 5(1)(c)"
-            },
-            {
-              "id": "d",
-              "label": "Assesses the risk that a person will commit a criminal offence based solely on profiling or personality traits",
-              "citation": "Art. 5(1)(d)"
-            },
-            {
-              "id": "e",
-              "label": "Builds or expands facial recognition databases through untargeted scraping of facial images from the internet or CCTV",
-              "citation": "Art. 5(1)(e)"
-            },
-            {
-              "id": "f",
-              "label": "Infers emotions of people in the workplace or in education (other than for medical or safety reasons)",
-              "citation": "Art. 5(1)(f)"
-            },
-            {
-              "id": "g",
-              "label": "Categorises people by biometric data to infer race, political opinions, trade-union membership, religious or philosophical beliefs, sex life or sexual orientation",
-              "citation": "Art. 5(1)(g)"
-            },
-            {
-              "id": "h",
-              "label": "Real-time remote biometric identification in publicly accessible spaces for law enforcement (outside the narrow exceptions)",
-              "citation": "Art. 5(1)(h)"
+              "id": "elsewhere",
+              "label": "Other people, for example customers or the public"
             }
           ]
+        },
+        {
+          "id": "p.emotionsMedical",
+          "type": "boolean",
+          "citation": "Art. 5(1)(f)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.emotionsWhere",
+                "hasAny": [
+                  "workplace",
+                  "education"
+                ]
+              }
+            ]
+          },
+          "text": "Is it used there solely for medical or safety reasons, for example detecting a driver's fatigue?"
+        },
+        {
+          "id": "p.biocat",
+          "type": "boolean",
+          "citation": "Art. 5(1)(g), Art. 3(40)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "use.areas",
+                "hasAny": [
+                  "biometrics",
+                  "lawEnforcement",
+                  "other"
+                ]
+              }
+            ]
+          },
+          "text": "Does the system use biometric data (face, voice, fingerprints, gait…) to sort people into groups?"
+        },
+        {
+          "id": "p.biocatSensitive",
+          "type": "boolean",
+          "citation": "Art. 5(1)(g)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.biocat",
+                "is": true
+              }
+            ]
+          },
+          "text": "Is that used to deduce or infer people's race, political opinions, trade-union membership, religious or philosophical beliefs, sex life or sexual orientation?"
+        },
+        {
+          "id": "p.rbi",
+          "type": "boolean",
+          "citation": "Art. 5(1)(h)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "use.areas",
+                "hasAny": [
+                  "lawEnforcement"
+                ]
+              }
+            ]
+          },
+          "text": "Is the system used by or for law enforcement to identify people at a distance, in real time, in places open to the public?"
+        },
+        {
+          "id": "p.rbiException",
+          "type": "boolean",
+          "citation": "Art. 5(1)(h)(i)–(iii), Art. 5(2)–(7)",
+          "showIf": {
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "p.rbi",
+                "is": true
+              }
+            ]
+          },
+          "text": "Is that use limited to searching for specific victims or missing persons, preventing an imminent threat to life or a terrorist attack, or locating suspects of serious crimes, with prior authorisation?"
         }
       ]
     },
     {
       "id": "highRisk",
       "title": "High-risk test",
-      "intro": "A system is high-risk under Art. 6(1) (product safety, Annex I) or Art. 6(2) (sensitive use cases, Annex III).",
+      "intro": "A system is high-risk if it is part of a regulated product's safety, or if it is used for one of a set of sensitive purposes.",
       "questions": [
         {
           "id": "hr.annexI",
@@ -192,99 +671,226 @@
           "text": "Is the system a safety component of a product, or itself a product, covered by any of this EU product legislation? Tick all that apply, or none.",
           "citation": "Art. 6(1), Annex I",
           "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "health",
+                  "other"
+                ]
+              }
+            ]
           },
           "options": [
             {
               "id": "machinery",
               "label": "Machinery",
-              "citation": "Annex I, Section A, point 1"
+              "citation": "Annex I, Section B, point 21 (moved from Section A by Reg. (EU) 2026/1744)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "toys",
               "label": "Toys",
-              "citation": "Annex I, Section A, point 2"
+              "citation": "Annex I, Section A, point 2",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "recreationalCraft",
               "label": "Recreational craft and personal watercraft",
-              "citation": "Annex I, Section A, point 3"
+              "citation": "Annex I, Section A, point 3",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "lifts",
               "label": "Lifts and their safety components",
-              "citation": "Annex I, Section A, point 4"
+              "citation": "Annex I, Section A, point 4",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "atex",
               "label": "Equipment for potentially explosive atmospheres",
-              "citation": "Annex I, Section A, point 5"
+              "citation": "Annex I, Section A, point 5",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "radio",
               "label": "Radio equipment",
-              "citation": "Annex I, Section A, point 6"
+              "citation": "Annex I, Section A, point 6",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "pressure",
               "label": "Pressure equipment",
-              "citation": "Annex I, Section A, point 7"
+              "citation": "Annex I, Section A, point 7",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "cableways",
               "label": "Cableway installations",
-              "citation": "Annex I, Section A, point 8"
+              "citation": "Annex I, Section A, point 8",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "ppe",
               "label": "Personal protective equipment",
-              "citation": "Annex I, Section A, point 9"
+              "citation": "Annex I, Section A, point 9",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "gas",
               "label": "Appliances burning gaseous fuels",
-              "citation": "Annex I, Section A, point 10"
+              "citation": "Annex I, Section A, point 10",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "medical",
               "label": "Medical devices",
-              "citation": "Annex I, Section A, point 11"
+              "citation": "Annex I, Section A, point 11",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "health",
+                  "other"
+                ]
+              }
             },
             {
               "id": "ivd",
               "label": "In vitro diagnostic medical devices",
-              "citation": "Annex I, Section A, point 12"
+              "citation": "Annex I, Section A, point 12",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "health",
+                  "other"
+                ]
+              }
             },
             {
               "id": "aviation",
               "label": "Civil aviation",
-              "citation": "Annex I, Section B"
+              "citation": "Annex I, Section B",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "vehicles",
               "label": "Motor vehicles, two- or three-wheel vehicles, agricultural and forestry vehicles",
-              "citation": "Annex I, Section B"
+              "citation": "Annex I, Section B",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "marine",
               "label": "Marine equipment",
-              "citation": "Annex I, Section B"
+              "citation": "Annex I, Section B",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             },
             {
               "id": "rail",
               "label": "Rail systems",
-              "citation": "Annex I, Section B"
+              "citation": "Annex I, Section B",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "product",
+                  "other"
+                ]
+              }
             }
-          ]
+          ],
+          "help": "A system used only for user assistance, performance optimisation, efficiency, automation, convenience or quality control is not a safety component, unless its failure or malfunction would endanger health or safety."
         },
         {
           "id": "hr.thirdPartyAssessment",
@@ -311,7 +917,8 @@
               "marine",
               "rail"
             ]
-          }
+          },
+          "help": "Answer no if third-party assessment is required only for risks other than health and safety, for example radio spectrum or electromagnetic interference."
         },
         {
           "id": "hr.annexIII",
@@ -320,109 +927,276 @@
           "text": "Is the system intended to be used for any of these purposes? Tick all that apply, or none.",
           "citation": "Art. 6(2), Annex III",
           "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "use.areas",
+                "hasAny": [
+                  "biometrics",
+                  "infrastructure",
+                  "education",
+                  "employment",
+                  "publicServices",
+                  "finance",
+                  "health",
+                  "lawEnforcement",
+                  "migration",
+                  "justice",
+                  "other"
+                ]
+              }
+            ]
           },
           "options": [
             {
               "id": "1a",
               "label": "Biometrics: remote biometric identification (not mere verification of identity)",
-              "citation": "Annex III, point 1(a)"
+              "citation": "Annex III, point 1(a)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "biometrics",
+                  "lawEnforcement",
+                  "migration",
+                  "other"
+                ]
+              }
             },
             {
               "id": "1b",
               "label": "Biometrics: categorisation by sensitive or protected attributes",
-              "citation": "Annex III, point 1(b)"
+              "citation": "Annex III, point 1(b)",
+              "showIf": {
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "biometrics",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "p.biocat",
+                    "is": true
+                  }
+                ]
+              }
             },
             {
               "id": "1c",
               "label": "Biometrics: emotion recognition",
-              "citation": "Annex III, point 1(c)"
+              "citation": "Annex III, point 1(c)",
+              "showIf": {
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "biometrics",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "p.emotions",
+                    "is": true
+                  }
+                ]
+              }
             },
             {
               "id": "2",
               "label": "Critical infrastructure: safety component in managing digital infrastructure, road traffic, or water, gas, heating or electricity supply",
-              "citation": "Annex III, point 2"
+              "citation": "Annex III, point 2",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "infrastructure",
+                  "other"
+                ]
+              }
             },
             {
               "id": "3a",
               "label": "Education: deciding access or admission to education and training",
-              "citation": "Annex III, point 3(a)"
+              "citation": "Annex III, point 3(a)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "education",
+                  "other"
+                ]
+              }
             },
             {
               "id": "3b",
               "label": "Education: evaluating learning outcomes",
-              "citation": "Annex III, point 3(b)"
+              "citation": "Annex III, point 3(b)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "education",
+                  "other"
+                ]
+              }
             },
             {
               "id": "3c",
               "label": "Education: assessing the level of education a person will receive or can access",
-              "citation": "Annex III, point 3(c)"
+              "citation": "Annex III, point 3(c)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "education",
+                  "other"
+                ]
+              }
             },
             {
               "id": "3d",
               "label": "Education: monitoring prohibited behaviour of students during tests",
-              "citation": "Annex III, point 3(d)"
+              "citation": "Annex III, point 3(d)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "education",
+                  "other"
+                ]
+              }
             },
             {
               "id": "4a",
               "label": "Employment: recruitment or selection — targeted job ads, filtering applications, evaluating candidates",
-              "citation": "Annex III, point 4(a)"
+              "citation": "Annex III, point 4(a)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "employment",
+                  "other"
+                ]
+              }
             },
             {
               "id": "4b",
               "label": "Employment: decisions on working conditions, promotion or termination, task allocation by behaviour or traits, monitoring and evaluating performance",
-              "citation": "Annex III, point 4(b)"
+              "citation": "Annex III, point 4(b)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "employment",
+                  "other"
+                ]
+              }
             },
             {
               "id": "5a",
               "label": "Essential services: public authorities assessing eligibility for public assistance benefits and services",
-              "citation": "Annex III, point 5(a)"
+              "citation": "Annex III, point 5(a)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "publicServices",
+                  "other"
+                ]
+              }
             },
             {
               "id": "5b",
               "label": "Essential services: evaluating creditworthiness or establishing a credit score (not fraud detection)",
-              "citation": "Annex III, point 5(b)"
+              "citation": "Annex III, point 5(b)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "finance",
+                  "other"
+                ]
+              }
             },
             {
               "id": "5c",
               "label": "Essential services: risk assessment and pricing for life and health insurance",
-              "citation": "Annex III, point 5(c)"
+              "citation": "Annex III, point 5(c)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "finance",
+                  "health",
+                  "other"
+                ]
+              }
             },
             {
               "id": "5d",
               "label": "Essential services: evaluating and classifying emergency calls, dispatching emergency services, emergency patient triage",
-              "citation": "Annex III, point 5(d)"
+              "citation": "Annex III, point 5(d)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "publicServices",
+                  "health",
+                  "other"
+                ]
+              }
             },
             {
               "id": "6",
               "label": "Law enforcement (risk of victimisation, polygraphs, evidence reliability, risk of offending, profiling)",
-              "citation": "Annex III, point 6"
+              "citation": "Annex III, point 6",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "lawEnforcement",
+                  "other"
+                ]
+              }
             },
             {
               "id": "7",
               "label": "Migration, asylum and border control (polygraphs, risk assessment, examining applications, identification)",
-              "citation": "Annex III, point 7"
+              "citation": "Annex III, point 7",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "migration",
+                  "other"
+                ]
+              }
             },
             {
               "id": "8a",
               "label": "Justice: assisting a judicial authority in researching and interpreting facts and law and applying the law",
-              "citation": "Annex III, point 8(a)"
+              "citation": "Annex III, point 8(a)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "justice",
+                  "other"
+                ]
+              }
             },
             {
               "id": "8b",
               "label": "Democratic processes: influencing the outcome of an election or referendum or voting behaviour",
-              "citation": "Annex III, point 8(b)"
+              "citation": "Annex III, point 8(b)",
+              "showIf": {
+                "q": "use.areas",
+                "hasAny": [
+                  "justice",
+                  "other"
+                ]
+              }
             }
-          ]
+          ],
+          "help": "Only the purposes that match the areas ticked in Part 1 are listed."
         },
         {
           "id": "hr.profiling",
@@ -508,7 +1282,7 @@
             },
             {
               "id": "d",
-              "label": "Performs a preparatory task to an assessment relevant to an Annex III use case",
+              "label": "Performs a preparatory task to an assessment for one of the purposes ticked above",
               "citation": "Art. 6(3)(d)"
             }
           ]
@@ -517,8 +1291,8 @@
           "id": "hr.rightsImpact",
           "type": "multi",
           "optional": true,
-          "text": "Even if no Annex III point applies: does the system materially influence a person's access to any of these?",
-          "help": "Annex III is a closed list, so this does not make the system high-risk. It flags the system for the reviewer, because the Commission can add use cases under Art. 7.",
+          "text": "Even if none of the purposes above applies: does the system materially influence a person's access to any of these?",
+          "help": "This does not make the system high-risk on its own. It flags the system for the reviewer, because the list of high-risk uses can be extended.",
           "citation": "Art. 7",
           "showIf": {
             "all": [
@@ -632,24 +1406,6 @@
           }
         },
         {
-          "id": "t.emotionOrBiometric",
-          "type": "boolean",
-          "text": "Does the system perform emotion recognition or biometric categorisation of people?",
-          "citation": "Art. 50(3)",
-          "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
-          }
-        },
-        {
           "id": "t.deepfake",
           "type": "boolean",
           "text": "Does the company use the system to generate or manipulate image, audio or video content that is a deep fake?",
@@ -683,7 +1439,9 @@
     "publicBody": false,
     "transparency": [],
     "attention": [],
-    "riskClass": "MINIMAL"
+    "riskClass": "MINIMAL",
+    "affectsWorkers": false,
+    "highRiskSectionB": false
   },
   "rules": [
     {
@@ -791,6 +1549,35 @@
       },
       "citation": "Art. 3(7)",
       "rationale": "The company makes the system available in the supply chain without being its provider or importer, so it is a distributor."
+    },
+    {
+      "id": "role.providerAndDeployer",
+      "when": {
+        "all": [
+          {
+            "out": "roles",
+            "has": "provider"
+          },
+          {
+            "out": "roles",
+            "has": "deployer"
+          }
+        ]
+      },
+      "citation": "Art. 13, Art. 26(1)",
+      "rationale": "The company is both the provider and a deployer of the system. As provider it writes the instructions for use itself (Art. 13), so using the system in line with them (Art. 26(1)) is treated as met through its provider duties and is not listed as a separate obligation."
+    },
+    {
+      "id": "role.workplace",
+      "when": {
+        "q": "role.workplace",
+        "is": true
+      },
+      "set": {
+        "affectsWorkers": true
+      },
+      "citation": "Art. 26(7)",
+      "rationale": "The system is used at the company's own workplace and affects its workers, so the duty to inform workers and their representatives applies if the system is high-risk."
     },
     {
       "id": "role.none",
@@ -912,122 +1699,169 @@
     {
       "id": "prohibited.a",
       "when": {
-        "q": "prohibited.practices",
-        "has": "a"
+        "q": "p.influenceHarm",
+        "is": true
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(a)"
+        "prohibitedPractices": "Art. 5(1)(a)",
+        "attention": "Possible prohibited practice under Art. 5(1)(a): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(a)",
-      "rationale": "Subliminal, manipulative or deceptive techniques that materially distort behaviour and are likely to cause significant harm are prohibited."
+      "rationale": "The system influences people's decisions in ways they may not notice and could cause significant harm. This points to a risk of manipulative or deceptive techniques prohibited by Art. 5(1)(a). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
     },
     {
       "id": "prohibited.b",
       "when": {
-        "q": "prohibited.practices",
-        "has": "b"
+        "q": "p.vulnerableExploit",
+        "is": true
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(b)"
+        "prohibitedPractices": "Art. 5(1)(b)",
+        "attention": "Possible prohibited practice under Art. 5(1)(b): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(b)",
-      "rationale": "Exploiting vulnerabilities due to age, disability or social or economic situation in a way that causes or is likely to cause significant harm is prohibited."
+      "rationale": "The system could take advantage of people's age, disability or social or economic situation in a way that harms them. This points to a risk of exploiting vulnerabilities, prohibited by Art. 5(1)(b). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
     },
     {
       "id": "prohibited.c",
       "when": {
-        "q": "prohibited.practices",
-        "has": "c"
+        "q": "p.scoringUse",
+        "is": true
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(c)"
+        "prohibitedPractices": "Art. 5(1)(c)",
+        "attention": "Possible prohibited practice under Art. 5(1)(c): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(c)",
-      "rationale": "Social scoring leading to unjustified or disproportionate detrimental treatment is prohibited."
+      "rationale": "The system scores people over time and the score could lead to unjustified or disproportionate detrimental treatment. This points to a risk of social scoring, prohibited by Art. 5(1)(c). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
     },
     {
       "id": "prohibited.d",
       "when": {
-        "q": "prohibited.practices",
-        "has": "d"
+        "q": "p.crimeBasis",
+        "is": true
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(d)"
+        "prohibitedPractices": "Art. 5(1)(d)",
+        "attention": "Possible prohibited practice under Art. 5(1)(d): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(d)",
-      "rationale": "Predicting criminal offences based solely on profiling or personality traits is prohibited."
+      "rationale": "The system predicts the risk of a person offending based only on profiling or personality traits. This points to a risk of a practice prohibited by Art. 5(1)(d). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
     },
     {
       "id": "prohibited.e",
       "when": {
-        "q": "prohibited.practices",
-        "has": "e"
+        "q": "p.faces",
+        "is": true
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(e)"
+        "prohibitedPractices": "Art. 5(1)(e)",
+        "attention": "Possible prohibited practice under Art. 5(1)(e): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(e)",
-      "rationale": "Untargeted scraping of facial images to build facial recognition databases is prohibited."
+      "rationale": "The system collects facial images in bulk from the internet or CCTV to build a facial recognition database. This points to a risk of untargeted scraping, prohibited by Art. 5(1)(e). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
     },
     {
       "id": "prohibited.f",
       "when": {
-        "q": "prohibited.practices",
-        "has": "f"
+        "all": [
+          {
+            "q": "p.emotionsWhere",
+            "hasAny": [
+              "workplace",
+              "education"
+            ]
+          },
+          {
+            "q": "p.emotionsMedical",
+            "is": false
+          }
+        ]
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(f)"
+        "prohibitedPractices": "Art. 5(1)(f)",
+        "attention": "Possible prohibited practice under Art. 5(1)(f): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(f)",
-      "rationale": "Emotion recognition in the workplace or in education is prohibited, except for medical or safety reasons."
+      "rationale": "The system infers the emotions of workers or learners from biometric data, other than for medical or safety reasons. This points to a risk of emotion recognition in the workplace or in education, prohibited by Art. 5(1)(f). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
     },
     {
       "id": "prohibited.g",
       "when": {
-        "q": "prohibited.practices",
-        "has": "g"
+        "q": "p.biocatSensitive",
+        "is": true
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(g)"
+        "prohibitedPractices": "Art. 5(1)(g)",
+        "attention": "Possible prohibited practice under Art. 5(1)(g): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(g)",
-      "rationale": "Biometric categorisation to infer sensitive characteristics is prohibited."
+      "rationale": "The system uses biometric data to infer sensitive characteristics. This points to a risk of biometric categorisation prohibited by Art. 5(1)(g). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
     },
     {
       "id": "prohibited.h",
       "when": {
-        "q": "prohibited.practices",
-        "has": "h"
+        "q": "p.rbiException",
+        "is": false
       },
       "set": {
         "prohibited": true
       },
       "add": {
-        "prohibitedPractices": "Art. 5(1)(h)"
+        "prohibitedPractices": "Art. 5(1)(h)",
+        "attention": "Possible prohibited practice under Art. 5(1)(h): assess the system against it before confirming the classification."
       },
       "citation": "Art. 5(1)(h)",
-      "rationale": "Real-time remote biometric identification in publicly accessible spaces for law enforcement is prohibited outside the narrow exceptions of Art. 5(1)(h)(i)–(iii)."
+      "rationale": "The system is used for real-time remote biometric identification in public spaces for law enforcement outside the narrow exceptions. This points to a risk of a practice prohibited by Art. 5(1)(h). This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
+    },
+    {
+      "id": "prohibited.ba",
+      "when": {
+        "q": "p.intimate",
+        "is": true
+      },
+      "set": {
+        "prohibited": true
+      },
+      "add": {
+        "prohibitedPractices": "Art. 5(1)(ba)–(bb)",
+        "attention": "Possible prohibited practice under Art. 5(1)(ba)–(bb): check the intended purpose and the safeguards against misuse (Art. 5(1a)) before confirming the classification."
+      },
+      "citation": "Art. 5(1)(ba)–(bb), Art. 5(1a), inserted by Reg. (EU) 2026/1744",
+      "rationale": "The system could generate non-consensual intimate content of identifiable people, or sexual content involving children, without safeguards that reliably prevent it. This points to a risk of a practice prohibited from 2 December 2026. This is a risk flag, not a finding: the reviewer must assess it before confirming the classification."
+    },
+    {
+      "id": "prohibited.h.exception",
+      "when": {
+        "q": "p.rbiException",
+        "is": true
+      },
+      "add": {
+        "attention": "Real-time remote biometric identification relies on the Art. 5(1)(h) exceptions: check the authorisation and safeguards of Art. 5(2)–(7)."
+      },
+      "citation": "Art. 5(1)(h), Art. 5(2)–(7)",
+      "rationale": "The company states that real-time remote biometric identification is limited to the exceptions in Art. 5(1)(h), which require prior authorisation and safeguards."
     },
     {
       "id": "hr.annexI",
@@ -1036,6 +1870,22 @@
           {
             "q": "hr.thirdPartyAssessment",
             "is": true
+          },
+          {
+            "q": "hr.annexI",
+            "hasAny": [
+              "toys",
+              "recreationalCraft",
+              "lifts",
+              "atex",
+              "radio",
+              "pressure",
+              "cableways",
+              "ppe",
+              "gas",
+              "medical",
+              "ivd"
+            ]
           }
         ]
       },
@@ -1045,8 +1895,38 @@
       "add": {
         "highRiskBasis": "annexI"
       },
-      "citation": "Art. 6(1), Annex I",
+      "citation": "Art. 6(1), Annex I, Section A",
       "rationale": "The system is a safety component of, or is itself, a product covered by Annex I legislation that requires third-party conformity assessment, so it is high-risk."
+    },
+    {
+      "id": "hr.annexI.sectionB",
+      "when": {
+        "all": [
+          {
+            "q": "hr.thirdPartyAssessment",
+            "is": true
+          },
+          {
+            "q": "hr.annexI",
+            "hasAny": [
+              "aviation",
+              "vehicles",
+              "marine",
+              "rail",
+              "machinery"
+            ]
+          }
+        ]
+      },
+      "set": {
+        "highRiskSectionB": true
+      },
+      "add": {
+        "highRiskBasis": "annexI:sectionB",
+        "attention": "High-risk under Art. 6(1) through Annex I, Section B legislation: the AI Act's high-risk requirements apply through that sectoral legislation (Art. 2(2)), not as separate obligations here. Check the sectoral requirements."
+      },
+      "citation": "Art. 6(1), Art. 2(2), Annex I, Section B, as amended by Reg. (EU) 2026/1744",
+      "rationale": "The system is a safety component of, or is itself, a product under Annex I, Section B legislation (civil aviation, vehicles, marine equipment, rail or, since the Digital Omnibus, machinery) that requires third-party conformity assessment. It is high-risk, but for these products only Art. 6(1), Art. 60a and Arts. 102–112 of the AI Act apply; the high-risk requirements reach the product through the sectoral legislation."
     },
     {
       "id": "hr.annexI.noThirdParty",
@@ -1222,8 +2102,16 @@
     {
       "id": "t.50_3",
       "when": {
-        "q": "t.emotionOrBiometric",
-        "is": true
+        "any": [
+          {
+            "q": "p.emotions",
+            "is": true
+          },
+          {
+            "q": "p.biocat",
+            "is": true
+          }
+        ]
       },
       "add": {
         "transparency": "50(3)"
@@ -1288,6 +2176,29 @@
       "silent": true
     },
     {
+      "id": "risk.highSectionB",
+      "when": {
+        "all": [
+          {
+            "out": "highRiskSectionB",
+            "is": true
+          },
+          {
+            "not": {
+              "out": "riskClass",
+              "is": "HIGH_RISK"
+            }
+          }
+        ]
+      },
+      "set": {
+        "riskClass": "HIGH_RISK"
+      },
+      "citation": "Art. 6(1), Art. 2(2)",
+      "rationale": "High-risk through Annex I, Section B legislation.",
+      "silent": true
+    },
+    {
       "id": "risk.prohibited",
       "when": {
         "out": "prohibited",
@@ -1297,7 +2208,7 @@
         "riskClass": "PROHIBITED"
       },
       "citation": "Art. 5",
-      "rationale": "The system involves a prohibited practice.",
+      "rationale": "The screening points to a risk of a prohibited practice.",
       "silent": true
     },
     {
@@ -1309,7 +2220,8 @@
       "set": {
         "riskClass": "OUT_OF_SCOPE",
         "highRisk": false,
-        "prohibited": false
+        "prohibited": false,
+        "highRiskSectionB": false
       },
       "citation": "Art. 2",
       "rationale": "The system is outside the scope of the AI Act.",

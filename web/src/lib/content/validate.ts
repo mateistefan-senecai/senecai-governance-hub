@@ -38,13 +38,25 @@ function checkQuestionnaire(q: Questionnaire, errors: string[]) {
   const questions = new Map<string, Set<string> | null>();
   for (const question of allQuestions(q)) {
     if (questions.has(question.id)) errors.push(`${q.id}: duplicate question id "${question.id}"`);
-    const isChoice = question.type !== "boolean";
+    const isChoice = question.type === "single" || question.type === "multi";
     if (isChoice && !question.options?.length) errors.push(`${q.id}: question "${question.id}" has no options`);
-    questions.set(question.id, isChoice ? new Set(question.options!.map((o) => o.id)) : null);
+    if (question.type === "text") questions.set(question.id, new Set());
+    else questions.set(question.id, isChoice ? new Set(question.options!.map((o) => o.id)) : null);
   }
+  // A free-text answer is never used by a rule (only shown): legal outcomes
+  // come from closed answers.
+  const textIds = new Set(allQuestions(q).filter((x) => x.type === "text").map((x) => x.id));
   const outputs = new Set(Object.keys(q.defaults));
   for (const question of allQuestions(q)) {
     if (question.showIf) checkCondition(question.showIf, `${q.id} question ${question.id}`, questions, outputs, errors, false);
+    for (const o of question.options ?? []) {
+      if (o.showIf) checkCondition(o.showIf, `${q.id} question ${question.id} option ${o.id}`, questions, outputs, errors, false);
+    }
+  }
+  for (const rule of q.rules) {
+    for (const id of conditionQuestions(rule.when)) {
+      if (textIds.has(id)) errors.push(`${q.id} rule ${rule.id}: uses the free-text answer "${id}"`);
+    }
   }
   const ruleIds = new Set<string>();
   for (const rule of q.rules) {
@@ -94,4 +106,11 @@ function checkCondition(
   } else if ("is" in cond && typeof cond.is !== "boolean") {
     errors.push(`${where}: "${cond.q}" is a yes/no question but is compared with "${cond.is}"`);
   }
+}
+
+function conditionQuestions(cond: Condition): string[] {
+  if ("all" in cond) return cond.all.flatMap(conditionQuestions);
+  if ("any" in cond) return cond.any.flatMap(conditionQuestions);
+  if ("not" in cond) return conditionQuestions(cond.not);
+  return "q" in cond ? [cond.q] : [];
 }

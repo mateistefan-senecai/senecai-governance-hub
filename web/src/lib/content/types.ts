@@ -22,14 +22,22 @@ export type Condition =
   | { out: string; hasAny: string[] }
   | { out: string; hasPrefix: string };
 
-export type Option = { id: string; label: string; help?: string; citation?: string };
+export type Option = {
+  id: string;
+  label: string;
+  help?: string;
+  citation?: string;
+  /** Offer this option only when this holds (e.g. Annex III points for the areas the system is used in). */
+  showIf?: Condition;
+};
 
 export type Question = {
   id: string;
   text: string;
   help?: string;
   citation?: string;
-  type: "boolean" | "single" | "multi";
+  /** "text" is a free answer: stored and shown, but never used by a rule. */
+  type: "boolean" | "single" | "multi" | "text";
   options?: Option[];
   /** Ask only when this holds. Hidden questions are dropped from the answers. */
   showIf?: Condition;

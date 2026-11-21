@@ -28,9 +28,12 @@ const NO_ROLE: Answers = {
   "role.develops": false, "role.integrates": false, "role.rebrands": false, "role.modifies": false,
   "role.repurposes": false, "role.uses": false, "role.imports": false, "role.distributes": false,
 };
+// Nothing in the prohibited-practice risk screen; each system adds its areas of use.
 const BASE: Answers = {
-  ...NO_ROLE, "scope.exclusions": [], "prohibited.practices": [], "hr.annexI": [], "hr.annexIII": [],
-  "t.interacts": false, "t.generates": false, "t.emotionOrBiometric": false,
+  ...NO_ROLE, "role.workplace": false, "scope.exclusions": [], "hr.annexI": [], "hr.annexIII": [],
+  "p.influence": false, "p.vulnerable": false, "p.scoring": false, "p.crime": false, "p.faces": false,
+  "p.emotions": false, "p.biocat": false, "p.rbi": false, "p.synthetic": false,
+  "t.interacts": false, "t.generates": false,
 };
 
 async function main() {
@@ -89,7 +92,7 @@ async function main() {
       affectedPersons: "Loan applicants (≈40,000 a year)",
     }));
     const scoringClass = await submitClassification(tx, actor, scoring, {
-      ...BASE, "role.develops": true, "role.uses": true, "role.publicBody": false,
+      ...BASE, "use.areas": ["finance"], "role.develops": true, "role.uses": true, "role.publicBody": false,
       "hr.annexIII": ["5b"], "hr.profiling": true,
     }, bundle);
     await confirmClassification(tx, consultantActor, scoringClass);
@@ -112,7 +115,7 @@ async function main() {
       affectedPersons: "Job applicants",
     }));
     await submitClassification(tx, actor, cv, {
-      ...BASE, "role.uses": true, "role.publicBody": false, "hr.annexIII": ["4a"], "hr.profiling": true,
+      ...BASE, "use.areas": ["employment"], "role.uses": true, "role.publicBody": false, "hr.annexIII": ["4a"], "hr.profiling": true,
     }, bundle);
     await tx.vendorDocument.updateMany({ where: { systemId: cv.id, kind: "instructionsForUse" }, data: { status: "RECEIVED" } });
     await tx.vendorDocument.updateMany({ where: { systemId: cv.id, kind: "declarationOfConformity" }, data: { status: "REQUESTED" } });
@@ -125,7 +128,7 @@ async function main() {
       useType: "PRODUCT", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Customers and website visitors",
     }));
     await submitClassification(tx, actor, chatbot, {
-      ...BASE, "role.integrates": true, "role.uses": true, "role.publicBody": false,
+      ...BASE, "use.areas": ["business"], "role.integrates": true, "role.uses": true, "role.publicBody": false,
       "t.interacts": true, "t.generates": true, "t.deepfake": false, "t.publicText": false,
     }, bundle);
 
@@ -137,7 +140,7 @@ async function main() {
       useType: "INTERNAL", autonomy: "ADVISORY", stage: "PRODUCTION", affectedPersons: "Card holders",
     }));
     await submitClassification(tx, actor, fraud, {
-      ...BASE, "role.develops": true, "role.uses": true, "role.publicBody": false, "hr.rightsImpact": ["finance"],
+      ...BASE, "use.areas": ["finance"], "role.develops": true, "role.uses": true, "role.publicBody": false, "hr.rightsImpact": ["finance"],
     }, bundle);
 
     await createSystem(tx, actor, nb, sys({
@@ -178,8 +181,8 @@ async function main() {
       useType: "HYBRID", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Warehouse workers",
     }));
     await submitClassification(tx, actor, robots, {
-      ...BASE, "role.integrates": true, "role.uses": true, "role.publicBody": false,
-      "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true,
+      ...BASE, "use.areas": ["product", "business"], "role.integrates": true, "role.uses": true, "role.workplace": true,
+      "role.publicBody": false, "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true,
     }, bundle);
     await generateDocument(tx, { ...actor, role: "ORG_ADMIN" }, logiflow.id, "INVENTORY");
   });
