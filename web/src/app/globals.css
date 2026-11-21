@@ -1,42 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  /* Color — "Elevated Soft UI" system: the original senecai.eu
-     gold/cream/white/black Modernist palette, just with softer depth
-     (rounded corners, shadows) than the flat hard-edged original — see
-     panel.tsx, button.tsx, tag.tsx, etc. */
-  --color-ink: #16130f;
-  --color-ink-hover: #3e3930;
-  --color-body: #3e3930;
-  --color-muted: #6e6656;
-  --color-label: #8b8375;
-  --color-disabled: #9c9486;
-  --color-ground: #f2eee4;
-  --color-panel: #f7f4ec;
+  /* Color — "Obsidian" system (Nov 2026 redesign): white ground with a faint
+     dot grid, near-black espresso ink, a bronze accent, frosted translucent
+     panels and a dark client rail. Token names are kept from the earlier
+     gold/cream palette so every component picks up the new look. */
+  --color-ink: #16110d;
+  --color-ink-hover: #3a2f27;
+  --color-body: #3a2f27;
+  --color-muted: #5c4f44;
+  --color-label: #6e6157;
+  --color-disabled: #8c8076;
+  --color-ground: #ffffff;
+  --color-panel: #f7f5f3;
   --color-surface: #ffffff;
-  --color-row-hover: #fbf9f3;
-  --color-hairline: #d9d2c2;
-  --color-hairline-light: #ede6d5;
-  --color-gold: #a8801f;
-  --color-gold-hover: #8a6a16;
-  --color-gold-light: #c9a227;
-  --color-gold-tint: #f2e6c8;
-  --color-gold-deep: #5c4712;
-  --color-border-neutral: #b9b1a0;
-  --color-backdrop: rgb(22 19 15 / 72%);
+  --color-row-hover: #faf8f6;
+  --color-hairline: #e3ddd7;
+  --color-hairline-light: #efebe7;
+  --color-gold: #8a5a33;
+  --color-gold-hover: #6e4526;
+  --color-gold-light: #d9ae82;
+  --color-gold-tint: #f3ebe3;
+  --color-gold-deep: #5c3a1e;
+  --color-border-neutral: #bdb2a7;
+  --color-backdrop: rgb(17 13 10 / 72%);
+
+  /* The dark client rail */
+  --color-rail: #110d0a;
+  --color-rail-text: #ede7e1;
+  --color-rail-muted: #a39689;
+  --color-rail-line: rgb(255 255 255 / 10%);
 
   /* Fonts — wired to next/font CSS vars in layout.tsx */
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-narrow: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-narrow: var(--font-jetbrains), ui-monospace, monospace;
+  --font-display: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   /* Letter-spacing tokens from the design spec's type scale */
   --tracking-tightest: -0.04em; /* plan readiness score */
   --tracking-tighter: -0.03em; /* gap live score */
   --tracking-tight: -0.015em; /* h1 */
   --tracking-tag: 0.06em; /* tags */
-  --tracking-citation: 0.05em; /* citations */
-  --tracking-micro: 0.13em; /* micro-labels, low end */
-  --tracking-micro-wide: 0.16em; /* micro-labels, high end */
+  --tracking-citation: 0; /* citations */
+  --tracking-micro: 0.08em; /* micro-labels (mono), low end */
+  --tracking-micro-wide: 0.1em; /* micro-labels (mono), high end */
 
   /* Layout constants */
   --spacing-sidebar: 268px;
@@ -46,6 +54,9 @@
   body {
     @apply bg-ground text-body antialiased;
     font-variant-numeric: tabular-nums;
+    background-image: radial-gradient(rgb(17 13 10 / 9%) 1px, transparent 1px);
+    background-size: 20px 20px;
+    background-attachment: fixed;
   }
 
   ::selection {
@@ -74,4 +85,11 @@
 
 .prose-pretty {
   text-wrap: pretty;
+}
+
+/* Frosted panel: translucent white over the dot grid. */
+.glass {
+  background: rgb(255 255 255 / 78%);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
 }

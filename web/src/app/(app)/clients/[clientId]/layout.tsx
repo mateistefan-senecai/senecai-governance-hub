@@ -13,16 +13,16 @@ export default async function ClientLayout({ children, params }: LayoutProps<"/c
   const open = aiActApplies(client);
 
   return (
-    <div className="flex flex-1">
-      <aside className="w-[var(--spacing-sidebar)] shrink-0 border-r border-hairline bg-panel py-5">
-        <div className="px-6 pb-5">
-          {ctx.role !== "COMPANY_USER" && (
-            <Link href="/clients" className="text-[11.5px] text-muted hover:text-gold-hover">
-              ← All clients
-            </Link>
-          )}
-          <p className="mt-2 font-narrow text-[10px] font-semibold uppercase tracking-micro-wide text-label">Client</p>
-          <p className="text-[14.5px] font-semibold leading-snug text-ink">{client.name}</p>
+    <div className="flex flex-1 flex-col md:flex-row">
+      <aside className="flex shrink-0 flex-col gap-6 bg-rail px-4 pb-6 pt-5 text-rail-text md:w-[var(--spacing-sidebar)]">
+        {ctx.role !== "COMPANY_USER" && (
+          <Link href="/clients" className="px-2 text-[13px] text-rail-muted hover:text-rail-text">
+            ← All clients
+          </Link>
+        )}
+        <div className="rounded-xl border border-rail-line bg-white/5 p-3.5">
+          <p className="font-mono text-[10.5px] tracking-micro-wide text-rail-muted">CLIENT</p>
+          <p className="mt-1 font-display text-[17px] font-semibold leading-snug">{client.name}</p>
         </div>
         <ClientNav
           items={[
@@ -33,7 +33,7 @@ export default async function ClientLayout({ children, params }: LayoutProps<"/c
           ]}
         />
         {!open && (
-          <p className="mx-6 mt-5 rounded-lg border border-hairline bg-surface p-3 text-[12px] leading-relaxed text-muted">
+          <p className="mt-auto rounded-xl border border-dashed border-white/15 p-3 text-[12px] leading-relaxed text-rail-muted">
             The inventory opens once the applicability check finds that the AI Act applies.
           </p>
         )}
