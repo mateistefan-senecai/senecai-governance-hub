@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { Citation } from "@/components/ui/citation";
+import { provisionAnchor } from "@/lib/content/links";
 import {
   ACTION_STATUS_LABEL,
   EFFORT_LABEL,
@@ -68,7 +69,8 @@ export default async function ObligationPage({
 
       <div className="grid max-w-6xl gap-5 p-8 lg:grid-cols-2">
         <Part n={1} title="Legal basis and why it applies">
-          <p className="text-[13.5px] leading-relaxed text-body">{def.summary}</p>
+          <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-label">In plain terms</p>
+          <p className="mt-1 text-[13.5px] leading-relaxed text-body">{def.summary}</p>
           <p className="mt-3 text-[13px] text-ink">
             <span className="font-semibold">Why it applies here: </span>
             {so.rationale}
@@ -81,6 +83,16 @@ export default async function ObligationPage({
             </span>
           </div>
           {dateDef?.note && <p className="mt-2 text-[12px] leading-relaxed text-gold-deep">{dateDef.note}</p>}
+          {provisionAnchor(def.article) && (
+            <a
+              href={provisionAnchor(def.article)!.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-gold-hover underline-offset-2 hover:underline"
+            >
+              Read {provisionAnchor(def.article)!.label} in full (official text, EUR-Lex) ↗
+            </a>
+          )}
           <p className="mt-3 text-[11.5px] text-label">Legal content {so.contentVersion}</p>
         </Part>
 

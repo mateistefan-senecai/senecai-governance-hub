@@ -149,13 +149,13 @@ export default async function SystemPage({ params }: PageProps<"/clients/[client
 
                 <div>
                   <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-label">Legal reasoning</p>
-                  <ol className="mt-2 space-y-2.5 border-l-2 border-hairline pl-4">
+                  <ul className="mt-2 list-disc space-y-2 pl-5 marker:text-gold">
                     {view.reasoning.map((r) => (
-                      <li key={r.ruleId} className="text-[13px] leading-relaxed text-body">
+                      <li key={r.ruleId} className="pl-1 text-[13px] leading-relaxed text-body">
                         {r.rationale} <Citation>{r.citation}</Citation>
                       </li>
                     ))}
-                  </ol>
+                  </ul>
                 </div>
 
                 {isReviewer && (

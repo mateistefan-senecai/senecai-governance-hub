@@ -19,6 +19,7 @@ import type { Actor } from "../src/lib/services/audit";
 import { confirmClassification, submitClassification } from "../src/lib/services/classification";
 import { createSystem, runApplicability, type SystemInput } from "../src/lib/services/inventory";
 import { assessObligation } from "../src/lib/services/assessment";
+import { generateDocument, transitionDocument } from "../src/lib/services/documents";
 import type { MemberRole, OrganizationType } from "../src/generated/prisma/enums";
 
 const PASSWORD = "changeme123";
@@ -27,9 +28,12 @@ const NO_ROLE: Answers = {
   "role.develops": false, "role.integrates": false, "role.rebrands": false, "role.modifies": false,
   "role.repurposes": false, "role.uses": false, "role.imports": false, "role.distributes": false,
 };
+// Nothing in the prohibited-practice risk screen; each system adds its areas of use.
 const BASE: Answers = {
-  ...NO_ROLE, "scope.exclusions": [], "prohibited.practices": [], "hr.annexI": [], "hr.annexIII": [],
-  "t.interacts": false, "t.generates": false, "t.emotionOrBiometric": false,
+  ...NO_ROLE, "role.workplace": false, "scope.exclusions": [], "hr.annexI": [], "hr.annexIII": [],
+  "p.influence": false, "p.vulnerable": false, "p.scoring": false, "p.crime": false, "p.faces": false,
+  "p.emotions": false, "p.biocat": false, "p.rbi": false, "p.synthetic": false,
+  "t.interacts": false, "t.generates": false,
 };
 
 async function main() {
@@ -55,6 +59,12 @@ async function main() {
 
   // ── SenecAI ──────────────────────────────────────────────────────────
   const senecai = await createOrg("SenecAI", "CONSULTANCY", "SenecAI");
+  // SenecAI, as the Hub's vendor, receives the landing page's demo requests.
+  // Only a migration or the seed may set this flag (migration demo_requests).
+  await withTenant({ userId: "seed", orgId: senecai }, async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.allow_vendor_flag', 'on', true)`;
+    await tx.organization.update({ where: { id: senecai }, data: { receivesDemoRequests: true } });
+  });
   await withTenant({ userId: admin.id, orgId: senecai }, async (tx) => {
     const actor: Actor = { userId: admin.id, userName: admin.name, orgId: senecai };
     const consultantActor: Actor = { userId: consultant.id, userName: consultant.name, orgId: senecai };
@@ -82,7 +92,7 @@ async function main() {
       affectedPersons: "Loan applicants (≈40,000 a year)",
     }));
     const scoringClass = await submitClassification(tx, actor, scoring, {
-      ...BASE, "role.develops": true, "role.uses": true, "role.publicBody": false,
+      ...BASE, "use.areas": ["finance"], "role.develops": true, "role.uses": true, "role.publicBody": false,
       "hr.annexIII": ["5b"], "hr.profiling": true,
     }, bundle);
     await confirmClassification(tx, consultantActor, scoringClass);
@@ -105,7 +115,7 @@ async function main() {
       affectedPersons: "Job applicants",
     }));
     await submitClassification(tx, actor, cv, {
-      ...BASE, "role.uses": true, "role.publicBody": false, "hr.annexIII": ["4a"], "hr.profiling": true,
+      ...BASE, "use.areas": ["employment"], "role.uses": true, "role.publicBody": false, "hr.annexIII": ["4a"], "hr.profiling": true,
     }, bundle);
     await tx.vendorDocument.updateMany({ where: { systemId: cv.id, kind: "instructionsForUse" }, data: { status: "RECEIVED" } });
     await tx.vendorDocument.updateMany({ where: { systemId: cv.id, kind: "declarationOfConformity" }, data: { status: "REQUESTED" } });
@@ -118,7 +128,7 @@ async function main() {
       useType: "PRODUCT", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Customers and website visitors",
     }));
     await submitClassification(tx, actor, chatbot, {
-      ...BASE, "role.integrates": true, "role.uses": true, "role.publicBody": false,
+      ...BASE, "use.areas": ["business"], "role.integrates": true, "role.uses": true, "role.publicBody": false,
       "t.interacts": true, "t.generates": true, "t.deepfake": false, "t.publicText": false,
     }, bundle);
 
@@ -130,7 +140,7 @@ async function main() {
       useType: "INTERNAL", autonomy: "ADVISORY", stage: "PRODUCTION", affectedPersons: "Card holders",
     }));
     await submitClassification(tx, actor, fraud, {
-      ...BASE, "role.develops": true, "role.uses": true, "role.publicBody": false, "hr.rightsImpact": ["finance"],
+      ...BASE, "use.areas": ["finance"], "role.develops": true, "role.uses": true, "role.publicBody": false, "hr.rightsImpact": ["finance"],
     }, bundle);
 
     await createSystem(tx, actor, nb, sys({
@@ -140,6 +150,16 @@ async function main() {
       dataCategories: ["Product information"], deploymentContext: "Marketing department",
       useType: "INTERNAL", autonomy: "ADVISORY", stage: "PILOT",
     }));
+
+    // Deliverables: the inventory PDF reviewed and released to NovaBank, and
+    // a draft of the classification report (its open points block approval
+    // until the remaining classifications are reviewed).
+    const reviewer = { ...consultantActor, role: "REVIEWER" as const };
+    const inventoryPdf = await generateDocument(tx, reviewer, novabank.id, "INVENTORY");
+    for (const step of ["submit", "approve", "release"] as const) {
+      await transitionDocument(tx, reviewer, novabank.id, inventoryPdf.id, step);
+    }
+    await generateDocument(tx, reviewer, novabank.id, "CLASSIFICATION");
   });
 
   // ── Ionescu & Asociații (separate tenant) ───────────────────────────
@@ -161,9 +181,10 @@ async function main() {
       useType: "HYBRID", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Warehouse workers",
     }));
     await submitClassification(tx, actor, robots, {
-      ...BASE, "role.integrates": true, "role.uses": true, "role.publicBody": false,
-      "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true,
+      ...BASE, "use.areas": ["product", "business"], "role.integrates": true, "role.uses": true, "role.workplace": true,
+      "role.publicBody": false, "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true,
     }, bundle);
+    await generateDocument(tx, { ...actor, role: "ORG_ADMIN" }, logiflow.id, "INVENTORY");
   });
 
   // ── Vitalis Health (a company on its own account) ────────────────────

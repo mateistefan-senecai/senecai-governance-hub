@@ -10,6 +10,7 @@ import type { ObligationStatus, SystemObligation } from "@/generated/prisma/clie
 import type { ContentBundle, ObligationDef } from "@/lib/content/types";
 import { audit, type Actor } from "./audit";
 import { ValidationError } from "./classification";
+import { refreshDocuments } from "@/lib/documents/freshness";
 
 export const ASSESSABLE: ObligationStatus[] = ["COMPLIANT", "PARTIAL", "GAP"];
 
@@ -56,6 +57,7 @@ export async function assessObligation(
   } else if (def) {
     await ensureAction(tx, updated, obligation.system.clientId, def);
   }
+  await refreshDocuments(tx, actor, obligation.system.clientId, "obligation assessed");
   return updated;
 }
 

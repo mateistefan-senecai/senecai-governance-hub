@@ -9,6 +9,7 @@ import type {
   Firing,
   ObligationDef,
   Outputs,
+  Option,
   Party,
   Question,
   Questionnaire,
@@ -38,16 +39,46 @@ export function visibleQuestions(q: Questionnaire, answers: Answers): Question[]
   return allQuestions(q).filter((question) => !question.showIf || test(question.showIf, answers, {}));
 }
 
-/** Drops answers to hidden questions so they cannot influence the rules. */
+/** Options of a question currently offered, given the answers so far. */
+export function visibleOptions(question: Question, answers: Answers): Option[] {
+  return (question.options ?? []).filter((o) => !o.showIf || test(o.showIf, answers, {}));
+}
+
+/**
+ * Drops answers to hidden questions, and hidden options from the answers to
+ * visible ones, so they cannot influence the rules. Repeats until stable,
+ * because dropping an answer can hide further questions or options.
+ */
 export function pruneAnswers(q: Questionnaire, answers: Answers): Answers {
-  const visible = new Set(visibleQuestions(q, answers).map((x) => x.id));
-  return Object.fromEntries(Object.entries(answers).filter(([id]) => visible.has(id)));
+  let current = answers;
+  for (let i = 0; i < 10; i++) {
+    const next: Answers = {};
+    for (const question of visibleQuestions(q, current)) {
+      if (!(question.id in current)) continue;
+      const value = current[question.id];
+      if (!question.options?.some((o) => o.showIf)) {
+        next[question.id] = value;
+        continue;
+      }
+      const offered = new Set(visibleOptions(question, current).map((o) => o.id));
+      if (Array.isArray(value)) next[question.id] = value.filter((v) => offered.has(v));
+      else if (typeof value === "string" && offered.has(value)) next[question.id] = value;
+    }
+    if (JSON.stringify(next) === JSON.stringify(current)) return next;
+    current = next;
+  }
+  return current;
 }
 
 /** Ids of visible, required questions without an answer. */
 export function missingAnswers(q: Questionnaire, answers: Answers): string[] {
   return visibleQuestions(q, answers)
-    .filter((question) => !question.optional && !(question.id in answers))
+    .filter((question) => {
+      if (question.optional) return false;
+      const value = answers[question.id];
+      if (question.type === "text") return typeof value !== "string" || !value.trim();
+      return value === undefined;
+    })
     .map((question) => question.id);
 }
 

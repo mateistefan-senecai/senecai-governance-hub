@@ -1,5 +1,5 @@
 {
-  "version": "2026.10-draft.1",
+  "version": "2026.11-draft.2",
   "status": "DRAFT",
-  "notes": "First content version for the rebuild. Ported from the role and high-risk checklists in docs/context/decision-trees, with the Art. 2 scope, Art. 5 and Art. 50 screens added. Draft: needs legal review by the spec owner before it is published, in particular the application dates (see dates.json notes on the Digital Omnibus)."
+  "notes": "Second draft. Classification starts from the system's areas of use, so questions and Annex I/III options that cannot apply are not asked; the Art. 5 screen asks indirect risk questions instead of listing the prohibited practices; Art. 26(1) is not listed separately when the company is also the provider; Art. 26(7) applies only when the system affects the company's own workers; the applicability check no longer flags DORA or NIS2 and takes the sector as free text. Updated to the Digital Omnibus on AI (Reg. (EU) 2026/1744, OJ L 24.7.2026): high-risk dates 2 December 2027 (Annex III) and 2 August 2028 (Annex I); machinery moved to Annex I, Section B; new Art. 4 wording; new prohibitions in Art. 5(1)(ba)–(bb) from 2 December 2026; Art. 50(2) transition to 2 December 2026; Art. 6(1a)–(1c) on safety components. Draft: needs legal review by the spec owner before it is published."
 }

@@ -7,18 +7,22 @@
   "transparency": {
     "date": "2026-08-02",
     "provision": "Art. 113",
-    "label": "Transparency duties (Art. 50)"
+    "label": "Transparency duties (Art. 50)",
+    "note": "Providers of generative systems placed on the market before 2 August 2026 have until 2 December 2026 to comply with Art. 50(2) (Art. 111(4), inserted by Reg. (EU) 2026/1744)."
   },
   "highRiskAnnexIII": {
-    "date": "2026-08-02",
-    "provision": "Art. 113",
-    "label": "High-risk systems listed in Annex III (Art. 6(2))",
-    "note": "The Commission's Digital Omnibus proposal (November 2025) would delay the high-risk obligations, linking them to the availability of standards with a long-stop date of 2 December 2027 for Annex III. Confirm the adopted position before publishing this content version."
+    "date": "2027-12-02",
+    "provision": "Art. 113, third paragraph, point (c)(i), as amended by Reg. (EU) 2026/1744",
+    "label": "High-risk systems listed in Annex III (Art. 6(2))"
   },
   "highRiskAnnexI": {
-    "date": "2027-08-02",
-    "provision": "Art. 113(c)",
-    "label": "High-risk systems under Annex I product legislation (Art. 6(1))",
-    "note": "The Digital Omnibus proposal would move this to a long-stop date of 2 August 2028. Confirm the adopted position before publishing this content version."
+    "date": "2028-08-02",
+    "provision": "Art. 113, third paragraph, point (c)(ii), as amended by Reg. (EU) 2026/1744",
+    "label": "High-risk systems under Annex I product legislation (Art. 6(1))"
+  },
+  "prohibitionsIntimate": {
+    "date": "2026-12-02",
+    "provision": "Art. 113, third paragraph, point (a), as amended by Reg. (EU) 2026/1744",
+    "label": "Prohibitions on non-consensual intimate content and child sexual abuse material (Art. 5(1)(ba)–(bb))"
   }
 }

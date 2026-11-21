@@ -5,6 +5,7 @@ import { withTenant } from "@/lib/tenant";
 import { requireClient } from "@/lib/authz";
 import { audit } from "@/lib/services/audit";
 import { ValidationError } from "@/lib/services/classification";
+import { refreshDocuments } from "@/lib/documents/freshness";
 import type { ActionStatus } from "@/generated/prisma/enums";
 import { actor, run, str, strOrNull } from "./run";
 
@@ -31,6 +32,7 @@ export async function updateAction(clientId: string, actionId: string, form: For
         before: { status: action.status, ownerName: action.ownerName, dueDate: action.dueDate },
         after: data,
       });
+      await refreshDocuments(tx, actor(ctx), client.id, "roadmap action updated");
     });
     return { to: `/clients/${clientId}/roadmap#${actionId}`, notice: "Action saved." };
   });
@@ -71,6 +73,7 @@ export async function requestImplementation(clientId: string, form: FormData) {
         action: "enquiry.created",
         after: { route, actions: actions.map((a) => a.title) },
       });
+      await refreshDocuments(tx, actor(ctx), client.id, "implementation requested");
     });
     return { notice: `Request sent for ${actionIds.length} action${actionIds.length > 1 ? "s" : ""}.` };
   });

@@ -53,6 +53,7 @@ export default async function RoadmapPage({ params }: PageProps<"/clients/[clien
         crumb="Step 6 · Compliance roadmap"
         title="Compliance roadmap"
         subtitle="Every gap or partial obligation becomes an action, grouped by urgency. The roadmap is complete on its own; asking for implementation help is optional."
+        actions={<Button href={`/clients/${clientId}/documents#ROADMAP`}>Roadmap PDF</Button>}
       />
       <div className="flex flex-wrap items-end justify-end gap-10 border-b border-hairline bg-ground px-8 py-4">
         <StatTile label="Open actions" value={open.length} />
