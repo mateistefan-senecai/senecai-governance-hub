@@ -11,17 +11,25 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 flex min-h-14 shrink-0 flex-wrap items-stretch">
-        <div className="flex w-[var(--spacing-sidebar)] shrink-0 items-center gap-3 bg-rail px-5">
-          <Link href="/home" className="rounded-lg bg-white px-2 py-1 shadow-sm">
-            <Image src="/images/senecai-logo-white.png" alt="SenecAI Governance Hub" width={124} height={32} className="h-7 w-auto" priority />
+      <header className="sticky top-0 z-30 flex min-h-16 shrink-0 flex-wrap items-stretch">
+        <div className="flex w-[var(--spacing-sidebar)] shrink-0 items-center bg-rail px-5">
+          <Link href="/home" aria-label="SenecAI Governance Hub — home" className="flex items-center gap-3 rounded-lg">
+            <Image src="/images/senecai-mark.png" alt="" width={44} height={46} className="h-11 w-auto" priority />
+            <span className="leading-none">
+              <span className="block font-display text-[23px] font-semibold tracking-tight text-rail-text">
+                Senec<span className="text-gold-light">AI</span>
+              </span>
+              <span className="mt-1 block font-mono text-[10px] font-medium tracking-micro-wide text-rail-muted">
+                GOVERNANCE HUB
+              </span>
+            </span>
           </Link>
-          <span className="rounded-full border border-gold-light/35 bg-gold-light/15 px-2 py-0.5 font-mono text-[10px] font-medium text-gold-light">
-            EU AI ACT
-          </span>
         </div>
 
         <div className="glass flex flex-1 flex-wrap items-center justify-end gap-5 border-b border-ink/10 px-8 py-2">
+          <span className="mr-auto rounded-full border border-gold/25 bg-gold/[0.08] px-2.5 py-1 font-mono text-[10.5px] font-medium text-gold">
+            EU AI ACT
+          </span>
           {ctx.memberships.length > 1 ? (
             <form action={switchOrganization} className="flex items-center gap-2">
               <label htmlFor="orgId" className="sr-only">
