@@ -100,6 +100,8 @@ export type Finding = {
   provision: string;
   summary: string;
   coveredInThisVersion: boolean;
+  /** Not covered by the Hub, but SenecAI offers consulting on it: the result offers a consultation request. */
+  servicesAvailable?: boolean;
 };
 
 export function aiActApplies(client: Pick<Client, "applicability">): boolean {

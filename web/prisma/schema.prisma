@@ -390,6 +390,10 @@ model DemoRequest {
   requesterType DemoRequesterType
   role          String?
   message       String?
+  /// Null for a demo request from the landing page; otherwise what the
+  /// signed-in user asked SenecAI about, e.g. a regulation the Hub does not
+  /// cover yet (from the applicability check).
+  topic         String?
   consentAt     DateTime
   status        DemoRequestStatus @default(NEW)
   handledById   String?

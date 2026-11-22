@@ -234,3 +234,19 @@ test("the client's sector pre-fills a new system's area of use", () => {
   assert.deepEqual(suggestedAreas(bundle.applicability, { "co.sector": "technology" }), []);
   assert.deepEqual(suggestedAreas(bundle.applicability, { "co.sector": "free text from an older version" }), []);
 });
+
+test("applicability: NIS2, DORA, CRA and Data Act are flagged as not covered, with SenecAI's services offered", () => {
+  const r = evaluate(bundle.applicability, {
+    "co.establishedInEU": true, "co.size": "medium", "co.sector": "finance",
+    "ai.builds": false, "ai.uses": true, "ai.importsOrDistributes": false, "data.personal": true,
+    "reg.nis2Sectors": ["banking"], "reg.financialEntity": true, "reg.digitalProducts": true, "reg.connectedData": true,
+  });
+  const findings = r.outputs.findings as { regulation: string; coveredInThisVersion: boolean; servicesAvailable?: boolean }[];
+  assert.deepEqual(findings.map((f) => f.regulation), ["AI_ACT", "GDPR", "NIS2", "DORA", "CRA", "DATA_ACT"]);
+  for (const f of findings.slice(2)) {
+    assert.equal(f.coveredInThisVersion, false);
+    assert.equal(f.servicesAvailable, true);
+  }
+  const small = evaluate(bundle.applicability, { "co.size": "small", "reg.nis2Sectors": ["food"] });
+  assert.ok(!(small.outputs.findings as { regulation: string }[]).some((f) => f.regulation === "NIS2"), "NIS2 size threshold");
+});
