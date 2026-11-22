@@ -27,14 +27,14 @@ export default async function DemoRequestsPage() {
   return (
     <>
       <PageHeader
-        crumb={`${ctx.orgName} · Landing page`}
-        title="Demo requests"
-        subtitle="Requests sent through the Request a demo form. They hold personal data: delete a request when it is no longer needed, or when the person asks."
+        crumb={`${ctx.orgName} · Inbox`}
+        title="Requests"
+        subtitle="Demo requests from the landing page, and consultation requests from inside the Hub (regulations it does not cover yet). They hold personal data: delete a request when it is no longer needed, or when the person asks."
       />
       <div className="space-y-4 p-8">
         {data.length === 0 ? (
           <Panel>
-            <p className="text-[13.5px] text-muted">No demo requests yet.</p>
+            <p className="text-[13.5px] text-muted">No requests yet.</p>
           </Panel>
         ) : (
           data.map((r) => (
@@ -44,6 +44,7 @@ export default async function DemoRequestsPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-[16px] font-semibold text-ink">{r.name}</h2>
                     <Tag tone={r.status === "NEW" ? "gold-fill" : "muted"}>{DEMO_STATUS_LABEL[r.status]}</Tag>
+                    <Tag tone="outline">{r.topic ? `Consultation · ${r.topic.split(" (")[0]}` : "Demo"}</Tag>
                   </div>
                   <p className="mt-0.5 text-[13px] text-body">
                     {r.role ? `${r.role}, ` : ""}

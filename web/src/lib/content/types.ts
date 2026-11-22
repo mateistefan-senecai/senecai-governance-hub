@@ -29,7 +29,13 @@ export type Option = {
   citation?: string;
   /** Offer this option only when this holds (e.g. Annex III points for the areas the system is used in). */
   showIf?: Condition;
+  /** Applicability sector options: the area of use (an option of `use.areas`) a new system starts with. */
+  suggestsArea?: string;
 };
+
+/** AI system fields (step 1) that answer a classification question directly. */
+export const SYSTEM_FACT_FIELDS = ["origin", "useType", "stage", "areas", "affectedGroups", "capabilities"] as const;
+export type SystemFactField = (typeof SYSTEM_FACT_FIELDS)[number];
 
 export type Question = {
   id: string;
@@ -43,6 +49,11 @@ export type Question = {
   showIf?: Condition;
   /** Multi questions may be left empty ("none of these"); others are required. */
   optional?: boolean;
+  /**
+   * Answered from this field of the AI system record (step 1) instead of
+   * being asked. Enum values are lower-cased to match the option ids.
+   */
+  fromSystem?: SystemFactField;
 };
 
 export type Section = { id: string; title: string; intro?: string; questions: Question[] };

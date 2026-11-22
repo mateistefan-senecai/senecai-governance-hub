@@ -44,7 +44,11 @@ export const CLASSIFICATION_STATUS_LABEL: Record<string, string> = {
 };
 
 export const ORIGIN_LABEL: Record<string, string> = { BUILT: "Built", BOUGHT: "Bought", EMBEDDED: "Embedded" };
-export const USE_TYPE_LABEL: Record<string, string> = { PRODUCT: "Product for customers", INTERNAL: "Internal operations", HYBRID: "Both" };
+export const USE_TYPE_LABEL: Record<string, string> = {
+  PRODUCT: "Supplied to others (sold or provided to other organisations or people)",
+  INTERNAL: "Used by the company itself (including in services to its own customers)",
+  HYBRID: "Both",
+};
 export const AUTONOMY_LABEL: Record<string, string> = {
   ADVISORY: "Advisory (human in the loop)",
   PARTIAL: "Partly automated (human on the loop)",

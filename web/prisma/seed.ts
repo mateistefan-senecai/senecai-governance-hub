@@ -24,17 +24,9 @@ import type { MemberRole, OrganizationType } from "../src/generated/prisma/enums
 
 const PASSWORD = "changeme123";
 
-const NO_ROLE: Answers = {
-  "role.develops": false, "role.integrates": false, "role.rebrands": false, "role.modifies": false,
-  "role.repurposes": false, "role.uses": false, "role.imports": false, "role.distributes": false,
-};
-// Nothing in the prohibited-practice risk screen; each system adds its areas of use.
-const BASE: Answers = {
-  ...NO_ROLE, "role.workplace": false, "scope.exclusions": [], "hr.annexI": [], "hr.annexIII": [],
-  "p.influence": false, "p.vulnerable": false, "p.scoring": false, "p.crime": false, "p.faces": false,
-  "p.emotions": false, "p.biocat": false, "p.rbi": false, "p.synthetic": false,
-  "t.interacts": false, "t.generates": false,
-};
+// Origin, use, stage, areas, affected groups and capabilities come from each
+// system's record; these are the remaining questions where nothing applies.
+const BASE: Answers = { "scope.exclusions": [], "hr.annexI": [], "hr.annexIII": [] };
 
 async function main() {
   // Runs on every deploy (see the build script) but only fills an empty
@@ -88,12 +80,11 @@ async function main() {
       purpose: "Scores retail loan applicants' creditworthiness and feeds the underwriting decision.",
       ownerName: "Mihai Georgescu", ownerRole: "Head of Credit Risk", origin: "BUILT",
       dataCategories: ["Financial data", "Identity data", "Credit bureau data"],
-      deploymentContext: "Retail lending, all branches and online", useType: "PRODUCT", autonomy: "PARTIAL", stage: "PRODUCTION",
-      affectedPersons: "Loan applicants (≈40,000 a year)",
+      deploymentContext: "Retail lending, all branches and online", useType: "INTERNAL", autonomy: "PARTIAL", stage: "PRODUCTION",
+      affectedPersons: "Loan applicants (≈40,000 a year)", areas: ["finance"], affectedGroups: ["customers"], capabilities: ["scores", "decides"],
     }));
     const scoringClass = await submitClassification(tx, actor, scoring, {
-      ...BASE, "use.areas": ["finance"], "role.develops": true, "role.uses": true, "role.publicBody": false,
-      "hr.annexIII": ["5b"], "hr.profiling": true,
+      ...BASE, "role.publicBody": false, "hr.annexIII": ["5b"], "hr.profiling": true, "p.scoringUse": false,
     }, bundle);
     await confirmClassification(tx, consultantActor, scoringClass);
     await assess(tx, consultantActor, scoring.id, bundle, {
@@ -112,10 +103,11 @@ async function main() {
       ownerName: "Laura Petrescu", ownerRole: "HR Director", origin: "BOUGHT", supplier: "TalentRank BV",
       dataCategories: ["CVs", "Application forms"],
       deploymentContext: "HR recruitment, used as provided by the vendor", useType: "INTERNAL", autonomy: "ADVISORY", stage: "PRODUCTION",
-      affectedPersons: "Job applicants",
+      affectedPersons: "Job applicants", areas: ["employment"], affectedGroups: ["candidates"], capabilities: ["scores", "decides"],
     }));
     await submitClassification(tx, actor, cv, {
-      ...BASE, "use.areas": ["employment"], "role.uses": true, "role.publicBody": false, "hr.annexIII": ["4a"], "hr.profiling": true,
+      ...BASE, "role.rebrands": false, "role.modifies": false, "role.repurposes": false, "role.publicBody": false,
+      "hr.annexIII": ["4a"], "hr.profiling": true, "p.scoringUse": false,
     }, bundle);
     await tx.vendorDocument.updateMany({ where: { systemId: cv.id, kind: "instructionsForUse" }, data: { status: "RECEIVED" } });
     await tx.vendorDocument.updateMany({ where: { systemId: cv.id, kind: "declarationOfConformity" }, data: { status: "REQUESTED" } });
@@ -125,11 +117,10 @@ async function main() {
       purpose: "Answers account and product questions on the website and hands over to a human agent.",
       ownerName: "Andreea Stan", ownerRole: "Digital Channels Lead", origin: "EMBEDDED", supplier: "Conversa AI GmbH",
       dataCategories: ["Chat transcripts"], deploymentContext: "Public website and mobile app",
-      useType: "PRODUCT", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Customers and website visitors",
+      useType: "INTERNAL", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Customers and website visitors", areas: ["business"], affectedGroups: ["customers", "public"], capabilities: ["chats", "generatesText"],
     }));
     await submitClassification(tx, actor, chatbot, {
-      ...BASE, "use.areas": ["business"], "role.integrates": true, "role.uses": true, "role.publicBody": false,
-      "t.interacts": true, "t.generates": true, "t.deepfake": false, "t.publicText": false,
+      ...BASE, "role.publicBody": false, "p.scoring": false, "t.publicText": false,
     }, bundle);
 
     const fraud = await createSystem(tx, actor, nb, sys({
@@ -137,10 +128,10 @@ async function main() {
       purpose: "Flags suspicious card transactions for the fraud team to review.",
       ownerName: "Victor Enache", ownerRole: "Head of Fraud Operations", origin: "BUILT",
       dataCategories: ["Transaction data"], deploymentContext: "Card payments monitoring",
-      useType: "INTERNAL", autonomy: "ADVISORY", stage: "PRODUCTION", affectedPersons: "Card holders",
+      useType: "INTERNAL", autonomy: "ADVISORY", stage: "PRODUCTION", affectedPersons: "Card holders", areas: ["finance"], affectedGroups: ["customers"], capabilities: ["scores"],
     }));
     await submitClassification(tx, actor, fraud, {
-      ...BASE, "use.areas": ["finance"], "role.develops": true, "role.uses": true, "role.publicBody": false, "hr.rightsImpact": ["finance"],
+      ...BASE, "role.publicBody": false, "hr.rightsImpact": ["finance"], "p.scoringUse": false,
     }, bundle);
 
     await createSystem(tx, actor, nb, sys({
@@ -148,7 +139,7 @@ async function main() {
       purpose: "Drafts campaign emails and social posts for the marketing team.",
       ownerName: "Andreea Stan", ownerRole: "Digital Channels Lead", origin: "BOUGHT", supplier: "WriteWell Inc.",
       dataCategories: ["Product information"], deploymentContext: "Marketing department",
-      useType: "INTERNAL", autonomy: "ADVISORY", stage: "PILOT",
+      useType: "INTERNAL", autonomy: "ADVISORY", stage: "PILOT", areas: ["business"], capabilities: ["generatesText"],
     }));
 
     // Deliverables: the inventory PDF reviewed and released to NovaBank, and
@@ -178,11 +169,10 @@ async function main() {
       purpose: "Guides collaborative picking robots using a vendor vision model integrated into LogiFlow's robot control software.",
       ownerName: "Cristian Vlad", ownerRole: "CTO", origin: "EMBEDDED", supplier: "VisionCore AG",
       dataCategories: ["Camera images"], deploymentContext: "Warehouses in Cluj and Timișoara; robots also sold to partners",
-      useType: "HYBRID", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Warehouse workers",
+      useType: "HYBRID", autonomy: "FULL", stage: "PRODUCTION", affectedPersons: "Warehouse workers", areas: ["product", "business"], affectedGroups: ["employees"], capabilities: ["product"],
     }));
     await submitClassification(tx, actor, robots, {
-      ...BASE, "use.areas": ["product", "business"], "role.integrates": true, "role.uses": true, "role.workplace": true,
-      "role.publicBody": false, "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true,
+      ...BASE, "role.publicBody": false, "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true,
     }, bundle);
     await generateDocument(tx, { ...actor, role: "ORG_ADMIN" }, logiflow.id, "INVENTORY");
   });
@@ -227,8 +217,8 @@ function member(tx: Tx, userId: string, organizationId: string, role: MemberRole
   return tx.membership.create({ data: { userId, organizationId, role, clientId } });
 }
 
-function sys(s: Partial<SystemInput> & Pick<SystemInput, "name" | "purpose" | "ownerName" | "origin" | "deploymentContext" | "useType" | "autonomy" | "stage">): SystemInput {
-  return { description: null, ownerRole: null, supplier: null, dataCategories: [], affectedPersons: null, ...s };
+function sys(s: Partial<SystemInput> & Pick<SystemInput, "name" | "purpose" | "ownerName" | "origin" | "deploymentContext" | "useType" | "autonomy" | "stage" | "areas">): SystemInput {
+  return { description: null, ownerRole: null, supplier: null, dataCategories: [], affectedPersons: null, affectedGroups: [], capabilities: [], ...s };
 }
 
 async function assess(tx: Tx, actor: Actor, systemId: string, bundle: ContentBundle, statuses: Record<string, ["COMPLIANT" | "PARTIAL" | "GAP", string]>) {

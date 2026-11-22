@@ -7,7 +7,7 @@ import { after, before, test } from "node:test";
 import assert from "node:assert/strict";
 import { prisma } from "../src/lib/db";
 import { withPublic, withTenant, withUser } from "../src/lib/tenant";
-import { createDemoRequest } from "../src/lib/services/demo-requests";
+import { createConsultationRequest, createDemoRequest } from "../src/lib/services/demo-requests";
 import { ValidationError } from "../src/lib/services/classification";
 
 let senecai: { orgId: string; userId: string };
@@ -77,4 +77,16 @@ test("the app cannot make another organisation a receiver of demo requests", asy
     withTenant(ionescu, (tx) => tx.organization.update({ where: { id: ionescu.orgId }, data: { receivesDemoRequests: true } })),
     /receivesDemoRequests can only be set by a migration/,
   );
+});
+
+test("a consultation request from inside the Hub reaches SenecAI's inbox with its topic, and no other firm", async () => {
+  await withPublic((tx) =>
+    createConsultationRequest(tx, {
+      name: "Andrei Ionescu", email: `test-c-${marker}`, organization: "Client (via Ionescu & Asociații)",
+      requesterType: "LAW_FIRM", topic: "NIS2 (Directive (EU) 2022/2555)", message: null,
+    }),
+  );
+  const stored = await withTenant(senecai, (tx) => tx.demoRequest.findFirstOrThrow({ where: { email: `test-c-${marker}` } }));
+  assert.equal(stored.topic, "NIS2 (Directive (EU) 2022/2555)");
+  assert.equal(await withTenant(ionescu, (tx) => tx.demoRequest.count()), 0);
 });

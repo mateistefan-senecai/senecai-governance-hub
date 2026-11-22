@@ -72,3 +72,20 @@ export async function deleteDemoRequest(tx: Tx, actor: Actor, id: string) {
   if (!count) throw new ValidationError("That request no longer exists.");
   await audit(tx, actor, { entityType: "DemoRequest", entityId: id, action: "demo_request.deleted" });
 }
+
+/**
+ * A signed-in user asks SenecAI for help with a regulation the Hub does not
+ * cover. Sent explicitly by the user, with their own contact details and the
+ * client's name; it lands in SenecAI's request inbox like a demo request.
+ */
+export async function createConsultationRequest(
+  tx: Tx,
+  input: { name: string; email: string; organization: string; requesterType: DemoRequesterType; topic: string; message: string | null },
+  now = new Date(),
+) {
+  if (!input.topic) throw new ValidationError("Choose what you need help with.");
+  if (input.message && input.message.length > 2000) throw new ValidationError("Keep the message under 2,000 characters.");
+  await tx.demoRequest.createMany({
+    data: [{ ...input, message: input.message || null, consentAt: now }],
+  });
+}

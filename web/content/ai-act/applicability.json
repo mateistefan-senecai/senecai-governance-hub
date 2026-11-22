@@ -38,9 +38,61 @@
         },
         {
           "id": "co.sector",
-          "type": "text",
+          "type": "single",
           "text": "Main sector",
-          "help": "In your own words, for example \"education technology\", \"retail banking\" or \"recruitment services\"."
+          "help": "Pre-fills the area of use of each new AI system.",
+          "options": [
+            {
+              "id": "education",
+              "label": "Education or training",
+              "suggestsArea": "education"
+            },
+            {
+              "id": "finance",
+              "label": "Banking, insurance or financial services",
+              "suggestsArea": "finance"
+            },
+            {
+              "id": "health",
+              "label": "Healthcare or life sciences",
+              "suggestsArea": "health"
+            },
+            {
+              "id": "hr",
+              "label": "HR or recruitment services",
+              "suggestsArea": "employment"
+            },
+            {
+              "id": "public",
+              "label": "Public administration",
+              "suggestsArea": "publicServices"
+            },
+            {
+              "id": "retail",
+              "label": "Retail or consumer services",
+              "suggestsArea": "business"
+            },
+            {
+              "id": "manufacturing",
+              "label": "Manufacturing or physical products",
+              "suggestsArea": "product"
+            },
+            {
+              "id": "technology",
+              "label": "Software or digital services"
+            },
+            {
+              "id": "other",
+              "label": "Other"
+            }
+          ]
+        },
+        {
+          "id": "co.sectorDetail",
+          "type": "text",
+          "optional": true,
+          "text": "Describe the sector in your own words (optional)",
+          "help": "For example \"education technology for secondary schools\"."
         }
       ]
     },
@@ -97,6 +149,105 @@
           "type": "boolean",
           "text": "Does the company process personal data (about customers, staff or anyone else)?",
           "citation": "GDPR Art. 2(1)"
+        }
+      ]
+    },
+    {
+      "id": "otherRegs",
+      "title": "Other EU digital regulations",
+      "intro": "Not covered by the Hub yet. If one applies, a SenecAI consultant can help you assess and implement it.",
+      "questions": [
+        {
+          "id": "reg.nis2Sectors",
+          "type": "multi",
+          "optional": true,
+          "text": "Does the company operate in any of these sectors? Tick all that apply, or none.",
+          "citation": "NIS2 Art. 2–3, Annexes I–II",
+          "options": [
+            {
+              "id": "energy",
+              "label": "Energy (electricity, gas, oil, district heating, hydrogen)"
+            },
+            {
+              "id": "transport",
+              "label": "Transport (air, rail, water, road)"
+            },
+            {
+              "id": "banking",
+              "label": "Banking or financial market infrastructure"
+            },
+            {
+              "id": "health",
+              "label": "Healthcare, pharmaceuticals or medical devices"
+            },
+            {
+              "id": "water",
+              "label": "Drinking water or waste water"
+            },
+            {
+              "id": "digitalInfra",
+              "label": "Digital infrastructure (cloud, data centres, DNS, telecoms, trust services)"
+            },
+            {
+              "id": "ictManaged",
+              "label": "Managed IT or security services for other businesses"
+            },
+            {
+              "id": "digitalProviders",
+              "label": "Online marketplaces, search engines or social networks"
+            },
+            {
+              "id": "public",
+              "label": "Public administration"
+            },
+            {
+              "id": "postal",
+              "label": "Postal or courier services"
+            },
+            {
+              "id": "waste",
+              "label": "Waste management"
+            },
+            {
+              "id": "chemicals",
+              "label": "Chemicals"
+            },
+            {
+              "id": "food",
+              "label": "Food production, processing or distribution"
+            },
+            {
+              "id": "manufacturing",
+              "label": "Manufacturing of electronics, machinery, vehicles or medical devices"
+            },
+            {
+              "id": "space",
+              "label": "Space"
+            },
+            {
+              "id": "research",
+              "label": "Research organisations"
+            }
+          ]
+        },
+        {
+          "id": "reg.financialEntity",
+          "type": "boolean",
+          "citation": "DORA Art. 2(1)",
+          "text": "Is the company a financial entity, such as a bank, payment or e-money institution, investment firm, insurer or crypto-asset service provider, or does it provide ICT services to one?"
+        },
+        {
+          "id": "reg.digitalProducts",
+          "type": "boolean",
+          "citation": "CRA Art. 2(1)",
+          "text": "Does the company make, import or sell hardware or software products that connect to a device or a network, for example connected devices, apps or installable software?",
+          "help": "Purely online services (software as a service) are generally not covered, unless they are part of such a product."
+        },
+        {
+          "id": "reg.connectedData",
+          "type": "boolean",
+          "citation": "Data Act Art. 1(3)",
+          "text": "Does the company make connected products that collect data about their use (for example smart devices, connected cars or machines), provide services that work with them, or offer cloud or other data processing services?"
         }
       ]
     }
@@ -235,6 +386,122 @@
       },
       "citation": "GDPR Art. 2(1), Art. 3",
       "rationale": "The company processes personal data, so the GDPR applies to that processing."
+    },
+    {
+      "id": "finding.nis2",
+      "when": {
+        "any": [
+          {
+            "all": [
+              {
+                "q": "reg.nis2Sectors",
+                "hasAny": [
+                  "energy",
+                  "transport",
+                  "banking",
+                  "health",
+                  "water",
+                  "digitalInfra",
+                  "ictManaged",
+                  "digitalProviders",
+                  "public",
+                  "postal",
+                  "waste",
+                  "chemicals",
+                  "food",
+                  "manufacturing",
+                  "space",
+                  "research"
+                ]
+              },
+              {
+                "q": "co.size",
+                "in": [
+                  "medium",
+                  "large"
+                ]
+              }
+            ]
+          },
+          {
+            "q": "reg.nis2Sectors",
+            "has": "digitalInfra"
+          }
+        ]
+      },
+      "add": {
+        "findings": {
+          "regulation": "NIS2",
+          "name": "NIS2 (Directive (EU) 2022/2555)",
+          "applies": "likely",
+          "provision": "Art. 2–3, Annexes I–II",
+          "summary": "Likely applies. Not covered by the Hub yet, but a SenecAI consultant can help you assess it and put it in place.",
+          "coveredInThisVersion": false,
+          "servicesAvailable": true
+        }
+      },
+      "citation": "NIS2 Art. 2–3, Annexes I–II",
+      "rationale": "A medium or large company in a sector of NIS2 Annex I or II, or a provider of certain digital infrastructure of any size, is likely in scope as transposed nationally."
+    },
+    {
+      "id": "finding.dora",
+      "when": {
+        "q": "reg.financialEntity",
+        "is": true
+      },
+      "add": {
+        "findings": {
+          "regulation": "DORA",
+          "name": "DORA (Regulation (EU) 2022/2554)",
+          "applies": "likely",
+          "provision": "Art. 2(1)",
+          "summary": "Likely applies. Not covered by the Hub yet, but a SenecAI consultant can help you assess it and put it in place.",
+          "coveredInThisVersion": false,
+          "servicesAvailable": true
+        }
+      },
+      "citation": "DORA Art. 2(1)",
+      "rationale": "Financial entities listed in Art. 2(1), and ICT third-party service providers to them, are within DORA's digital operational resilience rules."
+    },
+    {
+      "id": "finding.cra",
+      "when": {
+        "q": "reg.digitalProducts",
+        "is": true
+      },
+      "add": {
+        "findings": {
+          "regulation": "CRA",
+          "name": "Cyber Resilience Act (Regulation (EU) 2024/2847)",
+          "applies": "likely",
+          "provision": "Art. 2(1)",
+          "summary": "Likely applies. Not covered by the Hub yet, but a SenecAI consultant can help you assess it and put it in place.",
+          "coveredInThisVersion": false,
+          "servicesAvailable": true
+        }
+      },
+      "citation": "CRA Art. 2(1)",
+      "rationale": "Products with digital elements made available on the EU market fall within the Cyber Resilience Act."
+    },
+    {
+      "id": "finding.dataAct",
+      "when": {
+        "q": "reg.connectedData",
+        "is": true
+      },
+      "add": {
+        "findings": {
+          "regulation": "DATA_ACT",
+          "name": "Data Act (Regulation (EU) 2023/2854)",
+          "applies": "likely",
+          "provision": "Art. 1(3)",
+          "summary": "Likely applies. Not covered by the Hub yet, but a SenecAI consultant can help you assess it and put it in place.",
+          "coveredInThisVersion": false,
+          "servicesAvailable": true
+        }
+      },
+      "citation": "Data Act Art. 1(3)",
+      "rationale": "Manufacturers of connected products, providers of related services and providers of data processing services are within the Data Act."
     }
   ]
 }

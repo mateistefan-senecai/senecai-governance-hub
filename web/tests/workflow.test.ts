@@ -9,6 +9,7 @@ import { after, test } from "node:test";
 import assert from "node:assert/strict";
 import { prisma } from "../src/lib/db";
 import { withTenant, withUser, type Tx } from "../src/lib/tenant";
+import type { Answers } from "../src/lib/content/types";
 import { loadBundleFromDisk } from "../src/lib/content/load";
 import { overrideClassification, submitClassification, ValidationError } from "../src/lib/services/classification";
 import { updateSystem, type SystemInput } from "../src/lib/services/inventory";
@@ -37,6 +38,7 @@ const input = (s: SystemInput & Record<string, unknown>): SystemInput => ({
   name: s.name, purpose: s.purpose, description: s.description, ownerName: s.ownerName, ownerRole: s.ownerRole,
   origin: s.origin, supplier: s.supplier, dataCategories: s.dataCategories, deploymentContext: s.deploymentContext,
   useType: s.useType, autonomy: s.autonomy, stage: s.stage, affectedPersons: s.affectedPersons,
+  areas: s.areas, affectedGroups: s.affectedGroups, capabilities: s.capabilities,
 });
 
 after(() => prisma.$disconnect());
@@ -84,8 +86,10 @@ test("reclassifying keeps assessments of obligations that still apply and deacti
   await scenario(async (tx, actor) => {
     const system = await systemNamed(tx, "Credit Scoring Engine");
     const current = await tx.classification.findFirstOrThrow({ where: { systemId: system.id, isCurrent: true } });
-    // Same answers, but the company no longer uses the system itself: deployer duties fall away.
-    await submitClassification(tx, actor, system, { ...(current.answers as object), "role.uses": false }, bundle);
+    // Same answers, but the company now only supplies the system to others (the
+    // record says so): deployer duties fall away.
+    const supplied = await tx.aiSystem.update({ where: { id: system.id }, data: { useType: "PRODUCT" } });
+    await submitClassification(tx, actor, supplied, current.answers as object as Answers, bundle);
     const logging = await tx.systemObligation.findFirstOrThrow({ where: { systemId: system.id, obligationKey: "art12.recordKeeping" } });
     assert.equal(logging.status, "COMPLIANT");
     assert.equal(logging.active, true);

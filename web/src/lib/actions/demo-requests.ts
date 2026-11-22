@@ -4,7 +4,11 @@ import { getCtx } from "@/lib/session";
 import { withPublic, withTenant } from "@/lib/tenant";
 import { assertAdmin, ForbiddenError } from "@/lib/authz";
 import { ValidationError } from "@/lib/services/classification";
+import { requireClient } from "@/lib/authz";
+import type { Finding } from "@/lib/services/inventory";
+import type { DemoRequesterType } from "@/generated/prisma/enums";
 import {
+  createConsultationRequest,
   createDemoRequest,
   deleteDemoRequest,
   receivesDemoRequests,
@@ -58,5 +62,32 @@ export async function removeDemoRequest(id: string) {
     const ctx = await inboxCtx();
     await withTenant(ctx, (tx) => deleteDemoRequest(tx, actor(ctx), id));
     return { notice: "Request deleted." };
+  });
+}
+
+const REQUESTER_OF_ORG: Record<string, DemoRequesterType> = { LAW_FIRM: "LAW_FIRM", CONSULTANCY: "CONSULTANCY", COMPANY: "COMPANY" };
+
+/** From the applicability result: ask a SenecAI consultant about a regulation the Hub does not cover. */
+export async function requestConsultation(clientId: string, regulation: string, form: FormData) {
+  const ctx = await getCtx();
+  await run(`/clients/${clientId}/applicability`, async () => {
+    const client = await withTenant(ctx, (tx) => requireClient(tx, ctx, clientId));
+    const findings = ((client.applicability as { findings?: Finding[] } | null)?.findings ?? []).filter(
+      (f) => f.servicesAvailable && f.applies !== "no",
+    );
+    const finding = findings.find((f) => f.regulation === regulation);
+    if (!finding) throw new ValidationError("This regulation is not part of the applicability result.");
+    const organization = ctx.orgType === "COMPANY" ? client.name : `${client.name} (via ${ctx.orgName})`;
+    await withPublic((tx) =>
+      createConsultationRequest(tx, {
+        name: ctx.userName,
+        email: ctx.email,
+        organization,
+        requesterType: REQUESTER_OF_ORG[ctx.orgType] ?? "OTHER",
+        topic: finding.name,
+        message: str(form, "message") || null,
+      }),
+    );
+    return { notice: `Sent. A SenecAI consultant will contact you about ${finding.name.split(" (")[0]}.` };
   });
 }

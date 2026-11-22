@@ -49,7 +49,7 @@ export default async function ClientsPage() {
         actions={
           newDemoRequests !== null && (
             <Button href="/demo-requests" variant={newDemoRequests ? "primary" : "ghost"}>
-              Demo requests{newDemoRequests ? ` · ${newDemoRequests} new` : ""}
+              Requests{newDemoRequests ? ` · ${newDemoRequests} new` : ""}
             </Button>
           )
         }

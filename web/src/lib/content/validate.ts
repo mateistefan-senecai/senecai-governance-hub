@@ -3,7 +3,7 @@
 // firing, which for legal content is worse than a crash — so it is refused.
 
 import { allQuestions } from "./engine";
-import type { Condition, ContentBundle, Questionnaire } from "./types";
+import { SYSTEM_FACT_FIELDS, type Condition, type ContentBundle, type Questionnaire } from "./types";
 
 const PARTIES = new Set(["provider", "deployer", "importer", "distributor"]);
 
@@ -11,6 +11,22 @@ export function validateBundle(bundle: ContentBundle): string[] {
   const errors: string[] = [];
   checkQuestionnaire(bundle.applicability, errors);
   checkQuestionnaire(bundle.classification, errors);
+
+  // Facts answered from the AI system record: one question per field, and a
+  // sector may only suggest an area of use that exists.
+  const fields = new Set<string>();
+  for (const question of allQuestions(bundle.classification)) {
+    if (!question.fromSystem) continue;
+    if (!SYSTEM_FACT_FIELDS.includes(question.fromSystem)) errors.push(`classification question ${question.id}: unknown system field "${question.fromSystem}"`);
+    if (fields.has(question.fromSystem)) errors.push(`classification: two questions read system field "${question.fromSystem}"`);
+    fields.add(question.fromSystem);
+  }
+  const areaIds = new Set(allQuestions(bundle.classification).find((x) => x.fromSystem === "areas")?.options?.map((o) => o.id) ?? []);
+  for (const question of allQuestions(bundle.applicability)) {
+    for (const o of question.options ?? []) {
+      if (o.suggestsArea && !areaIds.has(o.suggestsArea)) errors.push(`applicability option ${question.id}/${o.id}: suggests unknown area "${o.suggestsArea}"`);
+    }
+  }
 
   const outputs = new Set(Object.keys(bundle.classification.defaults));
   const keys = new Set<string>();

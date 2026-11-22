@@ -114,7 +114,7 @@ decide anything.
 | 2 Classification | `/systems/[id]/classify`; reviewer confirms or overrides with a written reason |
 | 3 Obligation mapping | regenerated automatically from the effective classification |
 | 4 Evidence | **Stage 2**: the obligation page shows the expected evidence |
-| 5 Gap assessment | reviewer sets compliant / partial / gap with a rationale (Stage 1: from the interview) |
+| 5 Gap assessment | `/clients/[id]/gap-assessment`: every applicable obligation across the client's systems with its status; the reviewer assesses each one (compliant / partial / gap with a rationale) on its obligation page (Stage 1: from the interview) |
 | 6 Roadmap | `/clients/[id]/roadmap`: phases, owner, deadline, request implementation |
 | PDFs (steps 1, 2, 3, 5, 6 + pack) | `/clients/[id]/documents`: generate, submit for review, approve, release, download; linked from the inventory and the roadmap |
 
@@ -177,6 +177,17 @@ Decisions taken where the spec is silent (conservative by default; to confirm):
   `Organization.brandLogo` holds a `data:image/…` URI (no network fetch at render time);
   branding settings are not built yet, so PDFs show the brand name or organisation name.
 - Company users do not see draft documents in the audit log either.
+
+**Step 1 feeds step 2.** Each AI system record carries structured facts (`areas`,
+`affectedGroups`, `capabilities`, plus `origin`, `useType` and `stage`). They answer the
+classification's "facts" questions (`fromSystem` in `content/ai-act/classification.json`,
+see `src/lib/content/facts.ts`), so step 2 asks only what the record leaves open: the
+role only for bought systems, scope exclusions only before production, the Art. 5 screen
+only where the capabilities or affected groups show a pattern, Annex I/III only for the
+matching areas, and Art. 50 only for what the record does not settle. The record is
+authoritative: on submit its facts replace any answer to those questions. A system whose
+record lacks the facts is asked to complete it before it can be classified. The client's
+sector (applicability check) pre-fills a new system's area of use (`suggestsArea`).
 
 **Public pages and demo requests.** `/` is the landing page
 (`src/components/landing-page.tsx`) and `/request-demo` its form; both are public in

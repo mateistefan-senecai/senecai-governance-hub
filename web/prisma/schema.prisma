@@ -178,6 +178,12 @@ model AiSystem {
   autonomy          Autonomy
   stage             Stage
   affectedPersons   String?
+  /// Structured facts the classification reads (ids from the content
+  /// library's "facts" questions): areas of use, who is affected, and what
+  /// the system does. Step 2 does not ask again what these settle.
+  areas             String[]     @default([])
+  affectedGroups    String[]     @default([])
+  capabilities      String[]     @default([])
   /// Set when the system, its vendor, purpose or deployment changed after the
   /// current classification was made — the classification must be redone.
   classificationStale Boolean    @default(false)
@@ -384,6 +390,10 @@ model DemoRequest {
   requesterType DemoRequesterType
   role          String?
   message       String?
+  /// Null for a demo request from the landing page; otherwise what the
+  /// signed-in user asked SenecAI about, e.g. a regulation the Hub does not
+  /// cover yet (from the applicability check).
+  topic         String?
   consentAt     DateTime
   status        DemoRequestStatus @default(NEW)
   handledById   String?
