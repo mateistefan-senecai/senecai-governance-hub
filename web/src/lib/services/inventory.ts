@@ -26,10 +26,17 @@ export type SystemInput = {
   autonomy: Autonomy;
   stage: Stage;
   affectedPersons: string | null;
+  /** Structured facts for the classification (ids of the content library's fact questions). */
+  areas: string[];
+  affectedGroups: string[];
+  capabilities: string[];
 };
 
 /** Edits to these fields change what the system legally is. */
-const RECLASSIFY_FIELDS = ["purpose", "origin", "supplier", "deploymentContext", "useType", "autonomy", "affectedPersons"] as const;
+const RECLASSIFY_FIELDS = [
+  "purpose", "origin", "supplier", "deploymentContext", "useType", "autonomy", "affectedPersons",
+  "stage", "areas", "affectedGroups", "capabilities",
+] as const;
 
 export function assertSystemInput(input: SystemInput) {
   if (!input.name) throw new ValidationError("Give the system a name.");
@@ -37,6 +44,7 @@ export function assertSystemInput(input: SystemInput) {
   if (!input.ownerName) throw new ValidationError("Name the accountable owner.");
   if (!input.deploymentContext) throw new ValidationError("Say where the system is deployed.");
   if (input.origin !== "BUILT" && !input.supplier) throw new ValidationError("Name the supplier of a bought or embedded system.");
+  if (!input.areas.length) throw new ValidationError("Tick at least one area of use.");
 }
 
 export async function createSystem(tx: Tx, actor: Actor, client: Client, input: SystemInput) {

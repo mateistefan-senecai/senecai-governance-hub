@@ -38,9 +38,61 @@
         },
         {
           "id": "co.sector",
-          "type": "text",
+          "type": "single",
           "text": "Main sector",
-          "help": "In your own words, for example \"education technology\", \"retail banking\" or \"recruitment services\"."
+          "help": "Pre-fills the area of use of each new AI system.",
+          "options": [
+            {
+              "id": "education",
+              "label": "Education or training",
+              "suggestsArea": "education"
+            },
+            {
+              "id": "finance",
+              "label": "Banking, insurance or financial services",
+              "suggestsArea": "finance"
+            },
+            {
+              "id": "health",
+              "label": "Healthcare or life sciences",
+              "suggestsArea": "health"
+            },
+            {
+              "id": "hr",
+              "label": "HR or recruitment services",
+              "suggestsArea": "employment"
+            },
+            {
+              "id": "public",
+              "label": "Public administration",
+              "suggestsArea": "publicServices"
+            },
+            {
+              "id": "retail",
+              "label": "Retail or consumer services",
+              "suggestsArea": "business"
+            },
+            {
+              "id": "manufacturing",
+              "label": "Manufacturing or physical products",
+              "suggestsArea": "product"
+            },
+            {
+              "id": "technology",
+              "label": "Software or digital services"
+            },
+            {
+              "id": "other",
+              "label": "Other"
+            }
+          ]
+        },
+        {
+          "id": "co.sectorDetail",
+          "type": "text",
+          "optional": true,
+          "text": "Describe the sector in your own words (optional)",
+          "help": "For example \"education technology for secondary schools\"."
         }
       ]
     },

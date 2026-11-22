@@ -2,44 +2,42 @@
 // lawyer expects. If a content edit changes one of these outcomes, the test
 // fails and the change must be deliberate.
 //
+// Each system is described by its record (step 1: origin, use, stage, areas,
+// affected groups, what it does) plus the few answers step 2 still asks.
+//
 // Run: npm test
 
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { applicableObligations, evaluate, missingAnswers, pruneAnswers, visibleOptions, visibleQuestions } from "../src/lib/content/engine";
+import { suggestedAreas } from "../src/lib/content/facts";
 import { loadBundleFromDisk } from "../src/lib/content/load";
 import { validateBundle } from "../src/lib/content/validate";
 import type { Answers, ContentBundle } from "../src/lib/content/types";
 
 const bundle = loadBundleFromDisk();
 
-const NO_ROLE: Answers = {
-  "role.develops": false,
-  "role.integrates": false,
-  "role.rebrands": false,
-  "role.modifies": false,
-  "role.repurposes": false,
-  "role.uses": false,
-  "role.imports": false,
-  "role.distributes": false,
-};
-const NO_TRANSPARENCY: Answers = { "t.interacts": false, "t.generates": false };
-// Nothing flagged in the prohibited-practice risk screen.
-const NO_PROHIBITED_RISK: Answers = {
-  "p.influence": false, "p.vulnerable": false, "p.scoring": false, "p.crime": false, "p.faces": false,
-  "p.emotions": false, "p.biocat": false, "p.rbi": false, "p.synthetic": false,
-};
+type Facts = { origin?: string; use?: string; stage?: string; areas?: string[]; affected?: string[]; does?: string[] };
 
-/** Defaults to the "other" area, which keeps every question and option on offer. */
-function classify(answers: Answers) {
-  const all = {
-    "use.areas": ["other"], ...NO_ROLE, "role.workplace": false, ...NO_TRANSPARENCY, ...NO_PROHIBITED_RISK,
-    "scope.exclusions": [], "hr.annexI": [], "hr.annexIII": [], ...answers,
+function classify(facts: Facts, answers: Answers = {}) {
+  const all: Answers = {
+    "sys.origin": facts.origin ?? "built",
+    "sys.use": facts.use ?? "product",
+    "sys.stage": facts.stage ?? "production",
+    "use.areas": facts.areas ?? ["other"],
+    "sys.affected": facts.affected ?? [],
+    "sys.does": facts.does ?? [],
+    "hr.annexIII": [],
+    ...answers,
   };
+  const pruned = pruneAnswers(bundle.classification, all);
   const { outputs, reasoning } = evaluate(bundle.classification, all);
   const obligations = applicableObligations(bundle, outputs).map((o) => o.def.key);
-  return { outputs, reasoning, obligations, missing: missingAnswers(bundle.classification, all) };
+  const asked = visibleQuestions(bundle.classification, pruned).filter((q) => !q.fromSystem).map((q) => q.id);
+  return { outputs, reasoning, obligations, asked, pruned, missing: missingAnswers(bundle.classification, pruned) };
 }
+
+const BOUGHT_AS_IS: Answers = { "role.rebrands": false, "role.modifies": false, "role.repurposes": false };
 
 test("content library is structurally valid", () => {
   assert.deepEqual(validateBundle(bundle), []);
@@ -51,14 +49,32 @@ test("validator rejects a rule pointing at a question that does not exist", () =
   assert.match(validateBundle(broken).join("\n"), /unknown question "role\.doesNotExist"/);
 });
 
+test("the school chatbot an ed-tech company supplies: three questions, limited risk", () => {
+  const r = classify(
+    { origin: "built", use: "product", areas: ["education"], affected: ["students", "children"], does: ["chats", "generatesText"] },
+    { "p.vulnerableExploit": false, "p.scoring": false },
+  );
+  assert.deepEqual(r.asked, ["p.vulnerableExploit", "p.scoring", "hr.annexIII"]);
+  assert.deepEqual(r.missing, []);
+  assert.deepEqual(r.outputs.roles, ["provider"]);
+  assert.equal(r.outputs.riskClass, "LIMITED");
+  assert.deepEqual(r.obligations.sort(), ["art4.literacy", "art50_1.interaction", "art50_2.marking"]);
+});
+
+test("the role comes from origin and use; role questions are asked only for bought systems", () => {
+  assert.deepEqual(classify({ origin: "built", use: "internal" }).outputs.roles, ["provider", "deployer"]);
+  assert.deepEqual(classify({ origin: "embedded", use: "product" }).outputs.roles, ["provider"]);
+  assert.ok(!classify({ origin: "built" }).asked.some((id) => id.startsWith("role.")));
+  const resold = classify({ origin: "bought", use: "product" });
+  for (const id of ["role.rebrands", "role.modifies", "role.repurposes", "role.imports", "role.distributes"]) assert.ok(resold.asked.includes(id), id);
+  assert.ok(!classify({ origin: "bought", use: "internal" }).asked.includes("role.imports"));
+});
+
 test("in-house credit scoring: provider and deployer, high-risk under Annex III 5(b), FRIA applies", () => {
-  const r = classify({
-    "role.develops": true,
-    "role.uses": true,
-    "role.publicBody": false,
-    "hr.annexIII": ["5b"],
-    "hr.profiling": true,
-  });
+  const r = classify(
+    { origin: "built", use: "internal", areas: ["finance"], affected: ["customers"], does: ["scores", "decides"] },
+    { "role.publicBody": false, "hr.annexIII": ["5b"], "hr.profiling": true, "p.scoringUse": false },
+  );
   assert.deepEqual(r.missing, []);
   assert.equal(r.outputs.riskClass, "HIGH_RISK");
   assert.deepEqual(r.outputs.roles, ["provider", "deployer"]);
@@ -70,8 +86,12 @@ test("in-house credit scoring: provider and deployer, high-risk under Annex III 
   assert.ok(r.reasoning.some((f) => f.ruleId === "role.providerAndDeployer"), "and the trail says why");
 });
 
-test("bought CV screening tool used as-is: deployer only, no provider duties, no FRIA", () => {
-  const r = classify({ "role.uses": true, "role.publicBody": false, "hr.annexIII": ["4a"], "hr.profiling": true });
+test("bought CV screening tool used as-is: deployer only, no provider duties, no FRIA, no Art. 26(7)", () => {
+  const r = classify(
+    { origin: "bought", use: "internal", areas: ["employment"], affected: ["candidates"], does: ["scores", "decides"] },
+    { ...BOUGHT_AS_IS, "role.publicBody": false, "hr.annexIII": ["4a"], "hr.profiling": true, "p.scoringUse": false },
+  );
+  assert.deepEqual(r.missing, []);
   assert.equal(r.outputs.riskClass, "HIGH_RISK");
   assert.deepEqual(r.outputs.roles, ["deployer"]);
   assert.ok(r.obligations.includes("art26_1.useInstructions"));
@@ -80,27 +100,38 @@ test("bought CV screening tool used as-is: deployer only, no provider duties, no
   assert.ok(!r.obligations.includes("art27.fria"));
 });
 
+test("Art. 26(7) applies when a high-risk system affects the company's own employees", () => {
+  const r = classify(
+    { origin: "bought", use: "internal", areas: ["employment"], affected: ["employees"], does: ["decides"] },
+    { ...BOUGHT_AS_IS, "role.publicBody": false, "hr.annexIII": ["4b"], "hr.profiling": true, "p.scoring": false },
+  );
+  assert.ok(r.obligations.includes("art26_7.workers"));
+});
+
 test("public body deploying an Annex III system must do a FRIA and register the use", () => {
-  const r = classify({ "role.uses": true, "role.publicBody": true, "hr.annexIII": ["5a"], "hr.profiling": false, "hr.derogation": [] });
+  const r = classify(
+    { origin: "bought", use: "internal", areas: ["publicServices"], does: ["decides"] },
+    { ...BOUGHT_AS_IS, "role.publicBody": true, "hr.annexIII": ["5a"], "hr.profiling": false, "hr.derogation": [], "p.scoring": false },
+  );
   assert.ok(r.obligations.includes("art27.fria"));
   assert.ok(r.obligations.includes("art49_3.registration"));
 });
 
-test("deployer of a third-party chatbot: limited risk, but Art. 50(1) is the provider's duty", () => {
-  const r = classify({ "role.uses": true, "role.publicBody": false, "t.interacts": true });
+test("a bought chatbot used as-is: limited risk, and Art. 50(1) is the provider's duty", () => {
+  const r = classify(
+    { origin: "bought", use: "internal", areas: ["business"], affected: ["customers"], does: ["chats"] },
+    { ...BOUGHT_AS_IS, "role.publicBody": false, "p.scoring": false },
+  );
+  assert.deepEqual(r.missing, []);
   assert.equal(r.outputs.riskClass, "LIMITED");
   assert.deepEqual(r.obligations, ["art4.literacy"]);
 });
 
-test("provider of a chatbot that generates text must disclose and mark output", () => {
-  const r = classify({ "role.develops": true, "t.interacts": true, "t.generates": true, "t.deepfake": false, "t.publicText": false });
-  assert.equal(r.outputs.riskClass, "LIMITED");
-  assert.ok(r.obligations.includes("art50_1.interaction"));
-  assert.ok(r.obligations.includes("art50_2.marking"));
-});
-
 test("Art. 6(3) derogation without profiling: not high-risk, provider must document and register", () => {
-  const r = classify({ "role.develops": true, "hr.annexIII": ["4a"], "hr.profiling": false, "hr.derogation": ["d"] });
+  const r = classify(
+    { areas: ["employment"], does: ["scores"] },
+    { "hr.annexIII": ["4a"], "hr.profiling": false, "hr.derogation": ["d"], "p.scoringUse": false },
+  );
   assert.equal(r.outputs.highRisk, false);
   assert.equal(r.outputs.art6_3Exempt, true);
   assert.equal(r.outputs.riskClass, "MINIMAL");
@@ -109,21 +140,16 @@ test("Art. 6(3) derogation without profiling: not high-risk, provider must docum
 });
 
 test("derogation answers are ignored when the system profiles (question hidden)", () => {
-  const r = classify({ "role.develops": true, "hr.annexIII": ["4a"], "hr.profiling": true, "hr.derogation": ["d"] });
+  const r = classify({ areas: ["employment"], does: ["scores"] }, { "hr.annexIII": ["4a"], "hr.profiling": true, "hr.derogation": ["d"] });
   assert.equal(r.outputs.highRisk, true);
   assert.equal(r.outputs.art6_3Exempt, false);
 });
 
-test("Art. 26(7) applies only when the system affects the company's own workers", () => {
-  const atWork = classify({ "role.uses": true, "role.workplace": true, "role.publicBody": false, "hr.annexIII": ["4b"], "hr.profiling": true });
-  assert.ok(atWork.obligations.includes("art26_7.workers"));
-});
-
 test("emotion inference at work, not for medical or safety reasons, is flagged as a prohibited-practice risk", () => {
-  const r = classify({
-    "role.uses": true, "role.publicBody": false,
-    "p.emotions": true, "p.emotionsWhere": ["workplace"], "p.emotionsMedical": false,
-  });
+  const r = classify(
+    { origin: "bought", use: "internal", areas: ["employment"], affected: ["employees"], does: ["emotions"] },
+    { ...BOUGHT_AS_IS, "role.publicBody": false, "p.emotionsWhere": ["workplace"], "p.emotionsMedical": false },
+  );
   assert.equal(r.outputs.riskClass, "PROHIBITED");
   assert.deepEqual(r.outputs.prohibitedPractices, ["Art. 5(1)(f)"]);
   assert.ok(r.obligations.includes("art5.cease"));
@@ -132,41 +158,43 @@ test("emotion inference at work, not for medical or safety reasons, is flagged a
 });
 
 test("emotion inference for safety reasons is not flagged", () => {
-  const r = classify({ "role.uses": true, "role.publicBody": false, "p.emotions": true, "p.emotionsWhere": ["workplace"], "p.emotionsMedical": true });
+  const r = classify({ areas: ["employment"], does: ["emotions"] }, { "p.emotionsWhere": ["workplace"], "p.emotionsMedical": true });
   assert.equal(r.outputs.prohibited, false);
 });
 
-test("an ed-tech teaching assistant is not asked about law enforcement or product safety", () => {
-  const answers: Answers = {
-    "use.areas": ["education"], ...NO_ROLE, "role.develops": true, ...NO_TRANSPARENCY, ...NO_PROHIBITED_RISK,
-    "scope.exclusions": [], "hr.annexIII": ["3b", "6"], "hr.profiling": true,
-  };
-  const pruned = pruneAnswers(bundle.classification, answers);
-  const asked = new Set(visibleQuestions(bundle.classification, pruned).map((q) => q.id));
-  for (const id of ["hr.annexI", "p.crime", "p.rbi", "p.faces", "p.biocat"]) assert.ok(!asked.has(id), `${id} should not be asked`);
+test("the prohibited-practice screen asks only where the record shows a pattern", () => {
+  assert.deepEqual(classify({ areas: ["business"], does: ["generatesText"] }).asked.filter((id) => id.startsWith("p.")), []);
+  const faces = classify({ areas: ["biometrics"], does: ["recognises"] }).asked;
+  assert.ok(faces.includes("p.faces") && faces.includes("p.biocat"));
+  assert.ok(!faces.includes("p.rbi"), "real-time identification is asked only for law enforcement");
+});
+
+test("an ed-tech assessment tool is not asked about law enforcement or product safety", () => {
+  const r = classify({ areas: ["education"], affected: ["students"], does: ["scores"] }, { "hr.annexIII": ["3b", "6"], "hr.profiling": true, "p.scoringUse": false });
+  for (const id of ["hr.annexI", "p.crime", "p.rbi", "p.faces", "p.biocat", "scope.exclusions"]) assert.ok(!r.asked.includes(id), `${id} should not be asked`);
   const annexIII = bundle.classification.sections.flatMap((s) => s.questions).find((q) => q.id === "hr.annexIII")!;
-  assert.deepEqual(visibleOptions(annexIII, pruned).map((o) => o.id), ["3a", "3b", "3c", "3d"]);
-  assert.deepEqual(pruned["hr.annexIII"], ["3b"], "an option that is not offered is dropped");
-  assert.deepEqual(missingAnswers(bundle.classification, pruned), []);
-  const r = evaluate(bundle.classification, answers);
+  assert.deepEqual(visibleOptions(annexIII, r.pruned).map((o) => o.id), ["3a", "3b", "3c", "3d"]);
+  assert.deepEqual(r.pruned["hr.annexIII"], ["3b"], "an option that is not offered is dropped");
+  assert.deepEqual(r.missing, []);
   assert.equal(r.outputs.riskClass, "HIGH_RISK");
 });
 
-test("pure research is out of scope and nothing else is asked or applies", () => {
-  const r = classify({ "role.develops": true, "scope.exclusions": ["research"], "hr.annexIII": ["4a"], "t.interacts": true });
+test("scope exclusions are asked only before production; research is out of scope", () => {
+  assert.ok(!classify({}).asked.includes("scope.exclusions"));
+  const r = classify({ stage: "pilot", areas: ["employment"], does: ["scores"] }, { "scope.exclusions": ["research"], "hr.annexIII": ["4a"] });
   assert.equal(r.outputs.riskClass, "OUT_OF_SCOPE");
   assert.deepEqual(r.obligations, []);
 });
 
 test("Annex I medical device with notified body: high-risk with the Annex I date", () => {
-  const r = classify({ "role.develops": true, "hr.annexI": ["medical"], "hr.thirdPartyAssessment": true });
+  const r = classify({ areas: ["health"], does: ["product"] }, { "hr.annexI": ["medical"], "hr.thirdPartyAssessment": true });
   assert.equal(r.outputs.riskClass, "HIGH_RISK");
   const art9 = applicableObligations(bundle, r.outputs).find((o) => o.def.key === "art9.riskManagement");
   assert.equal(art9?.appliesFrom, bundle.dates.highRiskAnnexI.date);
 });
 
 test("Digital Omnibus: machinery is Annex I Section B, high-risk but without separate AI Act high-risk obligations", () => {
-  const r = classify({ "use.areas": ["product"], "role.develops": true, "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true });
+  const r = classify({ areas: ["product"], does: ["product"] }, { "hr.annexI": ["machinery"], "hr.thirdPartyAssessment": true });
   assert.equal(r.outputs.riskClass, "HIGH_RISK");
   assert.equal(r.outputs.highRisk, false);
   assert.ok(!r.obligations.includes("art9.riskManagement"));
@@ -180,7 +208,7 @@ test("Digital Omnibus: high-risk dates are 2 December 2027 (Annex III) and 2 Aug
 });
 
 test("Digital Omnibus: a generator of non-consensual intimate content is flagged under Art. 5(1)(ba)–(bb)", () => {
-  const r = classify({ "role.develops": true, "p.synthetic": true, "p.intimate": true });
+  const r = classify({ areas: ["business"], does: ["generatesMedia"] }, { "p.intimate": true });
   assert.equal(r.outputs.riskClass, "PROHIBITED");
   assert.deepEqual(r.outputs.prohibitedPractices, ["Art. 5(1)(ba)–(bb)"]);
 });
@@ -199,4 +227,10 @@ test("applicability: EU company using AI is in scope; non-EU company with no EU 
     "ai.builds": false, "ai.uses": true, "ai.outputUsedInEU": false, "ai.importsOrDistributes": false, "data.personal": false,
   });
   assert.equal(outOfScope.outputs.aiActApplies, false);
+});
+
+test("the client's sector pre-fills a new system's area of use", () => {
+  assert.deepEqual(suggestedAreas(bundle.applicability, { "co.sector": "education" }), ["education"]);
+  assert.deepEqual(suggestedAreas(bundle.applicability, { "co.sector": "technology" }), []);
+  assert.deepEqual(suggestedAreas(bundle.applicability, { "co.sector": "free text from an older version" }), []);
 });

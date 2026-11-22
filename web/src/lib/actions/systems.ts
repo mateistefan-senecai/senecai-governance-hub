@@ -13,6 +13,7 @@ import {
   type RiskClass,
 } from "@/lib/services/classification";
 import { createSystem, updateSystem, type SystemInput } from "@/lib/services/inventory";
+import { unknownFactValues } from "@/lib/content/facts";
 import { assessObligation } from "@/lib/services/assessment";
 import { refreshDocuments } from "@/lib/documents/freshness";
 import type { Autonomy, ObligationStatus, Stage, SystemOrigin, UseType, VendorDocStatus } from "@/generated/prisma/enums";
@@ -41,7 +42,20 @@ function systemInput(form: FormData): SystemInput {
     autonomy: oneOf<Autonomy>("autonomy", ["ADVISORY", "PARTIAL", "FULL"]),
     stage: oneOf<Stage>("stage", ["PLANNED", "PILOT", "PRODUCTION", "RETIRED"]),
     affectedPersons: strOrNull(form, "affectedPersons"),
+    areas: list(form, "areas"),
+    affectedGroups: list(form, "affectedGroups"),
+    capabilities: list(form, "capabilities"),
   };
+}
+
+function list(form: FormData, key: string): string[] {
+  return [...new Set(form.getAll(key).filter((v): v is string => typeof v === "string" && v.length > 0))];
+}
+
+/** The tick boxes must be options of the current content library. */
+async function assertFacts(tx: Parameters<typeof getCurrentContent>[0], input: SystemInput) {
+  const bad = unknownFactValues((await getCurrentContent(tx)).classification, input);
+  if (bad.length) throw new ValidationError("Some ticked options are no longer offered. Reload the page and try again.");
 }
 
 export async function createSystemAction(clientId: string, form: FormData) {
@@ -50,6 +64,7 @@ export async function createSystemAction(clientId: string, form: FormData) {
     const input = systemInput(form);
     const system = await withTenant(ctx, async (tx) => {
       const client = await requireClient(tx, ctx, clientId);
+      await assertFacts(tx, input);
       return createSystem(tx, actor(ctx), client, input);
     });
     return { to: `/clients/${clientId}/systems/${system.id}/classify`, notice: `${system.name} added. Next, classify it.` };
@@ -62,6 +77,7 @@ export async function updateSystemAction(clientId: string, systemId: string, for
     const input = systemInput(form);
     const updated = await withTenant(ctx, async (tx) => {
       const { system } = await requireSystem(tx, ctx, clientId, systemId);
+      await assertFacts(tx, input);
       return updateSystem(tx, actor(ctx), system, input);
     });
     return {

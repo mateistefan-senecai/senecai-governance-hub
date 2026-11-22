@@ -55,6 +55,7 @@ const input = (s: SystemInput & Record<string, unknown>): SystemInput => ({
   name: s.name, purpose: s.purpose, description: s.description, ownerName: s.ownerName, ownerRole: s.ownerRole,
   origin: s.origin, supplier: s.supplier, dataCategories: s.dataCategories, deploymentContext: s.deploymentContext,
   useType: s.useType, autonomy: s.autonomy, stage: s.stage, affectedPersons: s.affectedPersons,
+  areas: s.areas, affectedGroups: s.affectedGroups, capabilities: s.capabilities,
 });
 
 /** The seeded, released inventory PDF is current; edit a system so a new version can be generated. */

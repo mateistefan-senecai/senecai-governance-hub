@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { missingAnswers, pruneAnswers, test, visibleOptions } from "@/lib/content/engine";
-import type { AnswerValue, Answers, Question, Questionnaire } from "@/lib/content/types";
+import { applicableObligations, evaluate, missingAnswers, pruneAnswers, test, visibleOptions } from "@/lib/content/engine";
+import type { AnswerValue, Answers, ContentBundle, Question, Questionnaire } from "@/lib/content/types";
+import { RISK_LABEL } from "@/lib/labels";
 
 /**
  * Renders any questionnaire from the content library. Questions appear and
@@ -17,30 +18,44 @@ export function QuestionnaireForm({
   action,
   submitLabel,
   disabled,
+  fixed = {},
+  preview,
 }: {
   questionnaire: Questionnaire;
   initial: Answers;
   action: (form: FormData) => void | Promise<void>;
   submitLabel: string;
   disabled?: boolean;
+  /** Answers settled elsewhere (the AI system record): not asked, and not editable here. */
+  fixed?: Answers;
+  /** When given, shows the result the current answers lead to (risk class and obligations). */
+  preview?: Pick<ContentBundle, "obligations" | "dates">;
 }) {
-  const [answers, setAnswers] = useState<Answers>(initial);
-  const pruned = useMemo(() => pruneAnswers(questionnaire, answers), [questionnaire, answers]);
+  const [answers, setAnswers] = useState<Answers>({ ...initial, ...fixed });
+  const pruned = useMemo(() => pruneAnswers(questionnaire, { ...answers, ...fixed }), [questionnaire, answers, fixed]);
   const missing = useMemo(() => missingAnswers(questionnaire, pruned), [questionnaire, pruned]);
   const set = (id: string, value: AnswerValue) => setAnswers((a) => ({ ...a, [id]: value }));
+  const result = useMemo(() => {
+    if (!preview || missing.length) return null;
+    const { outputs } = evaluate(questionnaire, pruned);
+    const obligations = applicableObligations({ ...preview } as ContentBundle, outputs).map((o) => `${o.def.title} (${o.def.article})`);
+    return { riskClass: String(outputs.riskClass), obligations };
+  }, [preview, missing.length, questionnaire, pruned]);
+  // Sections with at least one question to ask, numbered in order.
+  const sections = questionnaire.sections
+    .map((section) => ({ section, visible: section.questions.filter((q) => !(q.id in fixed) && (!q.showIf || test(q.showIf, pruned, {}))) }))
+    .filter((x) => x.visible.length > 0);
 
   return (
     <form action={action} className="space-y-6">
       <input type="hidden" name="answers" value={JSON.stringify(pruned)} />
-      {questionnaire.sections.map((section, si) => {
-        const visible = section.questions.filter((q) => !q.showIf || test(q.showIf, pruned, {}));
-        if (!visible.length) return null;
+      {sections.map(({ section, visible }, i) => {
         return (
           <fieldset key={section.id} className="glass overflow-hidden rounded-2xl border border-ink/10 shadow-[0_20px_40px_-24px_rgb(17_13_10/25%)]" disabled={disabled}>
             <legend className="sr-only">{section.title}</legend>
             <div className="border-b border-ink/10 px-6 py-4">
               <p className="font-mono text-[11px] font-medium tracking-micro-wide text-gold">
-                PART {si + 1}
+                PART {i + 1}
               </p>
               <h2 className="mt-0.5 font-display text-[19px] font-semibold text-ink">{section.title}</h2>
               {section.intro && <p className="mt-0.5 text-[12.5px] text-muted">{section.intro}</p>}
@@ -53,6 +68,26 @@ export function QuestionnaireForm({
           </fieldset>
         );
       })}
+
+      {result && (
+        <div className="flex flex-col gap-4 rounded-2xl bg-ink px-6 py-5 text-rail-text sm:flex-row sm:items-start">
+          <span className="shrink-0 self-start rounded-full border border-gold-light px-3 py-1 font-mono text-[11px] tracking-micro text-gold-light">
+            {(RISK_LABEL[result.riskClass] ?? result.riskClass).toUpperCase()} · PRELIMINARY
+          </span>
+          {result.obligations.length > 0 ? (
+            <ul className="space-y-1 text-[13px] leading-relaxed">
+              {result.obligations.map((o) => (
+                <li key={o} className="flex gap-2">
+                  <span className="text-gold-light">•</span>
+                  {o}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-[13px]">No obligations follow from these answers.</p>
+          )}
+        </div>
+      )}
 
       {!disabled && (
         <div className="glass sticky bottom-4 flex items-center justify-between gap-4 rounded-2xl border border-ink/10 px-6 py-3 shadow-[0_20px_40px_-20px_rgb(17_13_10/35%)]">

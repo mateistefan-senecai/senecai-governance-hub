@@ -3,10 +3,74 @@
   "title": "AI Act classification",
   "sections": [
     {
-      "id": "use",
-      "title": "Intended use",
-      "intro": "Where the system is used decides which of the later questions are relevant.",
+      "id": "facts",
+      "title": "From the system record",
+      "intro": "Answered by the AI system's record (step 1), not asked here.",
       "questions": [
+        {
+          "id": "sys.origin",
+          "type": "single",
+          "fromSystem": "origin",
+          "text": "Origin",
+          "options": [
+            {
+              "id": "built",
+              "label": "Built by the company"
+            },
+            {
+              "id": "bought",
+              "label": "Bought from a supplier"
+            },
+            {
+              "id": "embedded",
+              "label": "A third-party model built into the company's own product or tool"
+            }
+          ]
+        },
+        {
+          "id": "sys.use",
+          "type": "single",
+          "fromSystem": "useType",
+          "text": "Use",
+          "options": [
+            {
+              "id": "product",
+              "label": "Supplied to others"
+            },
+            {
+              "id": "internal",
+              "label": "Used by the company itself"
+            },
+            {
+              "id": "hybrid",
+              "label": "Supplied to others and used by the company itself"
+            }
+          ]
+        },
+        {
+          "id": "sys.stage",
+          "type": "single",
+          "fromSystem": "stage",
+          "text": "Stage",
+          "options": [
+            {
+              "id": "planned",
+              "label": "Planned"
+            },
+            {
+              "id": "pilot",
+              "label": "Pilot"
+            },
+            {
+              "id": "production",
+              "label": "In production"
+            },
+            {
+              "id": "retired",
+              "label": "Retired"
+            }
+          ]
+        },
         {
           "id": "use.areas",
           "type": "multi",
@@ -65,6 +129,93 @@
               "id": "other",
               "label": "Something else"
             }
+          ],
+          "fromSystem": "areas"
+        },
+        {
+          "id": "sys.affected",
+          "type": "multi",
+          "optional": true,
+          "fromSystem": "affectedGroups",
+          "text": "Who uses it or is affected by it",
+          "options": [
+            {
+              "id": "students",
+              "label": "Students or learners"
+            },
+            {
+              "id": "children",
+              "label": "Children (under 18)"
+            },
+            {
+              "id": "vulnerable",
+              "label": "People in vulnerable situations (older people, people with a disability, people in financial hardship)"
+            },
+            {
+              "id": "employees",
+              "label": "The company's own employees"
+            },
+            {
+              "id": "candidates",
+              "label": "Job candidates"
+            },
+            {
+              "id": "customers",
+              "label": "Customers or consumers"
+            },
+            {
+              "id": "patients",
+              "label": "Patients"
+            },
+            {
+              "id": "public",
+              "label": "The general public"
+            }
+          ]
+        },
+        {
+          "id": "sys.does",
+          "type": "multi",
+          "optional": true,
+          "fromSystem": "capabilities",
+          "text": "What the system does",
+          "options": [
+            {
+              "id": "chats",
+              "label": "Chats or talks with people"
+            },
+            {
+              "id": "generatesText",
+              "label": "Generates text"
+            },
+            {
+              "id": "generatesMedia",
+              "label": "Generates or edits images, audio or video"
+            },
+            {
+              "id": "personalises",
+              "label": "Personalises content, offers or recommendations for individual people"
+            },
+            {
+              "id": "scores",
+              "label": "Scores, ranks or rates people"
+            },
+            {
+              "id": "decides",
+              "label": "Makes or recommends decisions about people"
+            },
+            {
+              "id": "recognises",
+              "label": "Recognises or identifies people by face, voice, fingerprints or other biometric data"
+            },
+            {
+              "id": "emotions",
+              "label": "Detects emotions, mood, stress or attention"
+            },
+            {
+              "id": "product",
+              "label": "Controls or protects a physical product (machinery, vehicle, device…)"
+            }
           ]
         }
       ]
@@ -72,71 +223,81 @@
     {
       "id": "role",
       "title": "The company's role",
-      "intro": "A company can hold more than one role for the same system. Answer for this system only.",
+      "intro": "Asked only for systems bought from a supplier: the company's role otherwise follows from origin and use.",
       "questions": [
-        {
-          "id": "role.develops",
-          "type": "boolean",
-          "text": "Does the company develop this AI system (or have it developed) and place it on the market or put it into service under its own name or trademark?",
-          "help": "Developing covers designing the logic, training the model or building the software. Putting into service includes first use for the company's own purposes.",
-          "citation": "Art. 3(3)"
-        },
-        {
-          "id": "role.integrates",
-          "type": "boolean",
-          "text": "Does the company integrate a third-party AI model into a product or service it offers under its own name?",
-          "help": "For example a CRM that embeds a third-party API for predictive sales scoring. The company is then the provider of the system, even if not of the model.",
-          "citation": "Art. 3(3), Art. 3(68)"
-        },
         {
           "id": "role.rebrands",
           "type": "boolean",
           "text": "Does the company put its own name or trademark on an AI system developed by someone else?",
-          "citation": "Art. 25(1)(a)"
+          "citation": "Art. 25(1)(a)",
+          "showIf": {
+            "q": "sys.origin",
+            "is": "bought"
+          }
         },
         {
           "id": "role.modifies",
           "type": "boolean",
           "text": "Has the company made a substantial modification to an AI system developed by someone else?",
           "help": "A change not foreseen by the original provider that affects compliance or the intended purpose, e.g. retraining that changes the system's core outputs.",
-          "citation": "Art. 25(1)(b), Art. 3(23)"
+          "citation": "Art. 25(1)(b), Art. 3(23)",
+          "showIf": {
+            "q": "sys.origin",
+            "is": "bought"
+          }
         },
         {
           "id": "role.repurposes",
           "type": "boolean",
           "text": "Does the company use or offer the system for a purpose other than the one its provider intended?",
           "help": "For example using a general text-summarisation tool to assess creditworthiness.",
-          "citation": "Art. 25(1)(c)"
-        },
-        {
-          "id": "role.uses",
-          "type": "boolean",
-          "text": "Does the company use this AI system under its authority in a professional capacity?",
-          "help": "Any use in the course of business, including internal tools. Purely personal use by an individual does not count.",
-          "citation": "Art. 3(4)"
-        },
-        {
-          "id": "role.workplace",
-          "type": "boolean",
-          "text": "Is the system used in the company's own workplace in a way that affects its workers, for example to monitor, evaluate, schedule or allocate work to staff?",
-          "help": "Workers are the company's own staff. Pupils, customers or members of the public are not workers.",
-          "citation": "Art. 26(7)",
+          "citation": "Art. 25(1)(c)",
           "showIf": {
-            "q": "role.uses",
-            "is": true
+            "q": "sys.origin",
+            "is": "bought"
           }
         },
         {
           "id": "role.imports",
           "type": "boolean",
           "text": "Is the company established in the EU and places on the EU market a system bearing the name or trademark of a provider established outside the EU?",
-          "citation": "Art. 3(6)"
+          "citation": "Art. 3(6)",
+          "showIf": {
+            "all": [
+              {
+                "q": "sys.origin",
+                "is": "bought"
+              },
+              {
+                "q": "sys.use",
+                "in": [
+                  "product",
+                  "hybrid"
+                ]
+              }
+            ]
+          }
         },
         {
           "id": "role.distributes",
           "type": "boolean",
           "text": "Does the company make this system available on the EU market as part of a supply chain, without being its provider or importer (e.g. as a reseller)?",
-          "citation": "Art. 3(7)"
+          "citation": "Art. 3(7)",
+          "showIf": {
+            "all": [
+              {
+                "q": "sys.origin",
+                "is": "bought"
+              },
+              {
+                "q": "sys.use",
+                "in": [
+                  "product",
+                  "hybrid"
+                ]
+              }
+            ]
+          }
         },
         {
           "id": "role.publicBody",
@@ -145,8 +306,11 @@
           "help": "Relevant to the fundamental rights impact assessment and to registration duties for deployers.",
           "citation": "Art. 27(1), Art. 49(3)",
           "showIf": {
-            "q": "role.uses",
-            "is": true
+            "q": "sys.use",
+            "in": [
+              "internal",
+              "hybrid"
+            ]
           }
         }
       ]
@@ -187,30 +351,47 @@
               "label": "Used by a non-EU public authority or international organisation under an international law-enforcement or judicial cooperation agreement",
               "citation": "Art. 2(4)"
             }
-          ]
+          ],
+          "showIf": {
+            "q": "sys.stage",
+            "in": [
+              "planned",
+              "pilot"
+            ]
+          }
         }
       ]
     },
     {
       "id": "prohibited",
       "title": "Prohibited practices: risk screening",
-      "intro": "These questions look for signs that the system could fall into a prohibited category. A \"yes\" is not a finding: it flags the system for the reviewer to assess.",
+      "intro": "Asked only where the system record shows a pattern that could fall into a prohibited category. A \"yes\" is not a finding: it flags the system for the reviewer.",
       "questions": [
         {
           "id": "p.influence",
           "type": "boolean",
           "citation": "Art. 5(1)(a)",
           "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "q": "sys.does",
+                "hasAny": [
+                  "personalises"
+                ]
+              }
+            ]
           },
           "text": "Does the system try to change what people decide or do, for example by nudging, persuading or personalising content or offers, in ways they might not notice or fully understand?"
         },
@@ -241,24 +422,6 @@
           "text": "Could that influence lead people to decisions they would not otherwise take, in a way that could cause them or others significant harm (financial, physical or psychological)?"
         },
         {
-          "id": "p.vulnerable",
-          "type": "boolean",
-          "citation": "Art. 5(1)(b)",
-          "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
-          },
-          "text": "Is the system aimed at, or likely to be used by, people who may be easier to influence: children, older people, people with a disability, or people in a difficult social or financial situation?"
-        },
-        {
           "id": "p.vulnerableExploit",
           "type": "boolean",
           "citation": "Art. 5(1)(b)",
@@ -277,30 +440,57 @@
                 }
               },
               {
-                "q": "p.vulnerable",
-                "is": true
+                "q": "sys.affected",
+                "hasAny": [
+                  "children",
+                  "vulnerable"
+                ]
               }
             ]
           },
-          "text": "Could the system take advantage of those circumstances to change their behaviour in a way that could significantly harm them?"
+          "text": "It is used by or on children or people in vulnerable situations. Could it take advantage of that to steer them towards choices that could significantly harm them?"
         },
         {
           "id": "p.scoring",
           "type": "boolean",
           "citation": "Art. 5(1)(c)",
           "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
+            "all": [
+              {
+                "not": {
+                  "q": "scope.exclusions",
+                  "hasAny": [
+                    "military",
+                    "research",
+                    "preMarket",
+                    "personal",
+                    "intlCooperation"
+                  ]
+                }
+              },
+              {
+                "all": [
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "chats",
+                      "decides",
+                      "personalises"
+                    ]
+                  },
+                  {
+                    "not": {
+                      "q": "sys.does",
+                      "hasAny": [
+                        "scores"
+                      ]
+                    }
+                  }
+                ]
+              }
+            ]
           },
-          "text": "Does the system score, rank or rate people over time based on their behaviour or personal characteristics?"
+          "text": "Does it score, rate or profile individual people based on their behaviour or characteristics?"
         },
         {
           "id": "p.scoringUse",
@@ -321,8 +511,18 @@
                 }
               },
               {
-                "q": "p.scoring",
-                "is": true
+                "any": [
+                  {
+                    "q": "p.scoring",
+                    "is": true
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "scores"
+                    ]
+                  }
+                ]
               }
             ]
           },
@@ -347,12 +547,23 @@
                 }
               },
               {
-                "q": "use.areas",
-                "hasAny": [
-                  "lawEnforcement",
-                  "migration",
-                  "justice",
-                  "other"
+                "all": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "lawEnforcement",
+                      "migration",
+                      "justice",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "scores",
+                      "decides"
+                    ]
+                  }
                 ]
               }
             ]
@@ -386,24 +597,6 @@
           "text": "Does that assessment rely only on profiling or on personality traits, rather than supporting a person's assessment based on objective, verifiable facts linked to a criminal activity?"
         },
         {
-          "id": "p.synthetic",
-          "type": "boolean",
-          "citation": "Art. 5(1)(ba)–(bb)",
-          "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
-          },
-          "text": "Can the system generate or edit realistic images, video or audio of people?"
-        },
-        {
           "id": "p.intimate",
           "type": "boolean",
           "citation": "Art. 5(1)(ba)–(bb), Art. 5(1a)",
@@ -422,8 +615,10 @@
                 }
               },
               {
-                "q": "p.synthetic",
-                "is": true
+                "q": "sys.does",
+                "hasAny": [
+                  "generatesMedia"
+                ]
               }
             ]
           },
@@ -448,35 +643,14 @@
                 }
               },
               {
-                "q": "use.areas",
+                "q": "sys.does",
                 "hasAny": [
-                  "biometrics",
-                  "lawEnforcement",
-                  "other"
+                  "recognises"
                 ]
               }
             ]
           },
           "text": "Does the system collect facial images in bulk from the internet or from CCTV footage to create or expand a facial recognition database?"
-        },
-        {
-          "id": "p.emotions",
-          "type": "boolean",
-          "citation": "Art. 5(1)(f), Art. 3(39)",
-          "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
-          },
-          "text": "Does the system detect or infer people's emotions, mood, stress, attention or intentions from biometric signals such as their face, voice or body movements?",
-          "help": "Inferences drawn only from what people write are not covered here."
         },
         {
           "id": "p.emotionsWhere",
@@ -497,8 +671,10 @@
                 }
               },
               {
-                "q": "p.emotions",
-                "is": true
+                "q": "sys.does",
+                "hasAny": [
+                  "emotions"
+                ]
               }
             ]
           },
@@ -566,11 +742,9 @@
                 }
               },
               {
-                "q": "use.areas",
+                "q": "sys.does",
                 "hasAny": [
-                  "biometrics",
-                  "lawEnforcement",
-                  "other"
+                  "recognises"
                 ]
               }
             ]
@@ -622,9 +796,19 @@
                 }
               },
               {
-                "q": "use.areas",
-                "hasAny": [
-                  "lawEnforcement"
+                "all": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "lawEnforcement"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "recognises"
+                    ]
+                  }
                 ]
               }
             ]
@@ -685,11 +869,21 @@
                 }
               },
               {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "health",
-                  "other"
+                "any": [
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  },
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "health",
+                      "other"
+                    ]
+                  }
                 ]
               }
             ]
@@ -700,10 +894,20 @@
               "label": "Machinery",
               "citation": "Annex I, Section B, point 21 (moved from Section A by Reg. (EU) 2026/1744)",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -712,10 +916,20 @@
               "label": "Toys",
               "citation": "Annex I, Section A, point 2",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -724,10 +938,20 @@
               "label": "Recreational craft and personal watercraft",
               "citation": "Annex I, Section A, point 3",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -736,10 +960,20 @@
               "label": "Lifts and their safety components",
               "citation": "Annex I, Section A, point 4",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -748,10 +982,20 @@
               "label": "Equipment for potentially explosive atmospheres",
               "citation": "Annex I, Section A, point 5",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -760,10 +1004,20 @@
               "label": "Radio equipment",
               "citation": "Annex I, Section A, point 6",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -772,10 +1026,20 @@
               "label": "Pressure equipment",
               "citation": "Annex I, Section A, point 7",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -784,10 +1048,20 @@
               "label": "Cableway installations",
               "citation": "Annex I, Section A, point 8",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -796,10 +1070,20 @@
               "label": "Personal protective equipment",
               "citation": "Annex I, Section A, point 9",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -808,10 +1092,20 @@
               "label": "Appliances burning gaseous fuels",
               "citation": "Annex I, Section A, point 10",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -820,11 +1114,21 @@
               "label": "Medical devices",
               "citation": "Annex I, Section A, point 11",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "health",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "health",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -833,11 +1137,21 @@
               "label": "In vitro diagnostic medical devices",
               "citation": "Annex I, Section A, point 12",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "health",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "health",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -846,10 +1160,20 @@
               "label": "Civil aviation",
               "citation": "Annex I, Section B",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -858,10 +1182,20 @@
               "label": "Motor vehicles, two- or three-wheel vehicles, agricultural and forestry vehicles",
               "citation": "Annex I, Section B",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -870,10 +1204,20 @@
               "label": "Marine equipment",
               "citation": "Annex I, Section B",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             },
@@ -882,10 +1226,20 @@
               "label": "Rail systems",
               "citation": "Annex I, Section B",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "product",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "product",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "product"
+                    ]
+                  }
                 ]
               }
             }
@@ -964,12 +1318,22 @@
               "label": "Biometrics: remote biometric identification (not mere verification of identity)",
               "citation": "Annex III, point 1(a)",
               "showIf": {
-                "q": "use.areas",
-                "hasAny": [
-                  "biometrics",
-                  "lawEnforcement",
-                  "migration",
-                  "other"
+                "any": [
+                  {
+                    "q": "use.areas",
+                    "hasAny": [
+                      "biometrics",
+                      "lawEnforcement",
+                      "migration",
+                      "other"
+                    ]
+                  },
+                  {
+                    "q": "sys.does",
+                    "hasAny": [
+                      "recognises"
+                    ]
+                  }
                 ]
               }
             },
@@ -987,8 +1351,10 @@
                     ]
                   },
                   {
-                    "q": "p.biocat",
-                    "is": true
+                    "q": "sys.does",
+                    "hasAny": [
+                      "recognises"
+                    ]
                   }
                 ]
               }
@@ -1007,8 +1373,10 @@
                     ]
                   },
                   {
-                    "q": "p.emotions",
-                    "is": true
+                    "q": "sys.does",
+                    "hasAny": [
+                      "emotions"
+                    ]
                   }
                 ]
               }
@@ -1196,7 +1564,7 @@
               }
             }
           ],
-          "help": "Only the purposes that match the areas ticked in Part 1 are listed."
+          "help": "Only the purposes that match the system's areas of use are listed."
         },
         {
           "id": "hr.profiling",
@@ -1297,41 +1665,52 @@
           "showIf": {
             "all": [
               {
-                "not": {
-                  "q": "hr.annexIII",
-                  "hasAny": [
-                    "1a",
-                    "1b",
-                    "1c",
-                    "2",
-                    "3a",
-                    "3b",
-                    "3c",
-                    "3d",
-                    "4a",
-                    "4b",
-                    "5a",
-                    "5b",
-                    "5c",
-                    "5d",
-                    "6",
-                    "7",
-                    "8a",
-                    "8b"
-                  ]
-                }
+                "all": [
+                  {
+                    "not": {
+                      "q": "hr.annexIII",
+                      "hasAny": [
+                        "1a",
+                        "1b",
+                        "1c",
+                        "2",
+                        "3a",
+                        "3b",
+                        "3c",
+                        "3d",
+                        "4a",
+                        "4b",
+                        "5a",
+                        "5b",
+                        "5c",
+                        "5d",
+                        "6",
+                        "7",
+                        "8a",
+                        "8b"
+                      ]
+                    }
+                  },
+                  {
+                    "not": {
+                      "q": "scope.exclusions",
+                      "hasAny": [
+                        "military",
+                        "research",
+                        "preMarket",
+                        "personal",
+                        "intlCooperation"
+                      ]
+                    }
+                  }
+                ]
               },
               {
-                "not": {
-                  "q": "scope.exclusions",
-                  "hasAny": [
-                    "military",
-                    "research",
-                    "preMarket",
-                    "personal",
-                    "intlCooperation"
-                  ]
-                }
+                "q": "sys.does",
+                "hasAny": [
+                  "scores",
+                  "decides"
+                ]
               }
             ]
           },
@@ -1367,52 +1746,27 @@
     {
       "id": "transparency",
       "title": "Transparency duties",
-      "intro": "These apply whatever the risk class.",
+      "intro": "Interaction with people and generated content come from the system record. These duties fall on the company when it uses the system itself.",
       "questions": [
-        {
-          "id": "t.interacts",
-          "type": "boolean",
-          "text": "Is the system intended to interact directly with natural persons (e.g. a chatbot or voice assistant)?",
-          "citation": "Art. 50(1)",
-          "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
-          }
-        },
-        {
-          "id": "t.generates",
-          "type": "boolean",
-          "text": "Does the system generate synthetic audio, image, video or text content?",
-          "citation": "Art. 50(2)",
-          "showIf": {
-            "not": {
-              "q": "scope.exclusions",
-              "hasAny": [
-                "military",
-                "research",
-                "preMarket",
-                "personal",
-                "intlCooperation"
-              ]
-            }
-          }
-        },
         {
           "id": "t.deepfake",
           "type": "boolean",
           "text": "Does the company use the system to generate or manipulate image, audio or video content that is a deep fake?",
           "citation": "Art. 50(4), first subparagraph",
           "showIf": {
-            "q": "t.generates",
-            "is": true
+            "all": [
+              {
+                "q": "sys.does",
+                "has": "generatesMedia"
+              },
+              {
+                "q": "sys.use",
+                "in": [
+                  "internal",
+                  "hybrid"
+                ]
+              }
+            ]
           }
         },
         {
@@ -1421,8 +1775,19 @@
           "text": "Does the company publish AI-generated or manipulated text to inform the public on matters of public interest, without human editorial review?",
           "citation": "Art. 50(4), second subparagraph",
           "showIf": {
-            "q": "t.generates",
-            "is": true
+            "all": [
+              {
+                "q": "sys.does",
+                "has": "generatesText"
+              },
+              {
+                "q": "sys.use",
+                "in": [
+                  "internal",
+                  "hybrid"
+                ]
+              }
+            ]
           }
         }
       ]
@@ -1447,26 +1812,26 @@
     {
       "id": "role.provider.develops",
       "when": {
-        "q": "role.develops",
-        "is": true
+        "q": "sys.origin",
+        "is": "built"
       },
       "add": {
         "roles": "provider"
       },
       "citation": "Art. 3(3)",
-      "rationale": "The company develops the system and places it on the market or puts it into service under its own name, so it is the provider."
+      "rationale": "The company built the system and offers or uses it under its own name, so it is the provider."
     },
     {
       "id": "role.provider.integrates",
       "when": {
-        "q": "role.integrates",
-        "is": true
+        "q": "sys.origin",
+        "is": "embedded"
       },
       "add": {
         "roles": "provider"
       },
       "citation": "Art. 3(3), Art. 3(68)",
-      "rationale": "The company integrates a third-party model into a product it offers under its own name, so it is the provider of the resulting system (and a downstream provider of the model)."
+      "rationale": "The company builds a third-party AI model into its own product or tool and offers or uses it under its own name, so it is the provider of that system."
     },
     {
       "id": "role.provider.rebrands",
@@ -1507,14 +1872,17 @@
     {
       "id": "role.deployer",
       "when": {
-        "q": "role.uses",
-        "is": true
+        "q": "sys.use",
+        "in": [
+          "internal",
+          "hybrid"
+        ]
       },
       "add": {
         "roles": "deployer"
       },
       "citation": "Art. 3(4)",
-      "rationale": "The company uses the system under its authority in a professional capacity, so it is a deployer."
+      "rationale": "The company uses the system under its own authority in its work, so it is a deployer."
     },
     {
       "id": "role.importer",
@@ -1570,52 +1938,35 @@
     {
       "id": "role.workplace",
       "when": {
-        "q": "role.workplace",
-        "is": true
+        "all": [
+          {
+            "q": "sys.affected",
+            "has": "employees"
+          },
+          {
+            "out": "roles",
+            "has": "deployer"
+          }
+        ]
       },
       "set": {
         "affectsWorkers": true
       },
       "citation": "Art. 26(7)",
-      "rationale": "The system is used at the company's own workplace and affects its workers, so the duty to inform workers and their representatives applies if the system is high-risk."
+      "rationale": "The company uses the system at its own workplace and it affects its employees, so the duty to inform workers and their representatives applies if the system is high-risk."
     },
     {
       "id": "role.none",
       "when": {
-        "all": [
-          {
-            "q": "role.develops",
-            "is": false
-          },
-          {
-            "q": "role.integrates",
-            "is": false
-          },
-          {
-            "q": "role.rebrands",
-            "is": false
-          },
-          {
-            "q": "role.modifies",
-            "is": false
-          },
-          {
-            "q": "role.repurposes",
-            "is": false
-          },
-          {
-            "q": "role.uses",
-            "is": false
-          },
-          {
-            "q": "role.imports",
-            "is": false
-          },
-          {
-            "q": "role.distributes",
-            "is": false
-          }
-        ]
+        "not": {
+          "out": "roles",
+          "hasAny": [
+            "provider",
+            "deployer",
+            "importer",
+            "distributor"
+          ]
+        }
       },
       "add": {
         "attention": "No AI Act role was identified for this system. Check whether the company has any relationship to it that the questionnaire missed."
@@ -2078,8 +2429,10 @@
     {
       "id": "t.50_1",
       "when": {
-        "q": "t.interacts",
-        "is": true
+        "q": "sys.does",
+        "hasAny": [
+          "chats"
+        ]
       },
       "add": {
         "transparency": "50(1)"
@@ -2090,8 +2443,11 @@
     {
       "id": "t.50_2",
       "when": {
-        "q": "t.generates",
-        "is": true
+        "q": "sys.does",
+        "hasAny": [
+          "generatesText",
+          "generatesMedia"
+        ]
       },
       "add": {
         "transparency": "50(2)"
@@ -2104,8 +2460,10 @@
       "when": {
         "any": [
           {
-            "q": "p.emotions",
-            "is": true
+            "q": "sys.does",
+            "hasAny": [
+              "emotions"
+            ]
           },
           {
             "q": "p.biocat",

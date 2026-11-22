@@ -5,6 +5,7 @@
 import type { Tx } from "@/lib/tenant";
 import type { AiSystem, Classification, Prisma } from "@/generated/prisma/client";
 import { applicableObligations, evaluate, missingAnswers, pruneAnswers, test } from "@/lib/content/engine";
+import { missingFacts, systemAnswers } from "@/lib/content/facts";
 import type { Answers, ContentBundle, Firing, Outputs } from "@/lib/content/types";
 import { audit, type Actor } from "./audit";
 import { refreshDocuments } from "@/lib/documents/freshness";
@@ -22,7 +23,11 @@ export async function submitClassification(
   rawAnswers: Answers,
   bundle: ContentBundle,
 ): Promise<Classification> {
-  const answers = pruneAnswers(bundle.classification, rawAnswers);
+  // The system record answers the "facts" questions; it overrides anything submitted for them.
+  if (missingFacts(bundle.classification, system).length) {
+    throw new ValidationError("Complete the AI system record first (areas of use, who is affected, what it does).");
+  }
+  const answers = pruneAnswers(bundle.classification, { ...rawAnswers, ...systemAnswers(bundle.classification, system) });
   const missing = missingAnswers(bundle.classification, answers);
   if (missing.length) throw new ValidationError(`Answer every question first (${missing.length} left).`);
 
