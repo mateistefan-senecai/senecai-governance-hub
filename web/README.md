@@ -114,7 +114,7 @@ decide anything.
 | 2 Classification | `/systems/[id]/classify`; reviewer confirms or overrides with a written reason |
 | 3 Obligation mapping | regenerated automatically from the effective classification |
 | 4 Evidence | **Stage 2**: the obligation page shows the expected evidence |
-| 5 Gap assessment | reviewer sets compliant / partial / gap with a rationale (Stage 1: from the interview) |
+| 5 Gap assessment | `/clients/[id]/gap-assessment`: every applicable obligation across the client's systems with its status; the reviewer assesses each one (compliant / partial / gap with a rationale) on its obligation page (Stage 1: from the interview) |
 | 6 Roadmap | `/clients/[id]/roadmap`: phases, owner, deadline, request implementation |
 | PDFs (steps 1, 2, 3, 5, 6 + pack) | `/clients/[id]/documents`: generate, submit for review, approve, release, download; linked from the inventory and the roadmap |
 
