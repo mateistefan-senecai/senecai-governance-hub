@@ -16,7 +16,7 @@ import { CLASSIFICATION_STATUS_LABEL, ORIGIN_LABEL, RISK_LABEL, RISK_TONE, roleL
 export default async function InventoryPage({ params }: PageProps<"/clients/[clientId]/inventory">) {
   const { clientId } = await params;
   const ctx = await getCtx();
-  const { client, systems } = await withTenant(ctx, async (tx) => {
+  const { client, systems, company } = await withTenant(ctx, async (tx) => {
     const client = await requireClient(tx, ctx, clientId);
     const systems = await tx.aiSystem.findMany({
       where: { clientId: client.id },
@@ -26,7 +26,12 @@ export default async function InventoryPage({ params }: PageProps<"/clients/[cli
         systemObligations: { select: { status: true, active: true, needsReassessment: true } },
       },
     });
-    return { client, systems };
+    // Company-level obligations (e.g. AI literacy) count once for the client.
+    const company = await tx.systemObligation.findMany({
+      where: { clientId: client.id, systemId: null },
+      select: { status: true, active: true, needsReassessment: true },
+    });
+    return { client, systems, company };
   });
   if (!aiActApplies(client)) redirect(`/clients/${client.id}/applicability`);
 
@@ -35,7 +40,7 @@ export default async function InventoryPage({ params }: PageProps<"/clients/[cli
   const effective = systems.map(effectiveOf);
   const highRisk = effective.filter((e) => e?.riskClass === "HIGH_RISK").length;
   const awaitingReview = systems.filter((s) => s.classifications[0]?.status === "PRELIMINARY").length;
-  const allObligations = systems.flatMap((s) => s.systemObligations);
+  const allObligations = [...company, ...systems.flatMap((s) => s.systemObligations)];
   const open = allObligations.filter((o) => o.active && o.status !== "COMPLIANT").length;
   const overall = readiness(allObligations);
 

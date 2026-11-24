@@ -57,6 +57,7 @@ export async function submitClassification(
     after: { version: created.version, riskClass: outputs.riskClass, roles: outputs.roles, contentVersion: bundle.version },
   });
   await syncObligations(tx, system, outputs, bundle);
+  await syncCompanyObligations(tx, system.organizationId, system.clientId, bundle);
   await syncVendorDocuments(tx, system, outputs, bundle);
   await refreshDocuments(tx, actor, system.clientId, "classification submitted");
   return created;
@@ -114,6 +115,7 @@ export async function overrideClassification(
     after: { effective, reason: override.reason.trim() },
   });
   await syncObligations(tx, system, effective, bundle);
+  await syncCompanyObligations(tx, system.organizationId, system.clientId, bundle);
   await syncVendorDocuments(tx, system, effective, bundle);
   await refreshDocuments(tx, actor, system.clientId, "classification overridden");
   return updated;
@@ -141,7 +143,7 @@ export function applyOverride(computed: Outputs, o: Override): Outputs {
  * longer apply are deactivated, not deleted, so their history stays.
  */
 export async function syncObligations(tx: Tx, system: AiSystem, effective: Outputs, bundle: ContentBundle) {
-  const applicable = applicableObligations(bundle, effective);
+  const applicable = applicableObligations(bundle, effective).filter((a) => a.def.level !== "company");
   const existing = await tx.systemObligation.findMany({ where: { systemId: system.id } });
   const byKey = new Map(existing.map((o) => [o.obligationKey, o]));
 
@@ -157,7 +159,7 @@ export async function syncObligations(tx: Tx, system: AiSystem, effective: Outpu
     };
     if (!prev) {
       await tx.systemObligation.create({
-        data: { ...data, organizationId: system.organizationId, systemId: system.id, obligationKey: a.def.key },
+        data: { ...data, organizationId: system.organizationId, clientId: system.clientId, systemId: system.id, obligationKey: a.def.key },
       });
       continue;
     }
@@ -192,6 +194,8 @@ export async function syncVendorDocuments(tx: Tx, system: AiSystem, effective: O
 export type ClassificationView = {
   riskClass: RiskClass;
   roles: string[];
+  /** Art. 5 provisions the risk screen flagged; empty when nothing was flagged. */
+  prohibitedPractices: string[];
   reasoning: Firing[];
   attention: string[];
 };
@@ -201,7 +205,61 @@ export function viewOf(c: Pick<Classification, "effective" | "reasoning">): Clas
   return {
     riskClass: e.riskClass as RiskClass,
     roles: (e.roles as string[]) ?? [],
+    prohibitedPractices: (e.prohibitedPractices as string[]) ?? [],
     reasoning: (c.reasoning as Firing[]) ?? [],
     attention: (e.attention as string[]) ?? [],
   };
+}
+
+/**
+ * Company-level obligations (content `level: "company"`, e.g. AI literacy):
+ * one record per client, active while the current classification of at
+ * least one of its systems selects it. The party is every role that
+ * carries it across those systems; the date is the earliest.
+ */
+export async function syncCompanyObligations(tx: Tx, organizationId: string, clientId: string, bundle: ContentBundle) {
+  const company = bundle.obligations.filter((d) => d.level === "company");
+  if (!company.length) return;
+  const current = await tx.classification.findMany({
+    where: { isCurrent: true, system: { clientId } },
+    select: { effective: true },
+  });
+  const selected = new Map<string, { parties: Set<string>; appliesFrom: string | null }>();
+  for (const c of current) {
+    for (const a of applicableObligations(bundle, c.effective as Outputs)) {
+      if (a.def.level !== "company") continue;
+      const entry = selected.get(a.def.key) ?? { parties: new Set<string>(), appliesFrom: a.appliesFrom };
+      for (const p of a.party.split(" & ")) entry.parties.add(p);
+      if (a.appliesFrom && (!entry.appliesFrom || a.appliesFrom < entry.appliesFrom)) entry.appliesFrom = a.appliesFrom;
+      selected.set(a.def.key, entry);
+    }
+  }
+  const existing = await tx.systemObligation.findMany({ where: { clientId, systemId: null } });
+  for (const def of company) {
+    const hit = selected.get(def.key);
+    const prev = existing.find((o) => o.obligationKey === def.key);
+    if (!hit) {
+      if (prev?.active) await tx.systemObligation.update({ where: { id: prev.id }, data: { active: false } });
+      continue;
+    }
+    const party = PARTIES.filter((p) => hit.parties.has(p)).join(" & ");
+    const appliesFrom = hit.appliesFrom ? new Date(hit.appliesFrom) : null;
+    const data = { contentVersion: bundle.version, party, appliesFrom, rationale: def.appliesBecause, active: true };
+    if (!prev) {
+      await tx.systemObligation.create({ data: { ...data, organizationId, clientId, systemId: null, obligationKey: def.key } });
+    } else {
+      const changed = !prev.active || prev.party !== party || prev.appliesFrom?.getTime() !== appliesFrom?.getTime();
+      await tx.systemObligation.update({
+        where: { id: prev.id },
+        data: { ...data, needsReassessment: prev.needsReassessment || (changed && prev.status !== "NOT_ASSESSED") },
+      });
+    }
+  }
+}
+
+/** The wording of the prohibited-practice screen's result, on screen and in the PDFs. */
+export function prohibitedSummary(practices: string[]): string {
+  return practices.length
+    ? `Use that might trigger a prohibited practice: ${practices.join(", ")}`
+    : "No potential use that might trigger a prohibited practice";
 }

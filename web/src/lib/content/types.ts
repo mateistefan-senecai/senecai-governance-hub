@@ -102,6 +102,12 @@ export type ObligationDef = {
   appliesBecause: string;
   action: { title: string; type: "LEGAL" | "TECHNICAL"; effort: "S" | "M" | "L" };
   evidenceExpected: string[];
+  /**
+   * "company": a duty of the company as a whole (e.g. AI literacy, Art. 4).
+   * It is recorded once per client, applying while at least one of its
+   * systems' classifications selects it. Omitted: one record per system.
+   */
+  level?: "company";
 };
 
 export type DateDef = { date: string; provision: string; label: string; note?: string };

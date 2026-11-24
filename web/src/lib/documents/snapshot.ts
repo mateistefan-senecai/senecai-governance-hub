@@ -81,6 +81,10 @@ export type SystemSnap = {
   autonomy: string;
   stage: string;
   affectedPersons: string | null;
+  /** Step-1 facts as their labels: areas of use, who is affected, what the system does. */
+  areas: string[];
+  affectedGroups: string[];
+  capabilities: string[];
   vendorDocuments: VendorDocSnap[];
   classification: ClassificationSnap | null;
   obligations: ObligationSnap[];
@@ -113,6 +117,8 @@ export type Snapshot = {
   client: { name: string };
   applicability: ApplicabilitySnap;
   systems: SystemSnap[];
+  /** Duties of the company as a whole (e.g. AI literacy), listed once. */
+  companyObligations?: ObligationSnap[];
   actions?: ActionSnap[];
   overallReadiness?: number | null;
 };
@@ -135,7 +141,13 @@ export async function loadClientRecord(tx: Tx, clientId: string) {
       vendorDocuments: { orderBy: { kind: "asc" } },
     },
   });
+  // Company-level obligations (systemId null), e.g. AI literacy.
+  const company = await tx.systemObligation.findMany({
+    where: { clientId, systemId: null, active: true },
+    include: { actions: { include: { enquiry: { select: { id: true } } } } },
+  });
   const versions = new Set<string>();
+  for (const o of company) versions.add(o.contentVersion);
   for (const s of systems) {
     for (const c of s.classifications) versions.add(c.contentVersion);
     for (const o of s.systemObligations) versions.add(o.contentVersion);
@@ -144,12 +156,13 @@ export async function loadClientRecord(tx: Tx, clientId: string) {
   for (const v of versions) if (!bundles.has(v)) bundles.set(v, await getContentVersion(tx, v));
 
   const userIds = new Set<string>();
+  for (const o of company) if (o.assessedById) userIds.add(o.assessedById);
   for (const s of systems) {
     for (const c of s.classifications) if (c.reviewedById) userIds.add(c.reviewedById);
     for (const o of s.systemObligations) if (o.assessedById) userIds.add(o.assessedById);
   }
   const users = await tx.user.findMany({ where: { id: { in: [...userIds] } }, select: { id: true, name: true } });
-  return { client, current, systems, bundles, versions: [...versions].sort(), userNames: new Map(users.map((u) => [u.id, u.name])) };
+  return { client, current, systems, company, bundles, versions: [...versions].sort(), userNames: new Map(users.map((u) => [u.id, u.name])) };
 }
 
 export type ClientRecord = Awaited<ReturnType<typeof loadClientRecord>>;
@@ -187,12 +200,16 @@ function classificationSnap(rec: ClientRecord, s: ClientRecord["systems"][number
   };
 }
 
-function obligationSnaps(rec: ClientRecord, s: ClientRecord["systems"][number]): ObligationSnap[] {
-  const rows = s.systemObligations.map((o) => {
+function obligationSnaps(
+  rec: ClientRecord,
+  list: ClientRecord["systems"][number]["systemObligations"],
+  effective: Outputs | undefined,
+): ObligationSnap[] {
+  const rows = list.map((o) => {
     const bundle = rec.bundles.get(o.contentVersion)!;
     const index = bundle.obligations.findIndex((d) => d.key === o.obligationKey);
     const def: ObligationDef | undefined = bundle.obligations[index];
-    const dateKey = def ? resolveDateKeyFor(def, s.classifications[0]?.effective as Outputs | undefined) : null;
+    const dateKey = def ? resolveDateKeyFor(def, effective) : null;
     const snap: ObligationSnap = {
       key: o.obligationKey,
       article: def?.article ?? o.obligationKey,
@@ -217,6 +234,17 @@ function obligationSnaps(rec: ClientRecord, s: ClientRecord["systems"][number]):
   return rows.sort((a, b) => a.index - b.index || a.snap.key.localeCompare(b.snap.key)).map((r) => r.snap);
 }
 
+/** The obligation mapping does not print assessments, so they must not outdate it. */
+function withoutAssessment(o: ObligationSnap): ObligationSnap {
+  return { ...o, status: "NOT_ASSESSED", statusRationale: null, assessedByName: null, assessedAt: null, needsReassessment: false };
+}
+
+/** Labels of a system's step-1 fact ids, from the current content library. */
+function factLabelsOf(rec: ClientRecord, field: "areas" | "affectedGroups" | "capabilities", ids: string[]): string[] {
+  const question = rec.current.classification.sections.flatMap((x) => x.questions).find((q) => q.fromSystem === field);
+  return ids.map((id) => question?.options?.find((o) => o.id === id)?.label ?? id);
+}
+
 function resolveDateKeyFor(def: ObligationDef, effective: Outputs | undefined): string {
   if (def.appliesFrom !== "highRisk") return def.appliesFrom;
   const basis = strings(effective?.highRiskBasis);
@@ -230,18 +258,8 @@ function systemSnap(rec: ClientRecord, s: ClientRecord["systems"][number], kind:
   const bundle = rec.bundles.get(s.classifications[0]?.contentVersion ?? rec.current.version) ?? rec.current;
   const vendorLabels = new Map(bundle.vendorDocuments.map((d) => [d.kind, d]));
 
-  let obligations = withObligations ? obligationSnaps(rec, s) : [];
-  if (withObligations && !withAssessment) {
-    // The obligation mapping does not print assessments, so they must not outdate it.
-    obligations = obligations.map((o) => ({
-      ...o,
-      status: "NOT_ASSESSED",
-      statusRationale: null,
-      assessedByName: null,
-      assessedAt: null,
-      needsReassessment: false,
-    }));
-  }
+  let obligations = withObligations ? obligationSnaps(rec, s.systemObligations, s.classifications[0]?.effective as Outputs | undefined) : [];
+  if (withObligations && !withAssessment) obligations = obligations.map(withoutAssessment);
   // Every deliverable prints each system's role and risk class.
   let classification = classificationSnap(rec, s);
   if (classification && kind === "INVENTORY") {
@@ -264,6 +282,9 @@ function systemSnap(rec: ClientRecord, s: ClientRecord["systems"][number], kind:
     autonomy: withInventory ? s.autonomy : "",
     stage: withInventory ? s.stage : "",
     affectedPersons: withInventory ? s.affectedPersons : null,
+    areas: withInventory ? factLabelsOf(rec, "areas", s.areas) : [],
+    affectedGroups: withInventory ? factLabelsOf(rec, "affectedGroups", s.affectedGroups) : [],
+    capabilities: withInventory ? factLabelsOf(rec, "capabilities", s.capabilities) : [],
     vendorDocuments: withInventory
       ? s.vendorDocuments.map((v) => ({
           label: vendorLabels.get(v.kind)?.label ?? v.kind,
@@ -279,8 +300,9 @@ function systemSnap(rec: ClientRecord, s: ClientRecord["systems"][number], kind:
 
 function actionSnaps(rec: ClientRecord): ActionSnap[] {
   const rows: { action: ActionSnap; order: number }[] = [];
-  for (const s of rec.systems) {
-    for (const o of s.systemObligations) {
+  const groups = [{ name: "Company-wide", obligations: rec.company }, ...rec.systems.map((s) => ({ name: s.name, obligations: s.systemObligations }))];
+  for (const s of groups) {
+    for (const o of s.obligations) {
       const bundle = rec.bundles.get(o.contentVersion)!;
       const index = bundle.obligations.findIndex((d) => d.key === o.obligationKey);
       const def = bundle.obligations[index];
@@ -340,8 +362,17 @@ export function buildSnapshot(rec: ClientRecord, kind: DocumentKind): Snapshot {
       })),
     },
     systems: rec.systems.map((s) => systemSnap(rec, s, kind)),
+    ...(kind !== "INVENTORY" && kind !== "CLASSIFICATION"
+      ? {
+          companyObligations: obligationSnaps(rec, rec.company, undefined).map((o) =>
+            kind === "OBLIGATIONS" ? withoutAssessment(o) : o,
+          ),
+        }
+      : {}),
     ...(withActions ? { actions: actionSnaps(rec) } : {}),
-    ...(withReadiness ? { overallReadiness: readiness(rec.systems.flatMap((s) => s.systemObligations)) } : {}),
+    ...(withReadiness
+      ? { overallReadiness: readiness([...rec.company, ...rec.systems.flatMap((s) => s.systemObligations)]) }
+      : {}),
   };
 }
 

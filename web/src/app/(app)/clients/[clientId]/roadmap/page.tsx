@@ -97,10 +97,10 @@ export default async function RoadmapPage({ params }: PageProps<"/clients/[clien
                         <p className="mt-1.5 text-[14px] font-semibold text-ink">{a.title}</p>
                         <p className="mt-0.5 text-[12.5px] text-muted">
                           <Link
-                            href={`/clients/${clientId}/systems/${a.systemObligation.system.id}/obligations/${a.systemObligationId}`}
+                            href={`/clients/${clientId}/systems/${a.systemObligation.system?.id ?? "company"}/obligations/${a.systemObligationId}`}
                             className="underline-offset-2 hover:text-gold-hover hover:underline"
                           >
-                            {article(a)} · {a.systemObligation.system.name}
+                            {article(a)} · {a.systemObligation.system?.name ?? "Company-wide"}
                           </Link>{" "}
                           · {OBLIGATION_STATUS_LABEL[a.systemObligation.status]} · applies from {formatDate(a.systemObligation.appliesFrom)}
                         </p>
@@ -149,7 +149,7 @@ export default async function RoadmapPage({ params }: PageProps<"/clients/[clien
                   <label key={a.id} className="flex items-start gap-2 text-[13px]">
                     <input type="checkbox" name="actionIds" value={a.id} className="mt-0.5 accent-[var(--color-gold)]" />
                     <span>
-                      {a.title} <span className="text-muted">· {a.systemObligation.system.name}</span>
+                      {a.title} <span className="text-muted">· {a.systemObligation.system?.name ?? "Company-wide"}</span>
                     </span>
                   </label>
                 ))}
@@ -195,7 +195,7 @@ export default async function RoadmapPage({ params }: PageProps<"/clients/[clien
             <ul className="mt-2 space-y-1 text-[13px] text-muted">
               {done.map((a) => (
                 <li key={a.id}>
-                  ✓ {a.title} · {a.systemObligation.system.name}
+                  ✓ {a.title} · {a.systemObligation.system?.name ?? "Company-wide"}
                 </li>
               ))}
             </ul>

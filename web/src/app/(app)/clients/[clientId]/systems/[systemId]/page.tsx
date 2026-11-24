@@ -3,7 +3,7 @@ import { getCtx } from "@/lib/session";
 import { withTenant } from "@/lib/tenant";
 import { canReview, requireSystem } from "@/lib/authz";
 import { getContentVersion } from "@/lib/content/current";
-import { viewOf, PARTIES, RISK_CLASSES } from "@/lib/services/classification";
+import { prohibitedSummary, viewOf, PARTIES, RISK_CLASSES } from "@/lib/services/classification";
 import { readiness } from "@/lib/services/assessment";
 import {
   confirmClassificationAction,
@@ -129,6 +129,15 @@ export default async function SystemPage({ params }: PageProps<"/clients/[client
                     Legal content {current.contentVersion}
                   </p>
                 </div>
+
+                <p
+                  className={`rounded-lg px-3 py-2 text-[13px] ${
+                    view.prohibitedPractices.length ? "bg-ink font-semibold text-rail-text" : "border border-hairline text-body"
+                  }`}
+                >
+                  <span className="mr-2 font-mono text-[10.5px] uppercase tracking-micro text-label">Prohibited practices</span>
+                  {prohibitedSummary(view.prohibitedPractices)}
+                </p>
 
                 {current.status === "OVERRIDDEN" && current.overrideReason && (
                   <div className="rounded-lg border border-gold bg-gold-tint/50 p-3 text-[13px] text-gold-deep">

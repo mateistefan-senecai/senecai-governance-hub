@@ -115,3 +115,13 @@ test("compliant needs a rationale; gap creates exactly one action; compliant clo
     assert.equal(action.status, "DONE");
   });
 });
+
+test("AI literacy (Art. 4) is a company-level obligation: one record per client, none per system", async () => {
+  await scenario(async (tx) => {
+    const system = await systemNamed(tx, "Credit Scoring Engine");
+    const company = await tx.systemObligation.findMany({ where: { clientId: system.clientId, obligationKey: "art4.literacy", active: true } });
+    assert.equal(company.length, 1);
+    assert.equal(company[0].systemId, null);
+    assert.equal(company[0].status, "COMPLIANT", "the seeded assessment is kept on the company record");
+  });
+});

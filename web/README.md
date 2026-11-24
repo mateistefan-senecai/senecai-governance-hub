@@ -153,10 +153,19 @@ Engine rules already enforced:
   `DocumentStore` (`store.ts`) so they can move to EU object storage with the Stage 2
   repository.
 - *Rendering.* `@react-pdf/renderer` (`render.tsx`): pure JavaScript, runs in a Vercel
-  function, no headless browser. Inter and Source Serif 4 (OFL) are embedded from
-  `assets/fonts/` because the standard PDF fonts cannot print Romanian diacritics.
+  function, no headless browser. Design "A · Data sheet" for every kind: the SenecAI
+  Compliance logo (`assets/senecai-compliance-logo.png`), a ruled header with a document
+  id, a system id and a spec-sheet table per AI system, ruled tables, bullet-point
+  summaries with key words in bold. One typeface, Sora (OFL, latin + latin-ext for
+  Romanian diacritics), embedded from `assets/fonts/`. Characters Sora lacks (≈, →) are
+  mapped for printing only.
   The package is ESM-only, which is why `package.json` has `"type": "module"`.
-- *Narrative.* Filled from the deterministic data (rule rationales, obligation summaries,
+- *Company-level obligations.* An obligation marked `level: "company"` in the content
+  (AI literacy, Art. 4) is recorded once per client (`SystemObligation.systemId` null),
+  active while any of its systems' classifications selects it
+  (`syncCompanyObligations`). It appears in the gap assessment, roadmap and PDFs as
+  "Company-wide", and its page is `/clients/[id]/systems/company/obligations/[id]`.
+- *Narrative.* Short bullet points (key words in `**…**`, printed bold), filled from the deterministic data (rule rationales, obligation summaries,
   reviewer rationales), every statement with its citation (`narrative.ts`). An AI drafter
   can implement `NarrativeDrafter` later and is recorded in `Document.narrativeSource`;
   the review states stay the same. No model is called today.

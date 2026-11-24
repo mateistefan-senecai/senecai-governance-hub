@@ -1,6 +1,7 @@
 "use server";
 
-import { getCtx } from "@/lib/session";
+import { getCtx, type Ctx } from "@/lib/session";
+import type { Tx } from "@/lib/tenant";
 import { withTenant } from "@/lib/tenant";
 import { assertReviewer, requireClient, requireSystem } from "@/lib/authz";
 import { getCurrentContent, getContentVersion } from "@/lib/content/current";
@@ -167,11 +168,7 @@ export async function assessObligationAction(clientId: string, systemId: string,
   await run(back, async () => {
     assertReviewer(ctx);
     await withTenant(ctx, async (tx) => {
-      await requireSystem(tx, ctx, clientId, systemId);
-      const so = await tx.systemObligation.findFirstOrThrow({
-        where: { id: obligationId, systemId },
-        include: { system: { select: { clientId: true } } },
-      });
+      const so = await findObligation(tx, ctx, clientId, systemId, obligationId);
       const bundle = await getContentVersion(tx, so.contentVersion);
       await assessObligation(tx, actor(ctx), so, str(form, "status") as ObligationStatus, str(form, "rationale"), bundle);
     });
@@ -184,8 +181,7 @@ export async function setObligationOwner(clientId: string, systemId: string, obl
   await run(`/clients/${clientId}/systems/${systemId}/obligations/${obligationId}`, async () => {
     const ownerName = strOrNull(form, "ownerName");
     await withTenant(ctx, async (tx) => {
-      await requireSystem(tx, ctx, clientId, systemId);
-      const so = await tx.systemObligation.findFirstOrThrow({ where: { id: obligationId, systemId } });
+      const so = await findObligation(tx, ctx, clientId, systemId, obligationId);
       await tx.systemObligation.update({ where: { id: so.id }, data: { ownerName } });
       await tx.action.updateMany({ where: { systemObligationId: so.id, ownerName: so.ownerName }, data: { ownerName } });
       await audit(tx, actor(ctx), {
@@ -199,4 +195,14 @@ export async function setObligationOwner(clientId: string, systemId: string, obl
     });
     return { notice: "Owner saved." };
   });
+}
+
+/** "company" in place of a system id addresses a company-level obligation (e.g. AI literacy). */
+async function findObligation(tx: Tx, ctx: Ctx, clientId: string, systemId: string, obligationId: string) {
+  if (systemId === "company") {
+    const client = await requireClient(tx, ctx, clientId);
+    return tx.systemObligation.findFirstOrThrow({ where: { id: obligationId, clientId: client.id, systemId: null } });
+  }
+  await requireSystem(tx, ctx, clientId, systemId);
+  return tx.systemObligation.findFirstOrThrow({ where: { id: obligationId, systemId } });
 }
