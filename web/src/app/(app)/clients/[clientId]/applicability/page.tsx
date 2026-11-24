@@ -5,7 +5,6 @@ import { getCurrentContent } from "@/lib/content/current";
 import { aiActApplies, type Finding } from "@/lib/services/inventory";
 import { submitApplicability } from "@/lib/actions/clients";
 import { requestConsultation } from "@/lib/actions/demo-requests";
-import { receivesDemoRequests } from "@/lib/services/demo-requests";
 import { QuestionnaireForm } from "@/components/questionnaire-form";
 import { PageHeader } from "@/components/ui/page-header";
 import { Panel } from "@/components/ui/panel";
@@ -20,11 +19,9 @@ const APPLIES_LABEL = { yes: "Applies", likely: "Likely applies", no: "Does not 
 export default async function ApplicabilityPage({ params }: PageProps<"/clients/[clientId]/applicability">) {
   const { clientId } = await params;
   const ctx = await getCtx();
-  const { client, content, isSenecai } = await withTenant(ctx, async (tx) => ({
+  const { client, content } = await withTenant(ctx, async (tx) => ({
     client: await requireClient(tx, ctx, clientId),
     content: await getCurrentContent(tx),
-    // SenecAI's own team sees an offer to make, not a request to send to itself.
-    isSenecai: await receivesDemoRequests(tx, ctx.orgId),
   }));
   const result = client.applicability as { findings: Finding[]; reasoning: Firing[] } | null;
 
@@ -58,7 +55,7 @@ export default async function ApplicabilityPage({ params }: PageProps<"/clients/
               </div>
               <ul className="divide-y divide-hairline-light">
                 {result.findings.map((f) => (
-                  <li key={f.regulation} className={`px-5 py-3.5 ${f.coveredInThisVersion ? "" : "opacity-75"}`}>
+                  <li key={f.regulation} className={`px-5 py-3.5 ${f.coveredInThisVersion || f.servicesAvailable ? "" : "opacity-75"}`}>
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-[13.5px] font-semibold text-ink">{f.name}</p>
                       <Tag tone={f.applies === "yes" ? (f.coveredInThisVersion ? "gold-fill" : "outline") : "muted"}>
@@ -68,36 +65,30 @@ export default async function ApplicabilityPage({ params }: PageProps<"/clients/
                     <p className="mt-1 text-[12.5px] leading-relaxed text-muted">{f.summary}</p>
                     <Citation>{f.provision}</Citation>
                     {f.servicesAvailable && f.applies !== "no" && (
-                      isSenecai ? (
-                        <p className="mt-2 rounded-lg bg-gold-tint px-3 py-2 text-[12px] text-gold-deep">
-                          Not covered by the Hub: offer the client SenecAI&rsquo;s consulting on this.
-                        </p>
-                      ) : (
-                        <details className="group mt-2">
-                          <summary className="inline-flex cursor-pointer list-none items-center rounded-lg bg-ink px-3 py-1.5 text-[12px] font-semibold text-rail-text hover:bg-ink-hover">
-                            Ask a SenecAI consultant →
-                          </summary>
-                          <form action={requestConsultation.bind(null, client.id, f.regulation)} className="mt-2 space-y-2">
-                            <label htmlFor={`msg-${f.regulation}`} className="sr-only">
-                              Message
-                            </label>
-                            <textarea
-                              id={`msg-${f.regulation}`}
-                              name="message"
-                              rows={3}
-                              maxLength={2000}
-                              placeholder="What would you like help with? (optional)"
-                              className="block w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-[12.5px] text-ink"
-                            />
-                            <p className="text-[11.5px] text-muted">
-                              SenecAI receives your name, email, {client.name} and your message, and will contact you.
-                            </p>
-                            <Button size="sm" variant="primary">
-                              Send request
-                            </Button>
-                          </form>
-                        </details>
-                      )
+                      <details className="group mt-2">
+                        <summary className="inline-flex cursor-pointer list-none items-center rounded-lg bg-ink px-3 py-2 text-left text-[12px] font-semibold leading-snug text-rail-text hover:bg-ink-hover">
+                          Consult a SenecAI consultant to find out about applicability and obligations →
+                        </summary>
+                        <form action={requestConsultation.bind(null, client.id, f.regulation)} className="mt-2 space-y-2">
+                          <label htmlFor={`msg-${f.regulation}`} className="sr-only">
+                            Message
+                          </label>
+                          <textarea
+                            id={`msg-${f.regulation}`}
+                            name="message"
+                            rows={3}
+                            maxLength={2000}
+                            placeholder="What would you like to know? (optional)"
+                            className="block w-full rounded-lg border border-hairline bg-surface px-3 py-2 text-[12.5px] text-ink"
+                          />
+                          <p className="text-[11.5px] text-muted">
+                            A SenecAI consultant receives your name, email, {client.name} and your message, and will contact you.
+                          </p>
+                          <Button size="sm" variant="primary">
+                            Send request
+                          </Button>
+                        </form>
+                      </details>
                     )}
                   </li>
                 ))}
