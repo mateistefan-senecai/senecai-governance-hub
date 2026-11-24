@@ -26,6 +26,7 @@ export default async function ClientLayout({ children, params }: LayoutProps<"/c
         </div>
         <ClientNav
           items={[
+            { href: `${base}/overview`, label: "Overview", hint: "Where the company stands", disabled: !client.applicability },
             { href: `${base}/applicability`, label: "Applicability check", hint: client.applicability ? undefined : "Start here" },
             { href: `${base}/inventory`, label: "AI inventory", hint: "Systems, classification, obligations", disabled: !open },
             // Step 4 (evidence) is Stage 2 of the spec: shown so the six steps read in order.

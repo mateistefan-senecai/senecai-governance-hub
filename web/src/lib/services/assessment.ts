@@ -105,3 +105,35 @@ export function readiness(obligations: Pick<SystemObligation, "status" | "active
   const score = active.reduce((s, o) => s + (o.status === "COMPLIANT" ? 1 : o.status === "PARTIAL" ? 0.5 : 0), 0);
   return Math.round((score / active.length) * 100);
 }
+
+type UrgentInput = {
+  id: string;
+  dueDate: Date | null;
+  phase: number;
+  systemObligation: { appliesFrom: Date | null; contentVersion: string; obligationKey: string };
+};
+
+/**
+ * Open actions that need attention now: overdue, due within 30 days, or whose
+ * obligation applies within six months (phase 1). Soonest first.
+ */
+export function urgentActions<A extends UrgentInput>(
+  actions: A[],
+  bundles: Map<string, ContentBundle>,
+  { now = new Date(), limit = 6 }: { now?: Date; limit?: number } = {},
+) {
+  const t = now.getTime();
+  const DAY = 24 * 3600 * 1000;
+  return actions
+    .map((a) => {
+      const due = a.dueDate?.getTime() ?? null;
+      const applies = a.systemObligation.appliesFrom?.getTime() ?? null;
+      const overdue = due !== null && due < t;
+      const isUrgent = overdue || (due !== null && due - t < 30 * DAY) || a.phase === 1;
+      const def = bundles.get(a.systemObligation.contentVersion)?.obligations.find((d) => d.key === a.systemObligation.obligationKey);
+      return { a, due, applies, overdue, isUrgent, article: def?.article ?? a.systemObligation.obligationKey };
+    })
+    .filter((x) => x.isUrgent)
+    .sort((x, y) => (x.due ?? x.applies ?? Infinity) - (y.due ?? y.applies ?? Infinity))
+    .slice(0, limit);
+}
