@@ -8,6 +8,7 @@ import "dotenv/config";
 import { loadBundleFromDisk } from "../src/lib/content/load";
 import { validateBundle } from "../src/lib/content/validate";
 import { prisma } from "../src/lib/db";
+import { refreshObligationDates } from "../src/lib/content/refresh";
 
 async function main() {
   const command = process.argv[2] ?? "validate";
@@ -27,6 +28,7 @@ async function main() {
   if (existing) {
     if (canonical(existing.bundle) === canonical(bundle)) {
       console.log("Already stored, unchanged.");
+      await refresh(bundle);
       return;
     }
     console.error(`Version ${bundle.version} is already stored with different content. Bump the version in manifest.json.`);
@@ -42,6 +44,13 @@ async function main() {
     },
   });
   console.log(`Stored content version ${bundle.version}.`);
+  await refresh(bundle);
+}
+
+/** Existing obligations take the dates of the current content (idempotent). */
+async function refresh(bundle: Parameters<typeof refreshObligationDates>[1]) {
+  const moved = await refreshObligationDates(prisma, bundle);
+  if (moved) console.log(`Moved ${moved} recorded obligation(s) onto content ${bundle.version}.`);
 }
 
 /** JSON with object keys sorted: PostgreSQL's jsonb does not keep key order. */

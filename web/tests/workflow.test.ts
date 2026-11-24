@@ -125,3 +125,21 @@ test("AI literacy (Art. 4) is a company-level obligation: one record per client,
     assert.equal(company[0].status, "COMPLIANT", "the seeded assessment is kept on the company record");
   });
 });
+
+test("a new legal content version moves recorded obligations onto its dates (Digital Omnibus)", async () => {
+  const { refreshObligationDates } = await import("../src/lib/content/refresh");
+  // An obligation recorded on an older content version, with the pre-Omnibus date.
+  const so = await prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe('ALTER TABLE "SystemObligation" NO FORCE ROW LEVEL SECURITY');
+    await tx.$executeRawUnsafe('ALTER TABLE "AiSystem" NO FORCE ROW LEVEL SECURITY');
+    const row = await tx.systemObligation.findFirstOrThrow({ where: { obligationKey: "art26_6.logs", system: { name: "Credit Scoring Engine" } } });
+    await tx.systemObligation.update({ where: { id: row.id }, data: { contentVersion: "2026.10-draft.1", appliesFrom: new Date("2026-08-02") } });
+    await tx.$executeRawUnsafe('ALTER TABLE "SystemObligation" FORCE ROW LEVEL SECURITY');
+    await tx.$executeRawUnsafe('ALTER TABLE "AiSystem" FORCE ROW LEVEL SECURITY');
+    return row;
+  });
+  assert.ok((await refreshObligationDates(prisma, bundle)) >= 1);
+  const after = await withTenant({ userId: "test", orgId: so.organizationId }, (tx) => tx.systemObligation.findUniqueOrThrow({ where: { id: so.id } }));
+  assert.equal(after.contentVersion, bundle.version);
+  assert.equal(after.appliesFrom?.toISOString().slice(0, 10), "2027-12-02", "Annex III date after the Digital Omnibus");
+});
