@@ -13,6 +13,10 @@ Scope right now: **EU AI Act only.** GDPR, NIS2, DORA and CRA are out of scope f
 
 Do not assume scope, sequencing or positioning beyond what the spec states — ask the user when something isn't covered.
 
+## Parked items
+
+`docs/backlog.md` lists what the product owner parked for later (e.g. email notifications) and what must happen before real clients use the platform. Read it at the start of a session, raise items that have become relevant, and keep it current.
+
 ## Supporting context (lower precedence)
 
 - `docs/context/business-overview.md` — company background, team, SenecAI 2.0 rebrand. Written before the spec: where it conflicts (e.g. it says the Hub is not sold standalone and that GDPR is built in parallel), **the spec wins**.
