@@ -31,8 +31,13 @@ export default async function GapAssessmentPage({ params, searchParams }: PagePr
   const { clientId } = await params;
   const filter = String((await searchParams).status ?? "all");
   const ctx = await getCtx();
-  const { systems, bundles } = await withTenant(ctx, async (tx) => {
+  const { systems, company, bundles } = await withTenant(ctx, async (tx) => {
     const client = await requireClient(tx, ctx, clientId);
+    // Company-level obligations (e.g. AI literacy) are recorded once per client.
+    const company = await tx.systemObligation.findMany({
+      where: { clientId: client.id, systemId: null, active: true },
+      orderBy: { obligationKey: "asc" },
+    });
     const systems = await tx.aiSystem.findMany({
       where: { clientId: client.id },
       orderBy: { name: "asc" },
@@ -41,13 +46,13 @@ export default async function GapAssessmentPage({ params, searchParams }: PagePr
         classifications: { where: { isCurrent: true }, select: { status: true } },
       },
     });
-    const versions = [...new Set(systems.flatMap((s) => s.systemObligations.map((o) => o.contentVersion)))];
+    const versions = [...new Set([...company, ...systems.flatMap((s) => s.systemObligations)].map((o) => o.contentVersion))];
     const bundles = new Map<string, ContentBundle>();
     for (const v of versions) bundles.set(v, await getContentVersion(tx, v));
-    return { systems, bundles };
+    return { systems, company, bundles };
   });
 
-  const all = systems.flatMap((s) => s.systemObligations);
+  const all = [...company, ...systems.flatMap((s) => s.systemObligations)];
   const count = (status: string) => all.filter((o) => o.status === status).length;
   const matches = (o: (typeof all)[number]) =>
     filter === "all" ? true : filter === "reassess" ? o.needsReassessment : o.status === filter;
@@ -104,27 +109,36 @@ export default async function GapAssessmentPage({ params, searchParams }: PagePr
           </Panel>
         )}
 
-        {systems.map((s) => {
-          const items = s.systemObligations.filter(matches);
+        {[{ id: "company", name: "Company-wide", note: "Duties of the company as a whole, not of a single AI system.", obligations: company }]
+          .concat(systems.map((s) => ({ id: s.id, name: s.name, note: "", obligations: s.systemObligations })))
+          .filter((g) => g.id !== "company" || g.obligations.length > 0)
+          .map((g) => {
+          const s = systems.find((x) => x.id === g.id);
+          const items = g.obligations.filter(matches);
           if (!items.length) return null;
-          const href = `${base}/systems/${s.id}`;
+          const href = `${base}/systems/${g.id}`;
           return (
-            <section key={s.id}>
+            <section key={g.id}>
               <div className="mb-3 flex flex-wrap items-end justify-between gap-4">
                 <div>
                   <h2 className="text-[16px] font-semibold text-ink">
-                    <Link href={href} className="hover:underline">
-                      {s.name}
-                    </Link>
+                    {s ? (
+                      <Link href={href} className="hover:underline">
+                        {g.name}
+                      </Link>
+                    ) : (
+                      g.name
+                    )}
                   </h2>
                   <p className="text-[12.5px] text-muted">
-                    {s.systemObligations.length} obligations
-                    {s.classifications[0]?.status === "PRELIMINARY" && " · classification awaiting review"}
-                    {s.classificationStale && " · classification outdated"}
+                    {g.obligations.length} obligation{g.obligations.length === 1 ? "" : "s"}
+                    {g.note && ` · ${g.note}`}
+                    {s?.classifications[0]?.status === "PRELIMINARY" && " · classification awaiting review"}
+                    {s?.classificationStale && " · classification outdated"}
                   </p>
                 </div>
                 <div className="w-40">
-                  <ProgressBar percent={readiness(s.systemObligations)} showLabel />
+                  <ProgressBar percent={readiness(g.obligations)} showLabel />
                 </div>
               </div>
               <div className="overflow-hidden rounded-xl border border-hairline bg-surface shadow-sm">

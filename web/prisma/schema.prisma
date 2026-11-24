@@ -42,17 +42,17 @@ enum OrganizationType {
 
 /// The account holder (tenant). Nothing in one organisation is visible to another.
 model Organization {
-  id         String           @id @default(cuid())
-  name       String
-  type       OrganizationType
+  id                   String           @id @default(cuid())
+  name                 String
+  type                 OrganizationType
   /// Name and logo printed on PDFs for this organisation's clients.
-  brandName  String?
-  brandLogo  String?
-  region     String           @default("EU")
+  brandName            String?
+  brandLogo            String?
+  region               String           @default("EU")
   /// The organisation that receives demo requests from the public landing
   /// page (SenecAI, as the Hub's vendor). At most one, enforced in the database.
-  receivesDemoRequests Boolean @default(false)
-  createdAt  DateTime         @default(now())
+  receivesDemoRequests Boolean          @default(false)
+  createdAt            DateTime         @default(now())
 
   memberships       Membership[]
   clients           Client[]
@@ -96,17 +96,17 @@ model Membership {
 /// A regulated company managed inside an organisation. A company on its own
 /// account is an organisation with exactly one client.
 model Client {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  name           String
+  id                          String       @id @default(cuid())
+  organizationId              String
+  organization                Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name                        String
   /// Answers to the applicability check (company profile), keyed by question id.
-  profile        Json?
+  profile                     Json?
   /// Result of the applicability check: one finding per regulation.
-  applicability  Json?
+  applicability               Json?
   applicabilityContentVersion String?
-  applicabilityAt DateTime?
-  createdAt      DateTime     @default(now())
+  applicabilityAt             DateTime?
+  createdAt                   DateTime     @default(now())
 
   memberships Membership[]
   assignments ClientAssignment[]
@@ -114,6 +114,8 @@ model Client {
   actions     Action[]
   enquiries   Enquiry[]
   documents   Document[]
+  /// Company-level obligations (systemId null) and system ones, by client.
+  obligations SystemObligation[]
 
   @@index([organizationId])
 }
@@ -159,36 +161,36 @@ enum Stage {
 }
 
 model AiSystem {
-  id                String       @id @default(cuid())
-  organizationId    String
-  organization      Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  clientId          String
-  client            Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
-  name              String
-  purpose           String
-  description       String?
+  id                  String       @id @default(cuid())
+  organizationId      String
+  organization        Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId            String
+  client              Client       @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  name                String
+  purpose             String
+  description         String?
   /// Accountable owner inside the company.
-  ownerName         String
-  ownerRole         String?
-  origin            SystemOrigin
-  supplier          String?
-  dataCategories    String[]
-  deploymentContext String
-  useType           UseType
-  autonomy          Autonomy
-  stage             Stage
-  affectedPersons   String?
+  ownerName           String
+  ownerRole           String?
+  origin              SystemOrigin
+  supplier            String?
+  dataCategories      String[]
+  deploymentContext   String
+  useType             UseType
+  autonomy            Autonomy
+  stage               Stage
+  affectedPersons     String?
   /// Structured facts the classification reads (ids from the content
   /// library's "facts" questions): areas of use, who is affected, and what
   /// the system does. Step 2 does not ask again what these settle.
-  areas             String[]     @default([])
-  affectedGroups    String[]     @default([])
-  capabilities      String[]     @default([])
+  areas               String[]     @default([])
+  affectedGroups      String[]     @default([])
+  capabilities        String[]     @default([])
   /// Set when the system, its vendor, purpose or deployment changed after the
   /// current classification was made — the classification must be redone.
-  classificationStale Boolean    @default(false)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  classificationStale Boolean      @default(false)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
 
   vendorDocuments   VendorDocument[]
   classifications   Classification[]
@@ -268,34 +270,39 @@ enum ObligationStatus {
 /// One obligation from the content library as it applies to one system.
 /// Regenerated whenever the effective classification changes.
 model SystemObligation {
-  id             String           @id @default(cuid())
-  organizationId String
-  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  systemId       String
-  system         AiSystem         @relation(fields: [systemId], references: [id], onDelete: Cascade)
-  obligationKey  String
-  contentVersion String
+  id                String            @id @default(cuid())
+  organizationId    String
+  organization      Organization      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  /// Null for a company-level obligation (e.g. AI literacy, Art. 4): one
+  /// record per client, applying because at least one of its systems needs it.
+  systemId          String?
+  system            AiSystem?         @relation(fields: [systemId], references: [id], onDelete: Cascade)
+  clientId          String
+  client            Client            @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  obligationKey     String
+  contentVersion    String
   /// Which of the company's roles carries this duty (provider, deployer…).
-  party          String
-  appliesFrom    DateTime?
-  rationale      String
+  party             String
+  appliesFrom       DateTime?
+  rationale         String
   /// False when a reclassification means the obligation no longer applies.
-  active         Boolean          @default(true)
-  status         ObligationStatus @default(NOT_ASSESSED)
+  active            Boolean           @default(true)
+  status            ObligationStatus  @default(NOT_ASSESSED)
   /// Platform-proposed status (Stage 2: from evidence); reviewer confirms.
-  proposedStatus ObligationStatus?
-  statusRationale String?
-  assessedById   String?
-  assessedAt     DateTime?
+  proposedStatus    ObligationStatus?
+  statusRationale   String?
+  assessedById      String?
+  assessedAt        DateTime?
   /// Set when the system or the legal content changed after assessment.
-  needsReassessment Boolean       @default(false)
-  ownerName      String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  needsReassessment Boolean           @default(false)
+  ownerName         String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   actions Action[]
 
   @@unique([systemId, obligationKey])
+  @@index([clientId])
 }
 
 enum ActionType {

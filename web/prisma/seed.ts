@@ -223,9 +223,10 @@ function sys(s: Partial<SystemInput> & Pick<SystemInput, "name" | "purpose" | "o
 
 async function assess(tx: Tx, actor: Actor, systemId: string, bundle: ContentBundle, statuses: Record<string, ["COMPLIANT" | "PARTIAL" | "GAP", string]>) {
   for (const [key, [status, why]] of Object.entries(statuses)) {
-    const so = await tx.systemObligation.findUniqueOrThrow({
-      where: { systemId_obligationKey: { systemId, obligationKey: key } },
-      include: { system: { select: { clientId: true } } },
+    // A company-level obligation (e.g. AI literacy) is recorded once for the client.
+    const { clientId } = await tx.aiSystem.findUniqueOrThrow({ where: { id: systemId }, select: { clientId: true } });
+    const so = await tx.systemObligation.findFirstOrThrow({
+      where: { OR: [{ systemId, obligationKey: key }, { clientId, systemId: null, obligationKey: key }] },
     });
     await assessObligation(tx, actor, so, status, why, bundle);
   }

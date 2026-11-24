@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import { getCtx } from "@/lib/session";
 import { withTenant } from "@/lib/tenant";
-import { canReview, requireSystem } from "@/lib/authz";
+import { canReview, requireClient, requireSystem } from "@/lib/authz";
 import { getContentVersion } from "@/lib/content/current";
 import { resolveDateKey } from "@/lib/content/engine";
 import { assessObligationAction, setObligationOwner } from "@/lib/actions/systems";
@@ -33,11 +33,17 @@ export default async function ObligationPage({
   const { clientId, systemId, obligationId } = await params;
   const ctx = await getCtx();
   const data = await withTenant(ctx, async (tx) => {
-    const { system } = await requireSystem(tx, ctx, clientId, systemId);
-    const so = await tx.systemObligation.findFirst({ where: { id: obligationId, systemId }, include: { actions: true } });
+    // "company" addresses a company-level obligation (e.g. AI literacy, Art. 4).
+    const isCompany = systemId === "company";
+    const client = await requireClient(tx, ctx, clientId);
+    const system = isCompany ? null : (await requireSystem(tx, ctx, clientId, systemId)).system;
+    const so = await tx.systemObligation.findFirst({
+      where: isCompany ? { id: obligationId, clientId: client.id, systemId: null } : { id: obligationId, systemId },
+      include: { actions: true },
+    });
     if (!so) notFound();
     const bundle = await getContentVersion(tx, so.contentVersion);
-    const current = await tx.classification.findFirst({ where: { systemId, isCurrent: true } });
+    const current = isCompany ? null : await tx.classification.findFirst({ where: { systemId, isCurrent: true } });
     const assessor = so.assessedById ? await tx.user.findUnique({ where: { id: so.assessedById } }) : null;
     return { system, so, bundle, current, assessor };
   });
@@ -47,18 +53,19 @@ export default async function ObligationPage({
   const action = so.actions[0];
   const dateDef = bundle.dates[resolveDateKey(def.appliesFrom, (current?.effective as Outputs | undefined) ?? {})];
   const isReviewer = canReview(ctx);
-  const systemHref = `/clients/${clientId}/systems/${systemId}`;
+  const systemHref = system ? `/clients/${clientId}/systems/${systemId}` : `/clients/${clientId}/gap-assessment`;
+  const scopeName = system?.name ?? "Company-wide";
 
   return (
     <>
       <PageHeader
-        crumb={`${def.article} · ${system.name}`}
+        crumb={`${def.article} · ${scopeName}`}
         title={def.title}
-        actions={<Button href={systemHref}>← {system.name}</Button>}
+        actions={<Button href={systemHref}>← {system ? system.name : "Gap assessment"}</Button>}
       />
       {!so.active && (
         <div className="border-b border-hairline bg-panel px-8 py-3 text-[13px] text-muted">
-          After the latest classification this obligation no longer applies to the system. Its record is kept for history.
+          After the latest classification this obligation no longer applies{system ? " to the system" : ""}. Its record is kept for history.
         </div>
       )}
       {so.needsReassessment && (
@@ -109,7 +116,7 @@ export default async function ObligationPage({
               id="ownerName"
               name="ownerName"
               defaultValue={so.ownerName ?? ""}
-              placeholder={`Accountable person, e.g. ${system.ownerName}`}
+              placeholder={system ? `Accountable person, e.g. ${system.ownerName}` : "Accountable person, e.g. the HR or compliance lead"}
               className="flex-1 rounded-lg border border-hairline bg-surface px-3 py-1.5 text-[13px]"
             />
             <Button size="sm">Save owner</Button>

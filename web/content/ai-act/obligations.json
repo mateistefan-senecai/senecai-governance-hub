@@ -15,7 +15,7 @@
       }
     },
     "appliesFrom": "prohibitions",
-    "appliesBecause": "Applies to every provider and deployer of an AI system in scope, whatever its risk class.",
+    "appliesBecause": "The company provides or deploys at least one AI system. AI literacy is a duty of the company as a whole, not of each system.",
     "action": {
       "title": "Run and record AI literacy training for staff who use or operate this system",
       "type": "LEGAL",
@@ -25,7 +25,8 @@
       "AI literacy training material",
       "Attendance or completion record per person",
       "AI literacy record (Art. 4)"
-    ]
+    ],
+    "level": "company"
   },
   {
     "key": "art5.cease",

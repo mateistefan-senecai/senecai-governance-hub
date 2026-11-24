@@ -32,6 +32,8 @@ export default async function ClientsPage() {
             systemObligations: { where: { active: true }, select: { status: true, active: true } },
           },
         },
+        // Company-level obligations (e.g. AI literacy), once per client.
+        obligations: { where: { active: true, systemId: null }, select: { status: true, active: true } },
       },
     }),
   );
@@ -81,7 +83,7 @@ export default async function ClientsPage() {
                   const highRisk = c.aiSystems.filter(
                     (s) => (s.classifications[0]?.effective as { riskClass?: string } | undefined)?.riskClass === "HIGH_RISK",
                   ).length;
-                  const obligations = c.aiSystems.flatMap((s) => s.systemObligations);
+                  const obligations = [...c.obligations, ...c.aiSystems.flatMap((s) => s.systemObligations)];
                   const open = obligations.filter((o) => o.status !== "COMPLIANT").length;
                   return (
                     <tr key={c.id} className="hover:bg-row-hover">

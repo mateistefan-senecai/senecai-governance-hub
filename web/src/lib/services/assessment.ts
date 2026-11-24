@@ -17,13 +17,13 @@ export const ASSESSABLE: ObligationStatus[] = ["COMPLIANT", "PARTIAL", "GAP"];
 export async function assessObligation(
   tx: Tx,
   actor: Actor,
-  obligation: SystemObligation & { system: { clientId: string } },
+  obligation: SystemObligation,
   status: ObligationStatus,
   rationale: string,
   bundle: ContentBundle,
 ) {
   if (!ASSESSABLE.includes(status)) throw new ValidationError("Choose compliant, partial or gap.");
-  if (!obligation.active) throw new ValidationError("This obligation no longer applies to the system.");
+  if (!obligation.active) throw new ValidationError("This obligation no longer applies.");
   const reason = rationale.trim();
   if (status === "COMPLIANT" && reason.length < 20) {
     throw new ValidationError("Record why the obligation is met (at least a sentence). Evidence will be required from Stage 2.");
@@ -55,9 +55,9 @@ export async function assessObligation(
     await tx.action.deleteMany({ where: { systemObligationId: obligation.id, status: "OPEN", enquiryId: null } });
     await tx.action.updateMany({ where: { systemObligationId: obligation.id }, data: { status: "DONE" } });
   } else if (def) {
-    await ensureAction(tx, updated, obligation.system.clientId, def);
+    await ensureAction(tx, updated, obligation.clientId, def);
   }
-  await refreshDocuments(tx, actor, obligation.system.clientId, "obligation assessed");
+  await refreshDocuments(tx, actor, obligation.clientId, "obligation assessed");
   return updated;
 }
 
