@@ -17,6 +17,7 @@
 //   as a draft and the old versions are kept.
 // - Every transition is written to the append-only audit log.
 
+import { notifyClient } from "./notifications";
 import type { Tx } from "@/lib/tenant";
 import type { Document, DocumentKind, DocumentState, MemberRole, Prisma } from "@/generated/prisma/client";
 import { ForbiddenError } from "@/lib/authz";
@@ -204,6 +205,17 @@ export async function transitionDocument(
 
   const updated = await tx.document.update({ where: { id: doc.id }, data });
   await storeRendition(tx, updated, opts.store);
+  if (transition === "release") {
+    const def = KIND_BY_ID.get(doc.kind)!;
+    await notifyClient(tx, {
+      organizationId: doc.organizationId,
+      clientId,
+      kind: "DOCUMENT_RELEASED",
+      title: `${def.title} released, version ${doc.version}`,
+      body: `Approved by ${updated.reviewerName ?? "your reviewer"} and released to you by ${actor.userName}. You can download the PDF from Documents.`,
+      link: `/clients/${clientId}/documents#${doc.kind}`,
+    });
+  }
   await audit(tx, actor, {
     entityType: "Document",
     entityId: doc.id,

@@ -284,7 +284,11 @@ function systemSnap(rec: ClientRecord, s: ClientRecord["systems"][number], kind:
     affectedPersons: withInventory ? s.affectedPersons : null,
     areas: withInventory ? factLabelsOf(rec, "areas", s.areas) : [],
     affectedGroups: withInventory ? factLabelsOf(rec, "affectedGroups", s.affectedGroups) : [],
-    capabilities: withInventory ? factLabelsOf(rec, "capabilities", s.capabilities) : [],
+    capabilities: withInventory
+      ? factLabelsOf(rec, "capabilities", s.capabilities).map((l, i) =>
+          s.capabilities[i] === "other" && s.capabilitiesOther ? `Other: ${s.capabilitiesOther}` : l,
+        )
+      : [],
     vendorDocuments: withInventory
       ? s.vendorDocuments.map((v) => ({
           label: vendorLabels.get(v.kind)?.label ?? v.kind,

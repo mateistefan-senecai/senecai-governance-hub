@@ -198,6 +198,22 @@ authoritative: on submit its facts replace any answer to those questions. A syst
 record lacks the facts is asked to complete it before it can be classified. The client's
 sector (applicability check) pre-fills a new system's area of use (`suggestsArea`).
 
+**Notifications to the client.** Confirming or overriding a classification and releasing a
+document write a `Notification` in the same transaction (`services/notifications.ts`). The
+client's company users see them in the **Updates** panel on their inventory page ("Mark all
+as read" stores `Membership.updatesSeenAt`), and they are emailed to those users after the
+change commits (`notify-dispatch.ts`). Email is sent only when configured:
+
+| Variable | |
+|---|---|
+| `EMAIL_PROVIDER` | `resend` |
+| `RESEND_API_KEY` | API key |
+| `EMAIL_FROM` | sender, e.g. `SenecAI Compliance <hub@senecai.eu>` (a verified domain) |
+| `APP_URL` | optional; defaults to the Vercel production URL, for links in emails |
+
+Without them each notification records `skipped: no email provider configured`; the panel
+works regardless.
+
 **Public pages and demo requests.** `/` is the landing page
 (`src/components/landing-page.tsx`) and `/request-demo` its form; both are public in
 `src/proxy.ts`. A visitor has no tenant, so a demo request is stored without one
@@ -223,6 +239,6 @@ or email notification yet.
   MFA for reviewers and admins.
 - A cross-tenant queue so SenecAI receives enquiries routed to it by other firms. Today
   an enquiry is stored in the sender's tenant.
-- Email notification of new demo requests, and a rate limit on the public form.
+- Email to SenecAI on new demo requests, and a rate limit on the public form.
 - Stage 2: evidence repository, evidence-based gap assessment, templates. Stage 3:
   regulatory monitoring.

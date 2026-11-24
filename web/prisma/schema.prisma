@@ -66,6 +66,7 @@ model Organization {
   documents         Document[]
   documentFiles     DocumentFile[]
   auditEvents       AuditEvent[]
+  notifications     Notification[]
 }
 
 enum MemberRole {
@@ -86,6 +87,8 @@ model Membership {
   /// Required for COMPANY_USER: the one client (company) they belong to.
   clientId       String?
   client         Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  /// When this member last marked their client's updates as read.
+  updatesSeenAt  DateTime?
   createdAt      DateTime     @default(now())
 
   assignments ClientAssignment[]
@@ -108,14 +111,15 @@ model Client {
   applicabilityAt             DateTime?
   createdAt                   DateTime     @default(now())
 
-  memberships Membership[]
-  assignments ClientAssignment[]
-  aiSystems   AiSystem[]
-  actions     Action[]
-  enquiries   Enquiry[]
-  documents   Document[]
+  memberships   Membership[]
+  assignments   ClientAssignment[]
+  aiSystems     AiSystem[]
+  actions       Action[]
+  enquiries     Enquiry[]
+  documents     Document[]
   /// Company-level obligations (systemId null) and system ones, by client.
-  obligations SystemObligation[]
+  obligations   SystemObligation[]
+  notifications Notification[]
 
   @@index([organizationId])
 }
@@ -186,6 +190,8 @@ model AiSystem {
   areas               String[]     @default([])
   affectedGroups      String[]     @default([])
   capabilities        String[]     @default([])
+  /// Free description when "something else" is ticked in capabilities (shown, never used by a rule).
+  capabilitiesOther   String?
   /// Set when the system, its vendor, purpose or deployment changed after the
   /// current classification was made — the classification must be redone.
   classificationStale Boolean      @default(false)
@@ -542,4 +548,35 @@ model ContentVersion {
   /// Full content bundle: questionnaires, rules, obligations, dates.
   bundle      Json
   createdAt   DateTime      @default(now())
+}
+
+// ── Notifications to the client ─────────────────────────────────────────
+
+enum NotificationKind {
+  CLASSIFICATION_CONFIRMED
+  CLASSIFICATION_OVERRIDDEN
+  DOCUMENT_RELEASED
+}
+
+/// Something the reviewer did that the client should know about. Written in
+/// the same transaction as the change; shown in the client's Updates panel
+/// and emailed to the client's company users after the change commits.
+model Notification {
+  id             String           @id @default(cuid())
+  organizationId String
+  organization   Organization     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  clientId       String
+  client         Client           @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  kind           NotificationKind
+  title          String
+  body           String
+  /// Path inside the Hub, e.g. /clients/<id>/documents#INVENTORY.
+  link           String
+  createdAt      DateTime         @default(now())
+  /// Email delivery: null until dispatched; then "sent", "skipped: …" or "failed: …".
+  emailStatus    String?
+  emailedAt      DateTime?
+
+  @@index([clientId, createdAt])
+  @@index([organizationId, emailStatus])
 }

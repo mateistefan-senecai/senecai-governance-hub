@@ -38,7 +38,7 @@ const input = (s: SystemInput & Record<string, unknown>): SystemInput => ({
   name: s.name, purpose: s.purpose, description: s.description, ownerName: s.ownerName, ownerRole: s.ownerRole,
   origin: s.origin, supplier: s.supplier, dataCategories: s.dataCategories, deploymentContext: s.deploymentContext,
   useType: s.useType, autonomy: s.autonomy, stage: s.stage, affectedPersons: s.affectedPersons,
-  areas: s.areas, affectedGroups: s.affectedGroups, capabilities: s.capabilities,
+  areas: s.areas, affectedGroups: s.affectedGroups, capabilities: s.capabilities, capabilitiesOther: s.capabilitiesOther,
 });
 
 after(() => prisma.$disconnect());
@@ -142,4 +142,29 @@ test("a new legal content version moves recorded obligations onto its dates (Dig
   const after = await withTenant({ userId: "test", orgId: so.organizationId }, (tx) => tx.systemObligation.findUniqueOrThrow({ where: { id: so.id } }));
   assert.equal(after.contentVersion, bundle.version);
   assert.equal(after.appliesFrom?.toISOString().slice(0, 10), "2027-12-02", "Annex III date after the Digital Omnibus");
+});
+
+test("confirming a classification notifies the client; the email is skipped without a provider; other firms see nothing", async () => {
+  const { confirmClassification } = await import("../src/lib/services/classification");
+  const { dispatchNotifications } = await import("../src/lib/services/notifications");
+  await scenario(async (tx, actor) => {
+    const system = await systemNamed(tx, "CV Screening Assistant");
+    const current = await tx.classification.findFirstOrThrow({ where: { systemId: system.id, isCurrent: true } });
+    await confirmClassification(tx, actor, current);
+    const n = await tx.notification.findFirstOrThrow({ where: { clientId: system.clientId, kind: "CLASSIFICATION_CONFIRMED" }, orderBy: { createdAt: "desc" } });
+    assert.match(n.title, /CV Screening Assistant/);
+    assert.equal(n.link, `/clients/${system.clientId}/systems/${system.id}`);
+    const before = process.env.EMAIL_PROVIDER;
+    delete process.env.EMAIL_PROVIDER;
+    await dispatchNotifications(tx, system.organizationId);
+    if (before !== undefined) process.env.EMAIL_PROVIDER = before;
+    const after = await tx.notification.findUniqueOrThrow({ where: { id: n.id } });
+    assert.equal(after.emailStatus, "skipped: no email provider configured");
+  });
+  const lawyer = await prisma.user.findUniqueOrThrow({ where: { email: "lawyer@ionescu.law" } });
+  const firm = await withUser(lawyer.id, (tx) => tx.membership.findFirstOrThrow({ where: { userId: lawyer.id, role: "ORG_ADMIN" } }));
+  const leaked = await withTenant({ userId: lawyer.id, orgId: firm.organizationId }, (tx) =>
+    tx.notification.count({ where: { title: { contains: "CV Screening Assistant" } } }),
+  );
+  assert.equal(leaked, 0);
 });

@@ -130,6 +130,16 @@ export function SystemForm({
         </Group>
         <Group label="What the system does">
           <Ticks question={facts.capabilities} name="capabilities" checked={system?.capabilities ?? []} />
+          <label className="mt-3 block">
+            <span className="block text-[12px] text-muted">If you ticked &ldquo;Something else&rdquo;, describe it</span>
+            <input
+              name="capabilitiesOther"
+              defaultValue={system?.capabilitiesOther ?? ""}
+              maxLength={300}
+              placeholder="e.g. optimises delivery routes, translates documents"
+              className={`mt-1.5 ${input}`}
+            />
+          </label>
         </Group>
       </section>
 

@@ -79,7 +79,12 @@ export default async function ClassifyPage({ params }: PageProps<"/clients/[clie
                 <dt className="font-mono text-[11px] tracking-micro text-label">ROLE</dt>
                 <dd className="text-ink">{roleText}</dd>
                 {factQuestions(content.classification).map((q) => {
-                  const labels = factLabels(q, system[q.fromSystem!] as string | string[]);
+                  const raw = system[q.fromSystem!] as string | string[];
+                  const labels = factLabels(q, raw).map((l, i) =>
+                    q.fromSystem === "capabilities" && Array.isArray(raw) && raw[i] === "other" && system.capabilitiesOther
+                      ? `Something else: ${system.capabilitiesOther}`
+                      : l,
+                  );
                   return (
                     <div key={q.id} className="contents">
                       <dt className="font-mono text-[11px] uppercase tracking-micro text-label">{FACT_LABEL[q.fromSystem!]}</dt>

@@ -30,12 +30,14 @@ export type SystemInput = {
   areas: string[];
   affectedGroups: string[];
   capabilities: string[];
+  /** Description when "other" is ticked in capabilities. */
+  capabilitiesOther: string | null;
 };
 
 /** Edits to these fields change what the system legally is. */
 const RECLASSIFY_FIELDS = [
   "purpose", "origin", "supplier", "deploymentContext", "useType", "autonomy", "affectedPersons",
-  "stage", "areas", "affectedGroups", "capabilities",
+  "stage", "areas", "affectedGroups", "capabilities", "capabilitiesOther",
 ] as const;
 
 export function assertSystemInput(input: SystemInput) {
@@ -45,6 +47,9 @@ export function assertSystemInput(input: SystemInput) {
   if (!input.deploymentContext) throw new ValidationError("Say where the system is deployed.");
   if (input.origin !== "BUILT" && !input.supplier) throw new ValidationError("Name the supplier of a bought or embedded system.");
   if (!input.areas.length) throw new ValidationError("Tick at least one area of use.");
+  if (input.capabilities.includes("other") && !input.capabilitiesOther) {
+    throw new ValidationError("Describe what else the system does.");
+  }
 }
 
 export async function createSystem(tx: Tx, actor: Actor, client: Client, input: SystemInput) {
