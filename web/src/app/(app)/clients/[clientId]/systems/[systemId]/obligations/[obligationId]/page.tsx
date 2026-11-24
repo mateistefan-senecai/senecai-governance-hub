@@ -11,6 +11,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { Button } from "@/components/ui/button";
 import { Tag } from "@/components/ui/tag";
 import { Citation } from "@/components/ui/citation";
+import { ObligationExplainer } from "@/components/obligation-explainer";
 import { provisionAnchor } from "@/lib/content/links";
 import {
   ACTION_STATUS_LABEL,
@@ -75,7 +76,7 @@ export default async function ObligationPage({
       )}
 
       <div className="grid max-w-6xl gap-5 p-8 lg:grid-cols-2">
-        <Part n={1} title="Legal basis and why it applies">
+        <Part n={1} title="Legal basis and why it applies" wide>
           <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-label">In plain terms</p>
           <p className="mt-1 text-[13.5px] leading-relaxed text-body">{def.summary}</p>
           <p className="mt-3 text-[13px] text-ink">
@@ -102,6 +103,7 @@ export default async function ObligationPage({
           )}
           <p className="mt-3 text-[11.5px] text-label">Legal content {so.contentVersion}</p>
         </Part>
+        {def.explainer && <ObligationExplainer explainer={def.explainer} />}
 
         <Part n={2} title="Responsible party and accountable owner">
           <p className="text-[13.5px] text-ink">
@@ -207,9 +209,9 @@ export default async function ObligationPage({
   );
 }
 
-function Part({ n, title, children, muted }: { n: number; title: string; children: ReactNode; muted?: boolean }) {
+function Part({ n, title, children, muted, wide }: { n: number; title: string; children: ReactNode; muted?: boolean; wide?: boolean }) {
   return (
-    <section className={`rounded-xl border border-hairline p-5 shadow-sm ${muted ? "bg-panel" : "bg-surface"}`}>
+    <section className={`rounded-xl border border-hairline p-5 shadow-sm ${muted ? "bg-panel" : "bg-surface"} ${wide ? "lg:col-span-2" : ""}`}>
       <p className="font-narrow text-[10.5px] font-semibold uppercase tracking-micro-wide text-gold-hover">{n} of 6</p>
       <h2 className="mb-3 text-[15px] font-semibold text-ink">{title}</h2>
       {children}

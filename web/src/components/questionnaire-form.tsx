@@ -172,7 +172,7 @@ function QuestionRow({
                   <input
                     type="checkbox"
                     checked={checked}
-                    onChange={() => onChange(checked ? list.filter((x) => x !== o.id) : [...list, o.id])}
+                    onChange={() => onChange(toggleOption(options, list, o.id, checked))}
                     className="mt-0.5 accent-[var(--color-gold)]"
                   />
                   <span>{o.label}</span>
@@ -184,4 +184,12 @@ function QuestionRow({
       </div>
     </div>
   );
+}
+
+/** Ticks or unticks one option; an exclusive "None of these" and the other options clear each other. */
+function toggleOption(options: { id: string; exclusive?: boolean }[], list: string[], id: string, checked: boolean): string[] {
+  if (checked) return list.filter((x) => x !== id);
+  if (options.find((o) => o.id === id)?.exclusive) return [id];
+  const exclusive = new Set(options.filter((o) => o.exclusive).map((o) => o.id));
+  return [...list.filter((x) => !exclusive.has(x)), id];
 }

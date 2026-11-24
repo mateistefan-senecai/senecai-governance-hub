@@ -31,6 +31,8 @@ export type Option = {
   showIf?: Condition;
   /** Applicability sector options: the area of use (an option of `use.areas`) a new system starts with. */
   suggestsArea?: string;
+  /** "None of these": ticking it clears the other options of a multi question, and ticking another clears it. */
+  exclusive?: boolean;
 };
 
 /** AI system fields (step 1) that answer a classification question directly. */
@@ -47,7 +49,11 @@ export type Question = {
   options?: Option[];
   /** Ask only when this holds. Hidden questions are dropped from the answers. */
   showIf?: Condition;
-  /** Multi questions may be left empty ("none of these"); others are required. */
+  /**
+   * Multi questions may be left empty when optional. A required multi question
+   * needs at least one tick: offer an `exclusive` "None of these" option, so
+   * that "none applies" is a deliberate answer and not an oversight.
+   */
   optional?: boolean;
   /**
    * Answered from this field of the AI system record (step 1) instead of
@@ -108,6 +114,22 @@ export type ObligationDef = {
    * systems' classifications selects it. Omitted: one record per system.
    */
   level?: "company";
+  /** Longer explanation for practitioners ("Understand this obligation better"). */
+  explainer?: Explainer;
+};
+
+/**
+ * A practitioner's explanation of an obligation: what it requires in detail,
+ * how to meet it and which guidance it draws on. Points may mark key words
+ * with **bold**. Guidance cited here is non-binding; the obligation itself
+ * comes from the Act.
+ */
+export type Explainer = {
+  intro: string;
+  sections: { heading: string; points: string[] }[];
+  sources: { label: string; url: string; note?: string }[];
+  /** ISO date the explanation was last checked against its sources. */
+  checked: string;
 };
 
 export type DateDef = { date: string; provision: string; label: string; note?: string };

@@ -225,7 +225,107 @@
       "Accuracy test report",
       "Robustness test report",
       "Security assessment or penetration test report"
-    ]
+    ],
+    "explainer": {
+      "intro": "Article 15 is one of the most technical duties in the AI Act. It does not set a number to reach: the provider decides what level of accuracy, robustness and cybersecurity is **appropriate for the system's intended purpose and its risks**, shows how it measured that level, keeps it there for the whole lifecycle and tells deployers what to expect. Harmonised standards are still being written (prEN 18229-2 on accuracy and robustness), so until they are adopted the practical reference is guidance such as the Spanish supervisory authority's (AESIA) guides from its regulatory sandbox, summarised below.",
+      "sections": [
+        {
+          "heading": "What the article requires, paragraph by paragraph",
+          "points": [
+            "**15(1) Appropriate level, consistent over time.** The system is designed and developed to reach an appropriate level of accuracy, robustness and cybersecurity, and to perform consistently in those respects throughout its lifecycle, not only on the day it is placed on the market.",
+            "**15(2) Benchmarks.** The Commission, with metrology and benchmarking authorities, encourages benchmarks and measurement methods. None is binding yet; until then the provider chooses and justifies its own.",
+            "**15(3) Declared accuracy.** The levels of accuracy and the relevant accuracy metrics are **declared in the instructions for use** (see also Art. 13(3)(b)(ii)), so the deployer knows what performance to expect.",
+            "**15(4) Robustness.** The system is as resilient as possible to **errors, faults or inconsistencies**, in the system or in its environment, in particular from interaction with people or other systems. This can include technical redundancy, such as **backup or fail-safe plans**. Systems that keep learning after release must avoid or reduce **feedback loops**, where biased outputs become future inputs.",
+            "**15(5) Cybersecurity.** The system resists attempts by unauthorised third parties to alter its use, outputs or performance by exploiting vulnerabilities. The measures must be appropriate to the circumstances and risks, and cover AI-specific attacks: **data poisoning, model poisoning, adversarial examples (model evasion), confidentiality attacks and model flaws**."
+          ]
+        },
+        {
+          "heading": "Accuracy: what a provider is expected to do",
+          "points": [
+            "**Choose metrics from the intended purpose and the risk assessment**, not from habit. For example: AUC-ROC for a yes/no classifier, precision and recall where false negatives harm people, ranking metrics such as discounted cumulative gain for a system that ranks candidates, MAE or RMSE for a regression.",
+            "**Keep test data separate and representative.** Training, validation and test sets must not overlap. They must represent the people and situations of the intended use, and keep the same distribution across splits when the data is unbalanced.",
+            "**Guard against overfitting.** Tune hyperparameters without touching the test set (e.g. nested cross-validation) and record them with the model version.",
+            "**Compare with a baseline.** Put the declared accuracy in context: a trivial baseline (always the majority class) and a state-of-the-art reference model.",
+            "**Check accuracy for groups, not only on average.** Accuracy that degrades for a minority class or a protected group is a risk to fundamental rights. Report bias and fairness metrics alongside accuracy.",
+            "**Show uncertainty and statistical validity.** Where possible, give each output a confidence level. Back the claimed differences between models with significance tests (e.g. Wilcoxon, McNemar).",
+            "**Monitor in production.** Log accuracy over time, show it on a dashboard and alert a human when it falls below the declared minimum."
+          ]
+        },
+        {
+          "heading": "Robustness: what a provider is expected to do",
+          "points": [
+            "**Anticipate failures at design stage.** Diverse review groups look for errors, inconsistencies and unexpected situations; for an SME this can be a company-wide working group.",
+            "**Fail safely.** Alert the people responsible when robustness is compromised. Let a human intervene at any time. Where no response comes within a safe time, stop the system.",
+            "**Handle bad or missing input.** For example, flag records with incomplete data for human review instead of scoring them as if complete.",
+            "**Build in redundancy and recovery.** Automatic backups of data, models and logs. A recovery plan. Geographic redundancy where availability matters. Version control for data and models, so a change in the data can be traced to a change in behaviour.",
+            "**Watch for drift.** Track data drift (the inputs change), concept drift (the same inputs should now give different outputs) and degradation after retraining; test for silent failures.",
+            "**Control feedback loops.** In systems that keep learning, or that are retrained on their own outputs, check that new training does not worsen accuracy, robustness or bias. Record human corrections so the next version learns from them, not from its own mistakes."
+          ]
+        },
+        {
+          "heading": "Cybersecurity: AI-specific threats and controls",
+          "points": [
+            "**Start from the risk assessment.** Map each risk to people's rights, health or safety to the vulnerabilities that could cause it, and show the control applied to each, across the whole lifecycle from design to retirement.",
+            "**Data and model poisoning.** Controlled access to training data. Checks on the provenance and integrity of datasets. Tests that look for triggers or backdoors before each training run.",
+            "**Evasion (adversarial examples).** Test the model against known adversarial attacks before release. Make it more resilient, e.g. with adversarial training, and detect suspicious inputs in production.",
+            "**Confidentiality attacks (model inversion, membership inference, model extraction).** Limit and monitor queries. Do not return more detail in outputs than the purpose needs. Protect the model files.",
+            "**Supply chain and infrastructure.** Verify third-party libraries, pre-trained models and hardware. Separate environments. Grant **least-privilege, role-based access** with multi-factor authentication. Revoke access when people leave.",
+            "**Keep the level up.** Automated security testing during development, a periodic security audit, indicators on a dashboard, and updates that do not lower the security level.",
+            "**Cyber Resilience Act.** Where the system is also a product with digital elements, CRA requirements apply from 11 December 2027, and meeting them can count towards the cybersecurity part of Art. 15."
+          ]
+        },
+        {
+          "heading": "What to document",
+          "points": [
+            "In the **technical documentation** (Annex IV):\n  - the chosen metrics and why, the test data and results, the baselines;\n  - the robustness and security tests, the redundancy and fail-safe measures;\n  - the minimum acceptable values below which a human is alerted.",
+            "**Model and dataset cards** are a practical format for this: what the model is for, how it was trained and evaluated, its limits and the known trade-offs (e.g. between robustness and privacy).",
+            "In the **instructions for use**:\n  - the declared accuracy and metrics;\n  - the ranges of input data and configurable parameters within which that accuracy holds;\n  - known limitations;\n  - security recommendations for the deployer;\n  - how to report errors.",
+            "**Update the documentation** after every retraining, significant change or change of operating context."
+          ]
+        },
+        {
+          "heading": "If the company deploys the system rather than builds it",
+          "points": [
+            "Art. 15 binds the provider. A deployer should still **obtain the declared accuracy, limitations and security instructions** from the supplier (see the vendor register). It should then check that its own use stays within the conditions under which that accuracy was measured.",
+            "Train the people who operate the system:\n  - to read the accuracy and uncertainty indicators;\n  - to spot degradation or bias;\n  - to report errors to the provider through the channel it provides (Art. 26(5)).",
+            "If the deployer installs the system itself, it must follow the provider's installation, backup and security instructions exactly."
+          ]
+        },
+        {
+          "heading": "Questions a reviewer can ask",
+          "points": [
+            "Which accuracy metrics were chosen, and how do they follow from the intended purpose and the identified risks?",
+            "Was accuracy tested on data that represents the people affected, including smaller groups, and on a test set kept separate from training?",
+            "What is the minimum acceptable value, and what happens in production when the system falls below it?",
+            "What happens when input is missing, malformed or outside the expected range? Is there a fail-safe or fallback?",
+            "Has the model been tested against poisoning, evasion and extraction attacks? Who can access the training data and model files?",
+            "Are the declared accuracy and its conditions written in the instructions for use?"
+          ]
+        }
+      ],
+      "sources": [
+        {
+          "label": "Regulation (EU) 2024/1689, Art. 15 and Recitals 74–78",
+          "url": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32024R1689#art_15"
+        },
+        {
+          "label": "AESIA, Guide 9: Accuracy (Guía de precisión), v2.0, 17 July 2026",
+          "url": "https://aesia.digital.gob.es/storage/media/09-guia-de-precision.pdf",
+          "note": "Non-binding; in Spanish; updated for the Digital Omnibus."
+        },
+        {
+          "label": "AESIA, Guide 10: Robustness (Guía de solidez), v2.0, 17 July 2026",
+          "url": "https://aesia.digital.gob.es/storage/media/10-guia-solidez.pdf",
+          "note": "Non-binding; in Spanish."
+        },
+        {
+          "label": "AESIA, Guide 11: Cybersecurity (Guía de ciberseguridad), v2.0, 17 July 2026",
+          "url": "https://aesia.digital.gob.es/storage/media/11-guia-ciberseguridad.pdf",
+          "note": "Non-binding; in Spanish."
+        }
+      ],
+      "checked": "2026-11-24"
+    }
   },
   {
     "key": "art17.qms",

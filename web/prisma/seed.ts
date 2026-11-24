@@ -26,7 +26,7 @@ const PASSWORD = "changeme123";
 
 // Origin, use, stage, areas, affected groups and capabilities come from each
 // system's record; these are the remaining questions where nothing applies.
-const BASE: Answers = { "scope.exclusions": [], "hr.annexI": [], "hr.annexIII": [] };
+const BASE: Answers = { "scope.exclusions": ["none"], "hr.annexI": ["none"], "hr.annexIII": ["none"], "hr.rightsImpact": ["none"] };
 
 async function main() {
   // Runs on every deploy (see the build script) but only fills an empty

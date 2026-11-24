@@ -39,6 +39,14 @@ export function validateBundle(bundle: ContentBundle): string[] {
       errors.push(`${where}: unknown date key "${ob.appliesFrom}"`);
     }
     if (!ob.evidenceExpected.length) errors.push(`${where}: no expected evidence listed`);
+    if (ob.explainer) {
+      const x = ob.explainer;
+      if (!x.intro?.trim() || !x.sections?.length) errors.push(`${where}: explainer needs an intro and at least one section`);
+      for (const sec of x.sections ?? []) if (!sec.heading?.trim() || !sec.points?.length) errors.push(`${where}: explainer section without heading or points`);
+      if (!x.sources?.length) errors.push(`${where}: explainer cites no sources`);
+      for (const src of x.sources ?? []) if (!/^https:\/\//.test(src.url)) errors.push(`${where}: explainer source "${src.label}" needs an https URL`);
+      if (Number.isNaN(Date.parse(x.checked))) errors.push(`${where}: explainer needs a valid "checked" date`);
+    }
     checkCondition(ob.when, where, new Map(), outputs, errors, true);
   }
   for (const doc of bundle.vendorDocuments) {
@@ -56,6 +64,10 @@ function checkQuestionnaire(q: Questionnaire, errors: string[]) {
     if (questions.has(question.id)) errors.push(`${q.id}: duplicate question id "${question.id}"`);
     const isChoice = question.type === "single" || question.type === "multi";
     if (isChoice && !question.options?.length) errors.push(`${q.id}: question "${question.id}" has no options`);
+    const exclusive = (question.options ?? []).filter((o) => o.exclusive);
+    if (exclusive.length && question.type !== "multi") errors.push(`${q.id}: question "${question.id}": only a multi question can have a "none" option`);
+    if (exclusive.length > 1) errors.push(`${q.id}: question "${question.id}" has more than one exclusive option`);
+    if (exclusive.some((o) => o.showIf)) errors.push(`${q.id}: question "${question.id}": the "none" option must always be offered`);
     if (question.type === "text") questions.set(question.id, new Set());
     else questions.set(question.id, isChoice ? new Set(question.options!.map((o) => o.id)) : null);
   }
