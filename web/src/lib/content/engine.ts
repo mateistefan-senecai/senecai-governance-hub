@@ -77,6 +77,7 @@ export function missingAnswers(q: Questionnaire, answers: Answers): string[] {
       if (question.optional) return false;
       const value = answers[question.id];
       if (question.type === "text") return typeof value !== "string" || !value.trim();
+      if (question.type === "multi") return !Array.isArray(value) || value.length === 0;
       return value === undefined;
     })
     .map((question) => question.id);

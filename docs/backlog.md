@@ -26,6 +26,13 @@ item that has become relevant. Remove an item when it is done.
 
 ## Before real clients use the platform
 
+- Stage 1 gaps against the spec (found in the 24 Nov 2026 review): no way to invite users
+  or add a company user for a client from the UI; AI drafting of PDF narratives (waits on
+  the AI-provider decision).
+- Decide whether a document may be approved by the same person who generated and
+  submitted it (today one reviewer can do all three; the spec only requires a named
+  human reviewer).
+
 - Legal review of the content library (still `DRAFT`): question wording, area-to-purpose
   mapping, Annex I Section B treatment of machinery, NIS2/DORA/CRA/Data Act screening.
 - Set `SEED_DEMO_DATA=false` in Vercel, change or remove the demo accounts, delete test

@@ -27,7 +27,7 @@ function classify(facts: Facts, answers: Answers = {}) {
     "use.areas": facts.areas ?? ["other"],
     "sys.affected": facts.affected ?? [],
     "sys.does": facts.does ?? [],
-    "hr.annexIII": [],
+    "hr.annexIII": ["none"],
     ...answers,
   };
   const pruned = pruneAnswers(bundle.classification, all);
@@ -173,7 +173,7 @@ test("an ed-tech assessment tool is not asked about law enforcement or product s
   const r = classify({ areas: ["education"], affected: ["students"], does: ["scores"] }, { "hr.annexIII": ["3b", "6"], "hr.profiling": true, "p.scoringUse": false });
   for (const id of ["hr.annexI", "p.crime", "p.rbi", "p.faces", "p.biocat", "scope.exclusions"]) assert.ok(!r.asked.includes(id), `${id} should not be asked`);
   const annexIII = bundle.classification.sections.flatMap((s) => s.questions).find((q) => q.id === "hr.annexIII")!;
-  assert.deepEqual(visibleOptions(annexIII, r.pruned).map((o) => o.id), ["3a", "3b", "3c", "3d"]);
+  assert.deepEqual(visibleOptions(annexIII, r.pruned).map((o) => o.id), ["3a", "3b", "3c", "3d", "none"]);
   assert.deepEqual(r.pruned["hr.annexIII"], ["3b"], "an option that is not offered is dropped");
   assert.deepEqual(r.missing, []);
   assert.equal(r.outputs.riskClass, "HIGH_RISK");
@@ -252,7 +252,7 @@ test("applicability: NIS2, DORA, CRA and Data Act are flagged as not covered, wi
 });
 
 test("fraud detection (predicts or detects patterns) is asked about profiling and rights impact, not about biometrics", () => {
-  const r = classify({ origin: "built", use: "internal", areas: ["finance"], affected: ["customers"], does: ["predicts"] }, { "role.publicBody": false, "p.scoring": false, "hr.rightsImpact": [] });
+  const r = classify({ origin: "built", use: "internal", areas: ["finance"], affected: ["customers"], does: ["predicts"] }, { "role.publicBody": false, "p.scoring": false, "hr.rightsImpact": ["none"] });
   assert.ok(r.asked.includes("p.scoring"));
   assert.ok(r.asked.includes("hr.rightsImpact"));
   assert.ok(!r.asked.includes("p.faces"));
@@ -263,4 +263,22 @@ test("fraud detection (predicts or detects patterns) is asked about profiling an
 test("'something else' brings up the broad screening questions", () => {
   const r = classify({ areas: ["business"], does: ["other"] });
   for (const id of ["p.influence", "p.scoring", "hr.rightsImpact"]) assert.ok(r.asked.includes(id), id);
+});
+
+test("the high-risk purpose list needs a deliberate answer: an empty list is not \"none applies\"", () => {
+  const facts = { areas: ["education"], affected: ["students"], does: ["scores", "decides"] };
+  const empty = classify(facts, { "hr.annexIII": [], "hr.profiling": true, "p.scoringUse": false, "role.publicBody": false });
+  assert.ok(empty.missing.includes("hr.annexIII"), "an unticked purpose list is still unanswered");
+  const none = classify(facts, { "hr.annexIII": ["none"], "hr.rightsImpact": ["none"], "p.scoringUse": false, "role.publicBody": false });
+  assert.ok(!none.missing.includes("hr.annexIII"));
+  assert.notEqual(none.outputs.riskClass, "HIGH_RISK");
+});
+
+test("every required multi-choice question offers one exclusive \"None of these\" or is answered from the system record", () => {
+  for (const q of bundle.classification.sections.flatMap((s) => s.questions)) {
+    if (q.type !== "multi" || q.optional || q.fromSystem) continue;
+    const exclusive = (q.options ?? []).filter((o) => o.exclusive);
+    if (q.id === "p.emotionsWhere") continue; // asked only once emotion recognition is known: at least one place applies
+    assert.equal(exclusive.length, 1, `${q.id} needs a "None of these" option`);
+  }
 });
