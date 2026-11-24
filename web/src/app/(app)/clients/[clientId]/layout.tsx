@@ -28,6 +28,8 @@ export default async function ClientLayout({ children, params }: LayoutProps<"/c
           items={[
             { href: `${base}/applicability`, label: "Applicability check", hint: client.applicability ? undefined : "Start here" },
             { href: `${base}/inventory`, label: "AI inventory", hint: "Systems, classification, obligations", disabled: !open },
+            // Step 4 (evidence) is Stage 2 of the spec: shown so the six steps read in order.
+            { href: `${base}/evidence`, label: "Evidence", hint: "Step 4 · Stage 2, coming next", disabled: true },
             { href: `${base}/gap-assessment`, label: "Gap assessment", hint: "Status of every obligation", disabled: !open },
             { href: `${base}/roadmap`, label: "Compliance roadmap", hint: "Actions from the gap assessment", disabled: !open },
             { href: `${base}/documents`, label: "Documents", hint: "PDF deliverables and their review", disabled: !open },
