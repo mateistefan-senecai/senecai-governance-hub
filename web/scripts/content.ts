@@ -49,8 +49,14 @@ async function main() {
 
 /** Existing obligations take the dates of the current content (idempotent). */
 async function refresh(bundle: Parameters<typeof refreshObligationDates>[1]) {
-  const moved = await refreshObligationDates(prisma, bundle);
-  if (moved) console.log(`Moved ${moved} recorded obligation(s) onto content ${bundle.version}.`);
+  // Maintenance of recorded data: a failure here is reported loudly but must
+  // not block the deploy (the transaction rolls back, nothing is half-done).
+  try {
+    const moved = await refreshObligationDates(prisma, bundle);
+    if (moved) console.log(`Moved ${moved} recorded obligation(s) onto content ${bundle.version}.`);
+  } catch (e) {
+    console.warn(`WARNING: recorded obligations were not moved onto content ${bundle.version}:`, e);
+  }
 }
 
 /** JSON with object keys sorted: PostgreSQL's jsonb does not keep key order. */
