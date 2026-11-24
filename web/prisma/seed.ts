@@ -128,10 +128,10 @@ async function main() {
       purpose: "Flags suspicious card transactions for the fraud team to review.",
       ownerName: "Victor Enache", ownerRole: "Head of Fraud Operations", origin: "BUILT",
       dataCategories: ["Transaction data"], deploymentContext: "Card payments monitoring",
-      useType: "INTERNAL", autonomy: "ADVISORY", stage: "PRODUCTION", affectedPersons: "Card holders", areas: ["finance"], affectedGroups: ["customers"], capabilities: ["scores"],
+      useType: "INTERNAL", autonomy: "ADVISORY", stage: "PRODUCTION", affectedPersons: "Card holders", areas: ["finance"], affectedGroups: ["customers"], capabilities: ["predicts"],
     }));
     await submitClassification(tx, actor, fraud, {
-      ...BASE, "role.publicBody": false, "hr.rightsImpact": ["finance"], "p.scoringUse": false,
+      ...BASE, "role.publicBody": false, "hr.rightsImpact": ["finance"], "p.scoring": false,
     }, bundle);
 
     await createSystem(tx, actor, nb, sys({
@@ -218,7 +218,7 @@ function member(tx: Tx, userId: string, organizationId: string, role: MemberRole
 }
 
 function sys(s: Partial<SystemInput> & Pick<SystemInput, "name" | "purpose" | "ownerName" | "origin" | "deploymentContext" | "useType" | "autonomy" | "stage" | "areas">): SystemInput {
-  return { description: null, ownerRole: null, supplier: null, dataCategories: [], affectedPersons: null, affectedGroups: [], capabilities: [], ...s };
+  return { description: null, ownerRole: null, supplier: null, dataCategories: [], affectedPersons: null, affectedGroups: [], capabilities: [], capabilitiesOther: null, ...s };
 }
 
 async function assess(tx: Tx, actor: Actor, systemId: string, bundle: ContentBundle, statuses: Record<string, ["COMPLIANT" | "PARTIAL" | "GAP", string]>) {

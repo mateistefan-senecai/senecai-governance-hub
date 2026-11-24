@@ -205,6 +205,10 @@
               "label": "Makes or recommends decisions about people"
             },
             {
+              "id": "predicts",
+              "label": "Predicts or detects risks, patterns or anomalies (e.g. fraud, credit risk, demand, failures)"
+            },
+            {
               "id": "recognises",
               "label": "Recognises or identifies people by face, voice, fingerprints or other biometric data"
             },
@@ -215,6 +219,10 @@
             {
               "id": "product",
               "label": "Controls or protects a physical product (machinery, vehicle, device…)"
+            },
+            {
+              "id": "other",
+              "label": "Something else (describe it)"
             }
           ]
         }
@@ -388,7 +396,8 @@
               {
                 "q": "sys.does",
                 "hasAny": [
-                  "personalises"
+                  "personalises",
+                  "other"
                 ]
               }
             ]
@@ -475,15 +484,15 @@
                     "hasAny": [
                       "chats",
                       "decides",
-                      "personalises"
+                      "personalises",
+                      "predicts",
+                      "other"
                     ]
                   },
                   {
                     "not": {
                       "q": "sys.does",
-                      "hasAny": [
-                        "scores"
-                      ]
+                      "has": "scores"
                     }
                   }
                 ]
@@ -561,7 +570,9 @@
                     "q": "sys.does",
                     "hasAny": [
                       "scores",
-                      "decides"
+                      "decides",
+                      "predicts",
+                      "other"
                     ]
                   }
                 ]
@@ -1709,7 +1720,9 @@
                 "q": "sys.does",
                 "hasAny": [
                   "scores",
-                  "decides"
+                  "decides",
+                  "predicts",
+                  "other"
                 ]
               }
             ]

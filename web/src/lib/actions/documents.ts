@@ -1,5 +1,6 @@
 "use server";
 
+import { dispatchAfterCommit } from "@/lib/notify-dispatch";
 import { getCtx, type Ctx } from "@/lib/session";
 import { withTenant } from "@/lib/tenant";
 import { requireClient } from "@/lib/authz";
@@ -54,6 +55,7 @@ export async function transitionDocumentAction(clientId: string, documentId: str
       const client = await requireClient(tx, ctx, clientId);
       return transitionDocument(tx, docActor(ctx), client.id, documentId, transition, { comment: str(form, "comment") });
     });
+    if (transition === "release") await dispatchAfterCommit(ctx);
     return { to: `${back}#${doc.kind}`, notice: `${KIND_BY_ID.get(doc.kind)!.title}, version ${doc.version}, ${DONE[transition]}.` };
   });
 }

@@ -15,6 +15,7 @@ import {
 } from "@/lib/services/classification";
 import { createSystem, updateSystem, type SystemInput } from "@/lib/services/inventory";
 import { unknownFactValues } from "@/lib/content/facts";
+import { dispatchAfterCommit } from "@/lib/notify-dispatch";
 import { assessObligation } from "@/lib/services/assessment";
 import { refreshDocuments } from "@/lib/documents/freshness";
 import type { Autonomy, ObligationStatus, Stage, SystemOrigin, UseType, VendorDocStatus } from "@/generated/prisma/enums";
@@ -46,6 +47,7 @@ function systemInput(form: FormData): SystemInput {
     areas: list(form, "areas"),
     affectedGroups: list(form, "affectedGroups"),
     capabilities: list(form, "capabilities"),
+    capabilitiesOther: list(form, "capabilities").includes("other") ? strOrNull(form, "capabilitiesOther") : null,
   };
 }
 
@@ -110,7 +112,8 @@ export async function confirmClassificationAction(clientId: string, systemId: st
       if (current.status !== "PRELIMINARY") throw new ValidationError("This classification has already been reviewed.");
       await confirmClassification(tx, actor(ctx), current);
     });
-    return { notice: "Classification confirmed." };
+    await dispatchAfterCommit(ctx);
+    return { notice: "Classification confirmed. The client has been notified." };
   });
 }
 
@@ -137,7 +140,8 @@ export async function overrideClassificationAction(clientId: string, systemId: s
         bundle,
       );
     });
-    return { notice: "Override recorded. Obligations updated." };
+    await dispatchAfterCommit(ctx);
+    return { notice: "Override recorded. Obligations updated. The client has been notified." };
   });
 }
 

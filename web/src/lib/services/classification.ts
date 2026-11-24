@@ -9,6 +9,8 @@ import { missingFacts, systemAnswers } from "@/lib/content/facts";
 import type { Answers, ContentBundle, Firing, Outputs } from "@/lib/content/types";
 import { audit, type Actor } from "./audit";
 import { refreshDocuments } from "@/lib/documents/freshness";
+import { notifyClient } from "./notifications";
+import { RISK_LABEL, roleList } from "@/lib/labels";
 
 export const RISK_CLASSES = ["PROHIBITED", "HIGH_RISK", "LIMITED", "MINIMAL", "OUT_OF_SCOPE"] as const;
 export type RiskClass = (typeof RISK_CLASSES)[number];
@@ -74,8 +76,17 @@ export async function confirmClassification(tx: Tx, actor: Actor, classification
     action: "classification.confirmed",
     after: { effective: classification.effective },
   });
-  const { clientId } = await tx.aiSystem.findUniqueOrThrow({ where: { id: classification.systemId }, select: { clientId: true } });
-  await refreshDocuments(tx, actor, clientId, "classification confirmed");
+  const system = await tx.aiSystem.findUniqueOrThrow({ where: { id: classification.systemId } });
+  const e = classification.effective as Outputs;
+  await notifyClient(tx, {
+    organizationId: system.organizationId,
+    clientId: system.clientId,
+    kind: "CLASSIFICATION_CONFIRMED",
+    title: `Classification confirmed: ${system.name}`,
+    body: `${RISK_LABEL[String(e.riskClass)] ?? e.riskClass}${(e.roles as string[] | undefined)?.length ? ` · ${roleList(e.roles as string[])}` : ""}. Confirmed by ${actor.userName}.`,
+    link: `/clients/${system.clientId}/systems/${system.id}`,
+  });
+  await refreshDocuments(tx, actor, system.clientId, "classification confirmed");
   return updated;
 }
 
@@ -117,6 +128,14 @@ export async function overrideClassification(
   await syncObligations(tx, system, effective, bundle);
   await syncCompanyObligations(tx, system.organizationId, system.clientId, bundle);
   await syncVendorDocuments(tx, system, effective, bundle);
+  await notifyClient(tx, {
+    organizationId: system.organizationId,
+    clientId: system.clientId,
+    kind: "CLASSIFICATION_OVERRIDDEN",
+    title: `Classification set by your reviewer: ${system.name}`,
+    body: `${RISK_LABEL[override.riskClass] ?? override.riskClass}${override.roles.length ? ` · ${roleList(override.roles)}` : ""}. Reason given by ${actor.userName}: ${override.reason.trim()}`,
+    link: `/clients/${system.clientId}/systems/${system.id}`,
+  });
   await refreshDocuments(tx, actor, system.clientId, "classification overridden");
   return updated;
 }

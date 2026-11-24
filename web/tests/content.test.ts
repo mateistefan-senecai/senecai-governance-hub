@@ -250,3 +250,17 @@ test("applicability: NIS2, DORA, CRA and Data Act are flagged as not covered, wi
   const small = evaluate(bundle.applicability, { "co.size": "small", "reg.nis2Sectors": ["food"] });
   assert.ok(!(small.outputs.findings as { regulation: string }[]).some((f) => f.regulation === "NIS2"), "NIS2 size threshold");
 });
+
+test("fraud detection (predicts or detects patterns) is asked about profiling and rights impact, not about biometrics", () => {
+  const r = classify({ origin: "built", use: "internal", areas: ["finance"], affected: ["customers"], does: ["predicts"] }, { "role.publicBody": false, "p.scoring": false, "hr.rightsImpact": [] });
+  assert.ok(r.asked.includes("p.scoring"));
+  assert.ok(r.asked.includes("hr.rightsImpact"));
+  assert.ok(!r.asked.includes("p.faces"));
+  assert.deepEqual(r.missing, []);
+  assert.equal(r.outputs.riskClass, "MINIMAL");
+});
+
+test("'something else' brings up the broad screening questions", () => {
+  const r = classify({ areas: ["business"], does: ["other"] });
+  for (const id of ["p.influence", "p.scoring", "hr.rightsImpact"]) assert.ok(r.asked.includes(id), id);
+});
