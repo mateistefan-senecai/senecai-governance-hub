@@ -130,12 +130,12 @@ test("a new legal content version moves recorded obligations onto its dates (Dig
   const { refreshObligationDates } = await import("../src/lib/content/refresh");
   // An obligation recorded on an older content version, with the pre-Omnibus date.
   const so = await prisma.$transaction(async (tx) => {
-    await tx.$executeRawUnsafe('ALTER TABLE "SystemObligation" NO FORCE ROW LEVEL SECURITY');
-    await tx.$executeRawUnsafe('ALTER TABLE "AiSystem" NO FORCE ROW LEVEL SECURITY');
+    await tx.$executeRawUnsafe('ALTER TABLE "hub"."SystemObligation" NO FORCE ROW LEVEL SECURITY');
+    await tx.$executeRawUnsafe('ALTER TABLE "hub"."AiSystem" NO FORCE ROW LEVEL SECURITY');
     const row = await tx.systemObligation.findFirstOrThrow({ where: { obligationKey: "art26_6.logs", system: { name: "Credit Scoring Engine" } } });
     await tx.systemObligation.update({ where: { id: row.id }, data: { contentVersion: "2026.10-draft.1", appliesFrom: new Date("2026-08-02") } });
-    await tx.$executeRawUnsafe('ALTER TABLE "SystemObligation" FORCE ROW LEVEL SECURITY');
-    await tx.$executeRawUnsafe('ALTER TABLE "AiSystem" FORCE ROW LEVEL SECURITY');
+    await tx.$executeRawUnsafe('ALTER TABLE "hub"."SystemObligation" FORCE ROW LEVEL SECURITY');
+    await tx.$executeRawUnsafe('ALTER TABLE "hub"."AiSystem" FORCE ROW LEVEL SECURITY');
     return row;
   });
   assert.ok((await refreshObligationDates(prisma, bundle)) >= 1);

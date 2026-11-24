@@ -12,14 +12,17 @@
 // the table owner: row-level security is lifted for this one transaction.
 
 import type { PrismaClient } from "@/generated/prisma/client";
+import { DB_SCHEMA } from "@/lib/db-url";
 import { resolveDate } from "./engine";
 import type { ContentBundle, Outputs } from "./types";
 
-const TABLES = ["SystemObligation", "AiSystem", "Classification", "AuditEvent"];
+// Raw SQL is not schema-qualified by Prisma: name the app's schema explicitly
+// (the connection's search_path does not necessarily include it).
+const TABLES = ["SystemObligation", "AiSystem", "Classification", "AuditEvent"].map((t) => `"${DB_SCHEMA}"."${t}"`);
 
 export async function refreshObligationDates(prisma: PrismaClient, bundle: ContentBundle): Promise<number> {
   return prisma.$transaction(async (tx) => {
-    for (const t of TABLES) await tx.$executeRawUnsafe(`ALTER TABLE "${t}" NO FORCE ROW LEVEL SECURITY`);
+    for (const t of TABLES) await tx.$executeRawUnsafe(`ALTER TABLE ${t} NO FORCE ROW LEVEL SECURITY`);
     const stale = await tx.systemObligation.findMany({
       where: { active: true, contentVersion: { not: bundle.version } },
       include: { system: { include: { classifications: { where: { isCurrent: true }, select: { effective: true } } } } },
@@ -54,7 +57,7 @@ export async function refreshObligationDates(prisma: PrismaClient, bundle: Conte
       });
       moved += 1;
     }
-    for (const t of TABLES) await tx.$executeRawUnsafe(`ALTER TABLE "${t}" FORCE ROW LEVEL SECURITY`);
+    for (const t of TABLES) await tx.$executeRawUnsafe(`ALTER TABLE ${t} FORCE ROW LEVEL SECURITY`);
     return moved;
   }, { timeout: 120_000 });
 }
