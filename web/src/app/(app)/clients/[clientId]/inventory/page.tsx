@@ -1,5 +1,3 @@
-import { UpdatesPanel } from "@/components/updates-panel";
-import { listUpdates } from "@/lib/services/notifications";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getCtx } from "@/lib/session";
@@ -18,7 +16,7 @@ import { CLASSIFICATION_STATUS_LABEL, ORIGIN_LABEL, RISK_LABEL, RISK_TONE, roleL
 export default async function InventoryPage({ params }: PageProps<"/clients/[clientId]/inventory">) {
   const { clientId } = await params;
   const ctx = await getCtx();
-  const { client, systems, company, updates, seenAt } = await withTenant(ctx, async (tx) => {
+  const { client, systems, company } = await withTenant(ctx, async (tx) => {
     const client = await requireClient(tx, ctx, clientId);
     const systems = await tx.aiSystem.findMany({
       where: { clientId: client.id },
@@ -33,13 +31,7 @@ export default async function InventoryPage({ params }: PageProps<"/clients/[cli
       where: { clientId: client.id, systemId: null },
       select: { status: true, active: true, needsReassessment: true },
     });
-    // The client's company users see what their reviewer did since their last visit.
-    const isClientUser = ctx.role === "COMPANY_USER";
-    const updates = isClientUser ? await listUpdates(tx, client.id) : [];
-    const seenAt = isClientUser
-      ? ((await tx.membership.findUnique({ where: { id: ctx.membershipId }, select: { updatesSeenAt: true } }))?.updatesSeenAt ?? null)
-      : null;
-    return { client, systems, company, updates, seenAt };
+    return { client, systems, company };
   });
   if (!aiActApplies(client)) redirect(`/clients/${client.id}/applicability`);
 
@@ -79,11 +71,7 @@ export default async function InventoryPage({ params }: PageProps<"/clients/[cli
       </div>
 
       <div className="p-8">
-        {updates.length > 0 && (
-          <div className="mb-6">
-            <UpdatesPanel updates={updates} seenAt={seenAt} back={`/clients/${client.id}/inventory`} />
-          </div>
-        )}
+
         {systems.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border-neutral bg-panel p-10 text-center">
             <p className="text-[15px] font-semibold text-ink">No AI systems yet</p>
