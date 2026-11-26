@@ -56,7 +56,9 @@ Left open on purpose (26 Nov 2026: "they don't need to be decided now"):
 
 ## Before real clients use the platform
 
-- Build the items decided above (invitations, content-review screen, PDF logo, MFA).
+- Built on 26 Nov 2026 for the pilot: user invitations (with law firm workspaces opened
+  by SenecAI at `/firms`), the pilot flag with its PDF watermark, the "Send feedback"
+  button, and branding (logo on PDFs). Still to build: the content-review screen and MFA.
 - AI drafting of PDF narratives (waits on the AI-provider decision).
 - Annex I Section B (machinery) treatment: confirm or change during the content review.
 - Legal review of the content library (still `DRAFT`): question wording, area-to-purpose

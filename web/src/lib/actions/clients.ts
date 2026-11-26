@@ -7,6 +7,7 @@ import { getCurrentContent } from "@/lib/content/current";
 import { audit } from "@/lib/services/audit";
 import { ValidationError } from "@/lib/services/classification";
 import { runApplicability } from "@/lib/services/inventory";
+import { receivesDemoRequests } from "@/lib/services/demo-requests";
 import { actor, parseAnswers, run, str } from "./run";
 
 export async function createClient(form: FormData) {
@@ -16,8 +17,10 @@ export async function createClient(form: FormData) {
     const name = str(form, "name");
     if (!name) throw new ValidationError("Enter the company's name.");
     const client = await withTenant(ctx, async (tx) => {
-      const c = await tx.client.create({ data: { organizationId: ctx.orgId, name } });
-      await audit(tx, actor(ctx), { entityType: "Client", entityId: c.id, action: "client.created", after: { name } });
+      // Only SenecAI marks pilot clients.
+      const pilot = str(form, "pilot") === "on" && (await receivesDemoRequests(tx, ctx.orgId));
+      const c = await tx.client.create({ data: { organizationId: ctx.orgId, name, pilot } });
+      await audit(tx, actor(ctx), { entityType: "Client", entityId: c.id, action: "client.created", after: { name, pilot } });
       return c;
     });
     return { to: `/clients/${client.id}/applicability`, notice: `${name} added. Start with the applicability check.` };

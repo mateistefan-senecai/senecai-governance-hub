@@ -134,7 +134,15 @@ export async function generateDocument(tx: Tx, actor: DocActor, clientId: string
 
 async function storeRendition(tx: Tx, doc: Document, store: DocumentStore = documentStore) {
   if (await store.get(tx, doc.id, doc.state)) return; // renditions are never replaced
+  // Not part of the snapshot (and its hash): how the PDF is branded and
+  // whether it is a pilot, read when this rendition is made.
+  const issuer = await tx.client.findUniqueOrThrow({
+    where: { id: doc.clientId },
+    select: { pilot: true, organization: { select: { type: true, pilot: true } } },
+  });
   const bytes = await renderDocumentPdf({
+    organizationType: issuer.organization.type,
+    pilot: issuer.pilot || issuer.organization.pilot,
     kind: doc.kind,
     version: doc.version,
     state: doc.state,

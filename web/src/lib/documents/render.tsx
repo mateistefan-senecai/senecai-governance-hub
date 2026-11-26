@@ -297,6 +297,10 @@ export type RenderInput = {
   reviewerName: string | null;
   approvedAt: Date | null;
   releasedAt: Date | null;
+  /** The issuing organisation's kind: a law firm without a logo prints its name instead of SenecAI's logo. */
+  organizationType?: "CONSULTANCY" | "LAW_FIRM" | "COMPANY";
+  /** A pilot (test) client or organisation: every page says "test version, not legal advice". */
+  pilot?: boolean;
 };
 
 function docId(input: RenderInput) {
@@ -307,11 +311,34 @@ function docId(input: RenderInput) {
 
 // ── Cover ─────────────────────────────────────────────────────────────────
 
-/** Organisation logo, when the organisation set one (data: URI); otherwise none. */
-function OrgMark({ org }: { org: Snapshot["organization"] }) {
-  if (!org.brandLogo?.startsWith("data:image/")) return null;
+/**
+ * The issuer's mark at the top of every page: the logo of the organisation
+ * that reviews the client (decided 26 Nov 2026). Its own uploaded logo when
+ * it set one; otherwise SenecAI's logo for SenecAI, and the firm's name for a
+ * law firm that has not uploaded a logo yet.
+ */
+function BrandMark({ input, height }: { input: RenderInput; height: number }) {
+  const org = input.snapshot.organization;
+  if (org.brandLogo?.startsWith("data:image/")) {
+    // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt
+    return <Image src={org.brandLogo} style={{ height, maxWidth: 200, objectFit: "contain" }} />;
+  }
+  if (input.organizationType && input.organizationType !== "CONSULTANCY") {
+    return <Text style={{ fontSize: height * 0.55, fontWeight: 600, color: C.ink, letterSpacing: -0.2 }}>{org.brandName ?? org.name}</Text>;
+  }
   // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt
-  return <Image src={org.brandLogo} style={{ height: 22 }} />;
+  return <Image src={logo!} style={{ height }} />;
+}
+
+/** On every page of a pilot client's PDF. */
+function PilotBand() {
+  return (
+    <View fixed style={{ position: "absolute", top: 12, left: M, right: M, borderWidth: 0.8, borderColor: C.bronze, backgroundColor: C.bronzeTint, paddingVertical: 3, paddingHorizontal: 6 }}>
+      <Text style={{ fontSize: 6.4, fontWeight: 600, letterSpacing: 0.9, textTransform: "uppercase", color: "#5c3a1e", textAlign: "center" }}>
+        Pilot · Test version – not legal advice · Do not rely on this document
+      </Text>
+    </View>
+  );
 }
 
 function Cover({ input }: { input: RenderInput }) {
@@ -337,8 +364,7 @@ function Cover({ input }: { input: RenderInput }) {
   return (
     <View>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomWidth: 1.1, borderBottomColor: C.ink, paddingBottom: 12 }}>
-        {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
-        <Image src={logo!} style={{ height: 34 }} />
+        <BrandMark input={input} height={34} />
         <View>
           <Text style={s.topMeta}>{docId(input)}</Text>
           <Text style={[s.topMeta, { marginTop: 2 }]}>
@@ -406,7 +432,6 @@ function Cover({ input }: { input: RenderInput }) {
           {input.narrativeSource === "RULES" ? "filled from the rules and reviewer rationales" : input.narrativeSource}. Input SHA-256{" "}
           {input.inputHash.slice(0, 4)}…{input.inputHash.slice(-4)}.
         </Text>
-        <OrgMark org={snap.organization} />
       </View>
     </View>
   );
@@ -884,11 +909,12 @@ function DeliverablePdf({ input }: { input: RenderInput }) {
   const title = `${def.title} · ${snap.client.name}`;
   const approval = approved && input.reviewerName ? `Approved · ${input.reviewerName} · ${date(input.approvedAt)}` : `${STATE_LABEL[input.state]} · not approved`;
 
-  const watermark = !approved && (
+  const watermark = (!approved || input.pilot) && (
     <Text style={s.watermark} fixed>
-      {input.state === "DRAFT" ? "DRAFT" : "IN REVIEW"}
+      {!approved ? (input.state === "DRAFT" ? "DRAFT" : "IN REVIEW") : "TEST VERSION"}
     </Text>
   );
+  const pilotBand = input.pilot ? <PilotBand /> : null;
   const footer = (
     <View style={s.foot} fixed>
       <Text>SenecAI Compliance · Governance Hub</Text>
@@ -899,8 +925,9 @@ function DeliverablePdf({ input }: { input: RenderInput }) {
 
   return (
     <Document title={title} author={snap.organization.brandName ?? snap.organization.name} subject={`EU AI Act · ${def.title}`} creator="SenecAI Compliance · Governance Hub" producer="Governance Hub">
-      <Page size="A4" style={s.cover}>
+      <Page size="A4" style={input.pilot ? [s.cover, { paddingTop: 52 }] : s.cover}>
         {watermark}
+        {pilotBand}
         {footer}
         <View style={s.body}>
           <Cover input={input} />
@@ -911,9 +938,9 @@ function DeliverablePdf({ input }: { input: RenderInput }) {
         return (
           <Page key={k} size="A4" style={s.page} wrap>
             {watermark}
+            {pilotBand}
             <View style={s.top} fixed>
-              {/* eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image has no alt */}
-              <Image src={logo!} style={{ height: 22 }} />
+              <BrandMark input={input} height={22} />
               <Text style={s.topMeta}>
                 {KIND_BY_ID.get(k)!.title} · {snap.client.name} · v{input.version}
               </Text>

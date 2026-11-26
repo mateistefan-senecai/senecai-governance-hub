@@ -47,8 +47,12 @@ npm test
 - `tests/demo-requests.test.ts`: a visitor can send a demo request but not read one;
   another firm can't read, update or delete them; the app can't make another
   organisation their receiver.
+- `tests/invitations.test.ts`: who may invite whom, a link works once and only before it
+  expires, renewing or withdrawing a link kills the old one, an existing account joins
+  with its own password, invitations are invisible to another firm and to a visitor
+  without the token, and SenecAI loses the right to re-invite a firm once it has joined.
 
-The last four, and the document tests in `tests/tenant-isolation.test.ts`, need a
+The last five, and the document tests in `tests/tenant-isolation.test.ts`, need a
 seeded database.
 
 `npx tsx scripts/pdf-samples.ts <dir>` writes one sample PDF of each deliverable from
@@ -242,3 +246,37 @@ or email notification yet.
 - Email to SenecAI on new demo requests, and a rate limit on the public form.
 - Stage 2: evidence repository, evidence-based gap assessment, templates. Stage 3:
   regulatory monitoring.
+
+**Invitations and team.** Nobody signs up: people join by invitation
+(`services/invitations.ts`, migration `invitations_pilot`). An org admin invites anyone
+(from `/team` or a client's Team page); a reviewer invites company users for the clients
+assigned to them; a company user invites colleagues for their own company. The link
+(`/invite/<token>`, public in `src/proxy.ts`) carries a random token, of which only the
+SHA-256 is stored; it works once and for 14 days, and a new link or a withdrawal kills the
+old one. Before the invitee has an account there is no tenant, so a second row-level
+security policy shows an invitation only to a transaction carrying its token's hash
+(`withInviteToken` in `src/lib/tenant.ts`); accepting it then writes the account, the
+membership and, for a reviewer, the client assignment in the invitation's organisation, in
+one transaction. When email is configured (above) the link is emailed; otherwise the
+inviter sees it with a "Copy link" button. Links use `APP_URL` or the Vercel production URL.
+
+**Law firm workspaces.** SenecAI's admins open a workspace for a law firm at `/firms`
+(`services/firms.ts`): it creates the organisation and invites its first admin. SenecAI keeps
+only a `firm.created` event in its own audit log, and may send the admin a new link only
+while nobody has joined the firm; after that the firm invites its own people and SenecAI
+sees none of its data.
+
+**Branding.** Admins set the name and logo printed on their PDFs at `/settings/branding`
+(PNG or JPEG under 300 KB, stored on the organisation as a data URI). The top of every PDF
+shows the organisation's logo; without one, SenecAI's logo for SenecAI and the firm's name
+for a law firm.
+
+**Pilot.** `Organization.pilot` (set when SenecAI opens a pilot firm) and `Client.pilot`
+(set by SenecAI's admins on the client's Team page, or when adding the client) put a
+"Pilot · Test version – not legal advice" band and watermark on every page of PDFs rendered
+afterwards. The flag is read when a rendition is made, not stored in the snapshot, so it
+does not change the input hash or mark documents outdated.
+
+**Feedback.** A "Send feedback" button on every signed-in screen sends the message, the
+user's name and email and the page path to SenecAI's request inbox (`/demo-requests`),
+as a request whose topic starts with `Feedback:`.

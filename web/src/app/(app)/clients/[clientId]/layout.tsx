@@ -23,6 +23,7 @@ export default async function ClientLayout({ children, params }: LayoutProps<"/c
         <div className="rounded-xl border border-rail-line bg-white/5 p-3.5">
           <p className="font-mono text-[10.5px] tracking-micro-wide text-rail-muted">CLIENT</p>
           <p className="mt-1 font-display text-[17px] font-semibold leading-snug">{client.name}</p>
+          {client.pilot && <p className="mt-1.5 inline-block rounded-full border border-gold-light/40 px-2 py-0.5 font-mono text-[10px] tracking-micro-wide text-gold-light">PILOT</p>}
         </div>
         <ClientNav
           items={[
@@ -34,6 +35,7 @@ export default async function ClientLayout({ children, params }: LayoutProps<"/c
             { href: `${base}/gap-assessment`, label: "Gap assessment", hint: "Status of every obligation", disabled: !open },
             { href: `${base}/roadmap`, label: "Compliance roadmap", hint: "Actions from the gap assessment", disabled: !open },
             { href: `${base}/documents`, label: "Documents", hint: "PDF deliverables and their review", disabled: !open },
+            { href: `${base}/team`, label: "Team", hint: "People and invitations" },
             { href: `${base}/audit`, label: "Audit log" },
           ]}
         />

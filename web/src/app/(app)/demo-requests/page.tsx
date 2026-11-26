@@ -3,7 +3,7 @@ import { getCtx } from "@/lib/session";
 import { withTenant } from "@/lib/tenant";
 import { canAdmin } from "@/lib/authz";
 import { removeDemoRequest, updateDemoRequestStatus } from "@/lib/actions/demo-requests";
-import { DEMO_STATUS_LABEL, REQUESTER_TYPE_LABEL, receivesDemoRequests } from "@/lib/services/demo-requests";
+import { DEMO_STATUS_LABEL, FEEDBACK_TOPIC, REQUESTER_TYPE_LABEL, receivesDemoRequests } from "@/lib/services/demo-requests";
 import { PageHeader } from "@/components/ui/page-header";
 import { Panel } from "@/components/ui/panel";
 import { Tag } from "@/components/ui/tag";
@@ -29,7 +29,7 @@ export default async function DemoRequestsPage() {
       <PageHeader
         crumb={`${ctx.orgName} · Inbox`}
         title="Requests"
-        subtitle="Demo requests from the landing page, and consultation requests from inside the Hub (regulations it does not cover yet). They hold personal data: delete a request when it is no longer needed, or when the person asks."
+        subtitle="Demo requests from the landing page, consultation requests from inside the Hub (regulations it does not cover yet), and feedback sent with the Hub’s feedback button. They hold personal data: delete a request when it is no longer needed, or when the person asks."
       />
       <div className="space-y-4 p-8">
         {data.length === 0 ? (
@@ -44,7 +44,9 @@ export default async function DemoRequestsPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-[16px] font-semibold text-ink">{r.name}</h2>
                     <Tag tone={r.status === "NEW" ? "gold-fill" : "muted"}>{DEMO_STATUS_LABEL[r.status]}</Tag>
-                    <Tag tone="outline">{r.topic ? `Consultation · ${r.topic.split(" (")[0]}` : "Demo"}</Tag>
+                    <Tag tone={r.topic?.startsWith(FEEDBACK_TOPIC) ? "prelim" : "outline"}>
+                      {!r.topic ? "Demo" : r.topic.startsWith(FEEDBACK_TOPIC) ? `Feedback · ${r.topic.slice(FEEDBACK_TOPIC.length).trim() || "Hub"}` : `Consultation · ${r.topic.split(" (")[0]}`}
+                    </Tag>
                   </div>
                   <p className="mt-0.5 text-[13px] text-body">
                     {r.role ? `${r.role}, ` : ""}

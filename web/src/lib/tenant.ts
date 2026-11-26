@@ -50,3 +50,25 @@ export async function withPublic<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
     return fn(tx);
   });
 }
+
+/**
+ * Runs `fn` for someone holding an invitation link, before they have an
+ * account. Under RLS the transaction sees only the invitation whose token
+ * hash it carries (migration `invitations_pilot`). `enter` then scopes the
+ * rest of the same transaction to the invitation's organisation, so the
+ * account, the membership and the acceptance are written together or not
+ * at all.
+ */
+export async function withInviteToken<T>(
+  tokenHash: string,
+  fn: (tx: Tx, enter: (scope: { userId: string; orgId: string }) => Promise<void>) => Promise<T>,
+): Promise<T> {
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRawUnsafe(SET_APP_ROLE);
+    await tx.$executeRaw`SELECT set_config('app.invite_token', ${tokenHash}, true)`;
+    const enter = async (scope: { userId: string; orgId: string }) => {
+      await tx.$executeRaw`SELECT set_config('app.user_id', ${scope.userId}, true), set_config('app.org_id', ${scope.orgId}, true)`;
+    };
+    return fn(tx, enter);
+  });
+}

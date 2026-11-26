@@ -14,8 +14,9 @@ export default auth((req) => {
   const isAuthRoute = pathname.startsWith("/login");
   // "/" is the public marketing landing page (src/components/landing-page.tsx) —
   // signed-out visitors see it, signed-in visitors go to /home, which routes them by role.
-  // "/request-demo" is its form, also public.
-  const isPublicRoute = pathname === "/" || pathname === "/request-demo" || isAuthRoute;
+  // "/request-demo" is its form, also public. "/invite/<token>" is where an
+  // invitation link lands, before the invitee has an account.
+  const isPublicRoute = pathname === "/" || pathname === "/request-demo" || pathname.startsWith("/invite/") || isAuthRoute;
 
   if (!isLoggedIn && !isPublicRoute) {
     const url = new URL("/login", req.nextUrl.origin);

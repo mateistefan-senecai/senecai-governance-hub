@@ -4,6 +4,7 @@ import { Suspense, type ReactNode } from "react";
 import { getCtx } from "@/lib/session";
 import { signOutAction, switchOrganization } from "@/lib/actions/session";
 import { Flash } from "@/components/flash";
+import { FeedbackButton } from "@/components/feedback-button";
 import { MEMBER_ROLE_LABEL, ORG_TYPE_LABEL } from "@/lib/labels";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -75,6 +76,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <Flash />
       </Suspense>
       <div className="flex flex-1 flex-col">{children}</div>
+      <FeedbackButton />
     </div>
   );
 }

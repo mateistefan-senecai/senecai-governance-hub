@@ -89,3 +89,6 @@ export async function createConsultationRequest(
     data: [{ ...input, message: input.message || null, consentAt: now }],
   });
 }
+
+/** Topic prefix of feedback sent with the Hub's "Send feedback" button; the page it was sent from follows. */
+export const FEEDBACK_TOPIC = "Feedback:";

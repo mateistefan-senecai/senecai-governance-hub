@@ -49,11 +49,16 @@ export default async function ClientsPage() {
             : "Every client of your organisation. Open one to work in its AI inventory."
         }
         actions={
-          newDemoRequests !== null && (
-            <Button href="/demo-requests" variant={newDemoRequests ? "primary" : "ghost"}>
-              Requests{newDemoRequests ? ` · ${newDemoRequests} new` : ""}
-            </Button>
-          )
+          <>
+            {canAdmin(ctx) && <Button href="/team">Team</Button>}
+            {canAdmin(ctx) && <Button href="/settings/branding">Branding</Button>}
+            {newDemoRequests !== null && <Button href="/firms">Law firms</Button>}
+            {newDemoRequests !== null && (
+              <Button href="/demo-requests" variant={newDemoRequests ? "primary" : "ghost"}>
+                Requests{newDemoRequests ? ` · ${newDemoRequests} new` : ""}
+              </Button>
+            )}
+          </>
         }
       />
       <div className="space-y-6 p-8">
@@ -91,6 +96,11 @@ export default async function ClientsPage() {
                         <Link href={`/clients/${c.id}`} className="font-semibold text-ink underline-offset-2 hover:text-gold-hover hover:underline">
                           {c.name}
                         </Link>
+                        {c.pilot && (
+                          <span className="ml-2">
+                            <Tag tone="prelim">Pilot</Tag>
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-3.5">
                         {!c.applicability ? (
@@ -122,15 +132,23 @@ export default async function ClientsPage() {
           <Panel className="max-w-xl">
             <h2 className="text-[15px] font-semibold text-ink">Add a client</h2>
             <p className="mt-1 text-[13px] text-muted">The company you will work for. Its data is visible only inside {ctx.orgName}.</p>
-            <form action={createClient} className="mt-4 flex gap-2">
-              <input
-                name="name"
-                required
-                placeholder="Company name, e.g. Acme Romania SRL"
-                className="flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-[13px]"
-              />
-              <Button variant="primary">Add client</Button>
+            <form action={createClient} className="mt-4 space-y-3">
+              <div className="flex gap-2">
+                <input
+                  name="name"
+                  required
+                  placeholder="Company name, e.g. Acme Romania SRL"
+                  className="flex-1 rounded-lg border border-hairline bg-surface px-3 py-2 text-[13px]"
+                />
+                <Button variant="primary">Add client</Button>
+              </div>
+              {newDemoRequests !== null && (
+                <label className="flex items-center gap-2 text-[13px] text-ink">
+                  <input type="checkbox" name="pilot" /> Pilot client: its PDFs carry a &ldquo;Test version – not legal advice&rdquo; watermark
+                </label>
+              )}
             </form>
+            <p className="mt-3 text-[12px] text-muted">Then invite the company&rsquo;s people from the client&rsquo;s Team page.</p>
           </Panel>
         )}
       </div>

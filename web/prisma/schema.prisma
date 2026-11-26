@@ -52,6 +52,9 @@ model Organization {
   /// The organisation that receives demo requests from the public landing
   /// page (SenecAI, as the Hub's vendor). At most one, enforced in the database.
   receivesDemoRequests Boolean          @default(false)
+  /// In the pilot with test clients: every PDF of its clients carries a
+  /// "test version, not legal advice" watermark. Set by SenecAI.
+  pilot                Boolean          @default(false)
   createdAt            DateTime         @default(now())
 
   memberships       Membership[]
@@ -67,6 +70,7 @@ model Organization {
   documentFiles     DocumentFile[]
   auditEvents       AuditEvent[]
   notifications     Notification[]
+  invitations       Invitation[]
 }
 
 enum MemberRole {
@@ -109,6 +113,8 @@ model Client {
   applicability               Json?
   applicabilityContentVersion String?
   applicabilityAt             DateTime?
+  /// A pilot (test) client: its PDFs carry a "test version" watermark.
+  pilot                       Boolean      @default(false)
   createdAt                   DateTime     @default(now())
 
   memberships   Membership[]
@@ -120,6 +126,7 @@ model Client {
   /// Company-level obligations (systemId null) and system ones, by client.
   obligations   SystemObligation[]
   notifications Notification[]
+  invitations   Invitation[]
 
   @@index([organizationId])
 }
@@ -135,6 +142,34 @@ model ClientAssignment {
   membership     Membership   @relation(fields: [membershipId], references: [id], onDelete: Cascade)
 
   @@unique([clientId, membershipId])
+}
+
+/// An invitation to join an organisation with a role. The link carries a
+/// random token; only its SHA-256 is stored. Accepting it creates the
+/// account (or adds the membership to an existing one), and for a reviewer
+/// the assignment to the client. Row-level security shows it to its
+/// organisation, and to an anonymous visitor only when the transaction
+/// carries the token's hash (migration `invitations`).
+model Invitation {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  email          String
+  name           String
+  role           MemberRole
+  /// The company (COMPANY_USER) or the client to assign (REVIEWER).
+  clientId       String?
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tokenHash      String       @unique
+  invitedById    String
+  invitedByName  String
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  revokedAt      DateTime?
+  emailStatus    String?
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, email])
 }
 
 // ── Step 1: AI inventory & vendor register ──────────────────────────────
