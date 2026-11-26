@@ -17,6 +17,8 @@ item that has become relevant. Remove an item when it is done.
 
 ## Open decisions (spec §12)
 
+Left open on purpose (26 Nov 2026: "they don't need to be decided now"):
+
 - Pricing model.
 - White-labelling of PDFs (full, or a "powered by" line; PDFs currently keep a small
   "Governance Hub" mention).
@@ -24,21 +26,38 @@ item that has become relevant. Remove an item when it is done.
   narratives waits on this.
 - Responsibility for approved documents and when a draft counts as legal work product.
 
+## Decided on 26 Nov 2026 (to build)
+
+- **Email provider: Resend.** The product owner is opening the account. Needs a verified
+  sending domain (EU region) and `EMAIL_PROVIDER`, `RESEND_API_KEY`, `EMAIL_FROM` in Vercel.
+- **User invitations.** The org admin invites anyone; a reviewer invites users for the
+  clients assigned to them; a company user invites colleagues for their own company only.
+  The invitee gets an email link to set a password; until Resend is configured the
+  inviter sees the link to copy and send by hand.
+- **Approval by the author is allowed**, without restriction: one reviewer may generate,
+  submit and approve the same document (the spec only requires a named human reviewer).
+- **Legal review of the content library** is done by the product owner, **inside the
+  app** (a content-review screen to build). Annex I Section B (machinery) stays as now,
+  marked open until that review.
+- **PDF logo:** the logo of the organisation that uses the Hub (a law firm's own logo for
+  its clients; SenecAI's logo for companies served by SenecAI).
+- **MFA:** code by email (needs Resend), optional during the pilot, mandatory for
+  reviewers and admins before real clients.
+- **EUR-Lex links:** checked by the product owner, they land on the right article.
+- **Pilot with demo clients:** each pilot client chooses whether to enter real or
+  fictitious data, covered by a short test agreement. Before the pilot: a watermark on
+  PDFs ("Test version – not legal advice") and a "Send feedback" button.
+
 ## Before real clients use the platform
 
-- Stage 1 gaps against the spec (found in the 24 Nov 2026 review): no way to invite users
-  or add a company user for a client from the UI; AI drafting of PDF narratives (waits on
-  the AI-provider decision).
-- Decide whether a document may be approved by the same person who generated and
-  submitted it (today one reviewer can do all three; the spec only requires a named
-  human reviewer).
-
+- Build the items decided above (invitations, content-review screen, PDF logo, MFA).
+- AI drafting of PDF narratives (waits on the AI-provider decision).
+- Annex I Section B (machinery) treatment: confirm or change during the content review.
 - Legal review of the content library (still `DRAFT`): question wording, area-to-purpose
-  mapping, Annex I Section B treatment of machinery, NIS2/DORA/CRA/Data Act screening.
-- Set `SEED_DEMO_DATA=false` in Vercel, change or remove the demo accounts, delete test
-  clients (e.g. "Test Matei 1.0", "Test 2", "Prințesa Puiuț SRL").
-- Check one EUR-Lex "Read Article … in full" link lands on the right article.
-- User invitations, branding settings (logo on PDFs), MFA for reviewers and admins.
+  mapping, NIS2/DORA/CRA/Data Act screening.
+- Remove the pilot watermark; set `SEED_DEMO_DATA=false` in Vercel. Kept for now (26 Nov):
+  the demo accounts and the test clients ("Test Matei 1.0", "Test 2",
+  "Prințesa Puiuț SRL"); decide after the pilot.
 
 ## Next build stages
 
