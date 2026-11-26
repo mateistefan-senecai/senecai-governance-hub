@@ -26,7 +26,7 @@ The existing prototype runs on Next.js and Tailwind CSS, hosted on Vercel, with 
 
 **3. Users, workspaces and permissions**
 
-An organisation is the account holder: a consultancy, a law firm or a company. An organisation can contain several clients, which are the regulated companies it works for. A company that signs up by itself is simply an organisation with one client. A user can belong to more than one organisation, for example a lawyer who is invited into a client’s workspace as a reviewer. The matrix below is the intended permission model.
+An organisation is the account holder: a consultancy (SenecAI) or a law firm. An organisation can contain several clients, which are the regulated companies it works for. A company that signs up by itself becomes a client of SenecAI, and a SenecAI consultant is assigned to it as reviewer; no client exists without a reviewer from its organisation. A user can belong to more than one organisation, for example a lawyer who is invited into a client’s workspace as a reviewer. The matrix below is the intended permission model.
 
 | **Capability**                            | **Company user** | **Reviewer (consultant or lawyer)** | **Org admin**  |
 |-------------------------------------------|------------------|-------------------------------------|----------------|

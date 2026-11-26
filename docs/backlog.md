@@ -39,8 +39,14 @@ Left open on purpose (26 Nov 2026: "they don't need to be decided now"):
 - **Legal review of the content library** is done by the product owner, **inside the
   app** (a content-review screen to build). Annex I Section B (machinery) stays as now,
   marked open until that review.
-- **PDF logo:** the logo of the organisation that uses the Hub (a law firm's own logo for
-  its clients; SenecAI's logo for companies served by SenecAI).
+- **PDF logo:** the logo of the reviewing organisation: a law firm's own logo for its
+  clients, SenecAI's logo for SenecAI's clients.
+- **No company works without a reviewer** (spec §2 and concept note updated). Ways in: an
+  existing SenecAI client is offered the platform; a company **signs up by itself**,
+  becomes a SenecAI client and is assigned a SenecAI consultant (included in its
+  subscription); or a law firm brings it in. To build: self sign-up that creates the
+  client under SenecAI and queues it for consultant assignment; move the demo company
+  Vitalis Health under SenecAI as a self-signed-up client with an assigned consultant.
 - **MFA:** code by email (needs Resend), optional during the pilot, mandatory for
   reviewers and admins before real clients.
 - **EUR-Lex links:** checked by the product owner, they land on the right article.
